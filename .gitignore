@@ -1,0 +1,52 @@
+# Numerous always-ignore extensions
+*.diff
+*.err
+*.orig
+*.rej
+*.swo
+*.swp
+*.vi
+*~
+*.psd
+
+# OS or Editor folders
+.DS_Store
+Thumbs.db
+.cache
+.project
+.pydevproject
+.settings
+.tmproj
+*.esproj
+nbproject
+*.sublime-project
+*.sublime-workspace
+
+# Translations
+*.mo
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+
+# Compiled static files
+deploy
+
+# npm
+node_modules
+
+# Bower
+static/lib
+
+# Sass
+.sass-cache
+.temp

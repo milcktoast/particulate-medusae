@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--[if lt IE 8]><html class="no-js lt-ie9 lt-ie8"><![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9"><![endif]-->
+<!--[if gt IE 8]><!--><html class="no-js"><!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>SeaGen</title>
+
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {# Place favicon.ico and apple-touch-icon.png in the root directory #}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/style.css" />
+    {% if TEMPLATE_DEBUG %}
+      <link rel="stylesheet" href="{{ STATIC_URL }}css/tests.css" />
+    {% endif %}
+  </head>
+  <body>
+    <div id="container"></div>
+    {% if TEMPLATE_DEBUG %}
+      <script src="{{ STATIC_URL }}js/libs.develop.js"></script>
+      <script src="{{ STATIC_URL }}js/app.develop.js"></script>
+      {# Run tests by appending ?test=true to the url #}
+      <script>
+        if (location.search.indexOf('test=true') > -1) {
+          document.write('<div id="qunit"></div><div id="qunit-fixture"></div>');
+          document.write('<script src="{{ STATIC_URL }}js/tests.js"></scr' + 'ipt>');
+        }
+      </script>
+    {% else %}
+      <script src="{{ STATIC_URL }}js/libs.min.js"></script>
+      <script src="{{ STATIC_URL }}js/app.min.js"></script>
+    {% endif %}
+  </body>
+</html>

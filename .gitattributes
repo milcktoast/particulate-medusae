@@ -1,0 +1,21 @@
+* text=auto* eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.jar binary
+*.exe binary
+*.eot binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.woff binary
+*.bz2 binary
+*.gz binary
+
+# Flash Binaries
+*.swc binary
+*.fla binary
+*.swf binary
+*.as  binary
+
+*.mp3 binary
