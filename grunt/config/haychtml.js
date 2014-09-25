@@ -22,7 +22,7 @@ module.exports = function (config) {
       dest: config.deploy,
       data : {
         TEMPLATE_DEBUG : false,
-        STATIC_URL : '/static/'
+        STATIC_URL : './static/'
       }
     }
   };

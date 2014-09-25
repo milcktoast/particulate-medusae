@@ -29,14 +29,21 @@ Links.radial = function (indexCenter, index, howMany, buffer) {
   return buffer;
 };
 
+Links.radial2 = function (indexCenter, index, howMany, buffer) {
+  for (var i = 0; i < howMany - 1; i ++) {
+    buffer.push(index + i, indexCenter, index + i + 1);
+  }
+  buffer.push(index + howMany - 1, indexCenter, index);
+  return buffer;
+};
+
+Links.radial2(0, 1, 3, []);
+
 Links.loop3 = function (index, howMany, buffer) {
   for (var i = 0; i < howMany - 2; i ++) {
     buffer.push(index + i, index + i + 1, index + i + 2);
   }
   buffer.push(index + howMany - 2, index + howMany - 1, index);
   buffer.push(index + howMany - 1, index, index + 1);
-  // debugger;
   return buffer;
 };
-
-Links.loop3(0, 3, []);

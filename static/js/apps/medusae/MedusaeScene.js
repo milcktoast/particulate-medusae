@@ -1,6 +1,7 @@
 var PTCL = Particulate;
 var GEOM = App.Geometry;
 var LINKS = App.Links;
+var FACES = App.Faces;
 
 var Vec3 = PTCL.Vec3;
 var PointConstraint = PTCL.PointConstraint;
@@ -26,6 +27,7 @@ function Medusae() {
   this._queuedConstraints = [];
   this.verts = [];
   this.links = [];
+  this.faces = [];
 
   this.ribs = [];
   this.skins = [];
@@ -90,6 +92,8 @@ Medusae.prototype.createCore = function () {
   // this.addLinks(top.indices);
   // this.addLinks(bottom.indices);
   this.addLinks(spine.indices);
+
+  FACES.radial(2, bottomStart, segments, this.faces);
 
   this.core = {
     top : top,
@@ -178,6 +182,10 @@ Medusae.prototype.addLinks = function (indices) {
   _push.apply(this.links, indices);
 };
 
+Medusae.prototype.addFaces = function (faceIndices) {
+  _push.apply(this.faces, faceIndices);
+};
+
 Medusae.prototype.createMaterials = function () {
   var vertices = new THREE.BufferAttribute();
   vertices.array = this.verts;
@@ -199,7 +207,28 @@ Medusae.prototype.createMaterials = function () {
   linesGeom.addAttribute('index', indices);
 
   this.lines = new THREE.Line(linesGeom,
-    new THREE.LineBasicMaterial());
+    new THREE.LineBasicMaterial({
+      color : 0x777777,
+      transparent : true,
+      blending: THREE.AdditiveBlending,
+      opacity : 0.8
+    }));
+
+  // Faces
+  var faceGeom = new THREE.BufferGeometry();
+  var faceIndices = new THREE.BufferAttribute();
+  faceIndices.array = new Uint16Array(this.faces);
+  faceGeom.addAttribute('position', vertices);
+  faceGeom.addAttribute('index', faceIndices);
+
+  this.faceMesh = new THREE.Mesh(faceGeom,
+    new THREE.MeshBasicMaterial({
+      color : 0x777777,
+      transparent : true,
+      blending : THREE.AdditiveBlending,
+      opacity : 0.25,
+      side : THREE.DoubleSide
+    }));
 
   this.positionAttr = dotsGeom.attributes.position;
 
@@ -227,6 +256,7 @@ Medusae.prototype.createMaterials = function () {
 Medusae.prototype.addTo = function (scene) {
   // scene.add(this.dots);
   scene.add(this.lines);
+  scene.add(this.faceMesh);
 };
 
 Medusae.prototype.updateCore = function (delta) {
