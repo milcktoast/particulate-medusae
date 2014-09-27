@@ -10,6 +10,8 @@ var AngleConstraint = PTCL.AngleConstraint;
 var AxisConstraint = PTCL.AxisConstraint;
 
 var sin = Math.sin;
+var cos = Math.cos;
+var tan = Math.tan;
 var PI = Math.PI;
 var GRAVITY = -0.001;
 
@@ -22,13 +24,15 @@ var gravityForce = PTCL.DirectionalForce.create();
 
 function Medusae() {
   this.segments = 9;
-  this.ribsCount = 40;
+  this.ribsCount = 50;
+  this.size = 50;
 
   this._queuedConstraints = [];
   this.verts = [];
   this.links = [];
   this.faces = [];
 
+  this._ribAngleIndices = [];
   this.ribs = [];
   this.skins = [];
 
@@ -48,6 +52,8 @@ Medusae.prototype.createGeometry = function () {
       this.createSkin(i - 1, i);
     }
   }
+
+  this.createMembrane();
 };
 
 function spineAngleIndices(a, b, start, howMany) {
@@ -62,55 +68,41 @@ Medusae.prototype.createCore = function () {
   var verts = this.verts;
   var segments = this.segments;
   var ribsCount = this.ribsCount;
+  var size = this.size;
 
+  GEOM.point(0, 0, size, verts);
   GEOM.point(0, 0, 0, verts);
-  GEOM.point(0, 0, -30, verts);
-  GEOM.point(0, 0, -30, verts);
+  GEOM.point(0, 0, 0, verts);
 
-  var topStart = 3;
-  var top = DistanceConstraint.create([3, 5],
-    LINKS.radial(0, topStart, segments, []));
-
-  var spine = DistanceConstraint.create([20, 50], [0, 2]);
+  var spine = DistanceConstraint.create([20, size], [0, 2]);
   var axis = AxisConstraint.create(0, 1, 2);
 
+  var topStart = 3;
   var bottomStart = segments * (ribsCount - 1) + 3;
-  var bottom = DistanceConstraint.create([15, 25],
-    LINKS.radial(2, bottomStart, segments, []));
-
-  // TODO: Add Plane3Constraint
-  // To project points onto plane defined by 3 points
   var topAngle = AngleConstraint.create(PI * 0.5,
     spineAngleIndices(1, 0, topStart, segments));
   var bottomAngle = AngleConstraint.create(PI * 0.5,
     spineAngleIndices(0, 2, bottomStart, segments));
 
-  this.queueConstraints(top, bottom);
   this.queueConstraints(spine, axis);
   this.queueConstraints(topAngle, bottomAngle);
 
-  // this.addLinks(top.indices);
-  // this.addLinks(bottom.indices);
   this.addLinks(spine.indices);
 
-  FACES.radial(2, bottomStart, segments, this.faces);
+  // FACES.radial(2, bottomStart, segments, this.faces);
 
-  this.core = {
-    top : top,
-    bottom : bottom
-  };
-
-  // debugger;
+  this.core = {};
 };
 
 function ribRadius(t) {
-  return sin(PI - PI * 0.5 * t * 1.5);
+  return Math.max(0.05, sin(PI - PI * 0.5 * t * 1.5));
 }
 
 Medusae.prototype.createRib = function (index, total) {
   var segments = this.segments;
   var verts = this.verts;
-  var yPos = -(index / total) * 30;
+  var size = this.size;
+  var yPos = size - (index / total) * size;
 
   var start = index * segments + 3;
   var radius = ribRadius(index / total) * 20 + 5;
@@ -121,18 +113,25 @@ Medusae.prototype.createRib = function (index, total) {
   var rib = DistanceConstraint.create([circumf * 0.9, circumf],
     LINKS.loop(start, segments, []));
 
-  var angle = (segments - 2) * PI / segments;
-  var membrane = AngleConstraint.create([angle * 0.8, angle * 1.1],
-    LINKS.loop3(start, segments, []));
+  // Push membrane angle indices
+  LINKS.loop3(start, segments, this._ribAngleIndices);
 
-  this.queueConstraints(rib, membrane);
+  var spine, spineCenter;
+  if (index === 0 || index === total - 1) {
+    spineCenter = index === 0 ? 0 : 2;
+    spine = DistanceConstraint.create([radius * 0.5, radius],
+      LINKS.radial(spineCenter, start, segments, []));
+
+    this.queueConstraints(spine);
+  }
+
+  this.queueConstraints(rib);
   this.addLinks(rib.indices);
 
   this.ribs.push({
-    start : start
+    start : start,
+    radius : radius
   });
-
-  // debugger;
 };
 
 Medusae.prototype.createSkin = function (r0, r1) {
@@ -151,6 +150,14 @@ Medusae.prototype.createSkin = function (r0, r1) {
     a : r0,
     b : r1
   });
+};
+
+Medusae.prototype.createMembrane = function () {
+  var segments = this.segments;
+  var angle = (segments - 2) * PI / segments;
+  var membrane = AngleConstraint.create([angle * 0.8, angle * 1.1], this._ribAngleIndices);
+
+  this.queueConstraints(membrane);
 };
 
 Medusae.prototype.queueConstraint = function (constraint) {
@@ -172,8 +179,8 @@ Medusae.prototype.createSystem = function () {
 
   system.setWeight(0, 0);
   system.setWeight(1, 0);
-  system.addPinConstraint(PointConstraint.create([0, 0, 0], 0));
-  system.addPinConstraint(PointConstraint.create([0, -30, 0], 1));
+  system.addPinConstraint(PointConstraint.create([0, this.size, 0], 0));
+  system.addPinConstraint(PointConstraint.create([0, 0, 0], 1));
 
   system.addForce(gravityForce);
 };
@@ -263,7 +270,7 @@ Medusae.prototype.updateCore = function (delta) {
   var t = sin(delta * 0.01) * 0.5 + 0.5;
   var radius = t * 10 + 15;
   // console.log(t);
-  this.core.bottom.setDistance(radius * 0.7, radius);
+  // this.core.bottom.setDistance(radius * 0.7, radius);
 };
 
 Medusae.prototype.update = function (delta) {
