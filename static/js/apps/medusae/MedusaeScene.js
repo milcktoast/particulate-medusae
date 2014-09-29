@@ -1,3 +1,5 @@
+var DEBUG_WIRE = false;
+
 var PTCL = Particulate;
 var GEOM = App.Geometry;
 var LINKS = App.Links;
@@ -12,6 +14,8 @@ var AxisConstraint = PTCL.AxisConstraint;
 var sin = Math.sin;
 var cos = Math.cos;
 var tan = Math.tan;
+var log = Math.log;
+var floor = Math.floor;
 var PI = Math.PI;
 var GRAVITY = -0.001;
 
@@ -23,18 +27,19 @@ var gravityForce = PTCL.DirectionalForce.create();
 // ---------------
 
 function Medusae() {
-  this.segments = 9;
-  this.ribsCount = 50;
-  this.size = 50;
+  this.segments = 3 * 9;
+  this.ribsCount = 20;
+  this.size = 20;
 
   this._queuedConstraints = [];
   this.verts = [];
   this.links = [];
   this.faces = [];
 
-  this._ribAngleIndices = [];
   this.ribs = [];
   this.skins = [];
+
+  this._membraneIndices = [];
 
   this.createGeometry();
   this.createSystem();
@@ -79,9 +84,9 @@ Medusae.prototype.createCore = function () {
 
   var topStart = 3;
   var bottomStart = segments * (ribsCount - 1) + 3;
-  var topAngle = AngleConstraint.create(PI * 0.5,
+  var topAngle = AngleConstraint.create([PI * 0.35, PI * 0.65],
     spineAngleIndices(1, 0, topStart, segments));
-  var bottomAngle = AngleConstraint.create(PI * 0.5,
+  var bottomAngle = AngleConstraint.create([PI * 0.45, PI * 0.65],
     spineAngleIndices(0, 2, bottomStart, segments));
 
   this.queueConstraints(spine, axis);
@@ -89,13 +94,28 @@ Medusae.prototype.createCore = function () {
 
   this.addLinks(spine.indices);
 
-  // FACES.radial(2, bottomStart, segments, this.faces);
+  FACES.radial(0, topStart, segments, this.faces);
 
   this.core = {};
 };
 
 function ribRadius(t) {
-  return Math.max(0.05, sin(PI - PI * 0.5 * t * 1.5));
+  // return sin(PI - PI * 0.55 * t * 1.5);
+  return sin(PI - PI * 0.55 * t * 1.8) + log(t * 100 + 2) / 3;
+}
+
+function innerRibIndices(offset, start, segments, buffer) {
+  var step = floor(segments / 3);
+  var a, b;
+  for (var i = 0; i < 3; i ++) {
+    a = offset + step * i;
+    b = offset + step * (i + 1);
+
+    buffer.push(
+      start + a % segments,
+      start + b % segments);
+  }
+  return buffer;
 }
 
 Medusae.prototype.createRib = function (index, total) {
@@ -105,28 +125,42 @@ Medusae.prototype.createRib = function (index, total) {
   var yPos = size - (index / total) * size;
 
   var start = index * segments + 3;
-  var radius = ribRadius(index / total) * 20 + 5;
+  var radiusT = ribRadius(index / total);
+  var radius = radiusT * 10 + 0.5;
 
   GEOM.circle(segments, radius, yPos, verts);
 
-  var circumf = 2 * PI * radius / segments;
-  var rib = DistanceConstraint.create([circumf * 0.9, circumf],
-    LINKS.loop(start, segments, []));
+  var ribIndices = LINKS.loop(start, segments, []);
+  var ribLen = 2 * PI * radius / segments;
+  // var ribLen = Vec3.distance(this.verts, ribIndices[0], ribIndices[1]);
+  var rib = DistanceConstraint.create([ribLen * 0.9, ribLen], ribIndices);
+
+  // TODO: Parmeterize sub-structure divisions
+  var innerIndices = [];
+  innerRibIndices(0, start, segments, innerIndices);
+  innerRibIndices(3, start, segments, innerIndices);
+  innerRibIndices(6, start, segments, innerIndices);
+
+  var innerRibLen = 2 * PI * radius / 3;
+  // var innerRibLen = Vec3.distance(this.verts, innerIndices[0], innerIndices[1]);
+  var innerRib = DistanceConstraint.create([innerRibLen * 0.8, innerRibLen], innerIndices);
 
   // Push membrane angle indices
-  LINKS.loop3(start, segments, this._ribAngleIndices);
+  LINKS.loop3(start, segments, this._membraneIndices);
 
   var spine, spineCenter;
   if (index === 0 || index === total - 1) {
     spineCenter = index === 0 ? 0 : 2;
-    spine = DistanceConstraint.create([radius * 0.5, radius],
+    spine = DistanceConstraint.create([radius * 0.8, radius],
       LINKS.radial(spineCenter, start, segments, []));
 
     this.queueConstraints(spine);
+    this.addLinks(spine.indices);
   }
 
-  this.queueConstraints(rib);
-  this.addLinks(rib.indices);
+  this.queueConstraints(rib, innerRib);
+  // this.addLinks(rib.indices);
+  // this.addLinks(innerRib.indices);
 
   this.ribs.push({
     start : start,
@@ -144,7 +178,9 @@ Medusae.prototype.createSkin = function (r0, r1) {
     LINKS.rings(rib0.start, rib1.start, segments, []));
 
   this.queueConstraints(skin);
-  // this.addLinks(skin.indices);
+  this.addLinks(skin.indices);
+
+  FACES.rings(rib0.start, rib1.start, segments, this.faces);
 
   this.skins.push({
     a : r0,
@@ -155,7 +191,7 @@ Medusae.prototype.createSkin = function (r0, r1) {
 Medusae.prototype.createMembrane = function () {
   var segments = this.segments;
   var angle = (segments - 2) * PI / segments;
-  var membrane = AngleConstraint.create([angle * 0.8, angle * 1.1], this._ribAngleIndices);
+  var membrane = AngleConstraint.create([angle * 0.8, angle * 1.1], this._membraneIndices);
 
   this.queueConstraints(membrane);
 };
@@ -215,11 +251,13 @@ Medusae.prototype.createMaterials = function () {
 
   this.lines = new THREE.Line(linesGeom,
     new THREE.LineBasicMaterial({
-      color : 0x777777,
+      color : 0xffffff,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      opacity : 0.8
+      opacity : 0.25,
+      depthTest : !DEBUG_WIRE
     }));
+  this.lines.scale.multiplyScalar(1.1);
 
   // Faces
   var faceGeom = new THREE.BufferGeometry();
@@ -227,15 +265,28 @@ Medusae.prototype.createMaterials = function () {
   faceIndices.array = new Uint16Array(this.faces);
   faceGeom.addAttribute('position', vertices);
   faceGeom.addAttribute('index', faceIndices);
+  faceGeom.computeVertexNormals();
 
-  this.faceMesh = new THREE.Mesh(faceGeom,
-    new THREE.MeshBasicMaterial({
-      color : 0x777777,
-      transparent : true,
-      blending : THREE.AdditiveBlending,
-      opacity : 0.25,
-      side : THREE.DoubleSide
+  this.skinMesh = new THREE.Mesh(faceGeom,
+    new THREE.MeshLambertMaterial({
+      color : 0x411991,
+      emissive : 0x0f0a19,
+      shading : THREE.FlatShading,
+      // transparent : true,
+      // blending : THREE.AdditiveBlending,
+      // opacity : 0.25,
+      // side : THREE.DoubleSide
     }));
+
+  this.innerMesh = new THREE.Mesh(faceGeom,
+    new THREE.MeshLambertMaterial({
+      color : 0x4d1442,
+      emissive : 0x240e20,
+      // ambient : 0x84146e,
+      shading : THREE.FlatShading,
+      side : THREE.BackSide
+    }));
+  this.innerMesh.scale.multiplyScalar(0.8);
 
   this.positionAttr = dotsGeom.attributes.position;
 
@@ -263,15 +314,15 @@ Medusae.prototype.createMaterials = function () {
 Medusae.prototype.addTo = function (scene) {
   // scene.add(this.dots);
   scene.add(this.lines);
-  scene.add(this.faceMesh);
+  scene.add(this.skinMesh);
+  scene.add(this.innerMesh);
 };
 
-Medusae.prototype.updateCore = function (delta) {
-  var t = sin(delta * 0.01) * 0.5 + 0.5;
-  var radius = t * 10 + 15;
-  // console.log(t);
-  // this.core.bottom.setDistance(radius * 0.7, radius);
-};
+// Medusae.prototype.updateCore = function (delta) {
+//   var t = sin(delta * 0.01) * 0.5 + 0.5;
+//   var radius = t * 10 + 15;
+//   this.core.bottom.setDistance(radius * 0.7, radius);
+// };
 
 Medusae.prototype.update = function (delta) {
   // this.updateCore(delta);
@@ -286,6 +337,13 @@ var medusae = new Medusae();
 
 var demo = PTCL.DemoScene.create();
 demo.camera.position.set(200, 100, 0);
+
+var ambient = new THREE.AmbientLight(0xffffff);
+// demo.scene.add(ambient);
+
+var light = new THREE.PointLight(0xffffff, 1, 0);
+light.position.set(200, 100, 0);
+demo.scene.add(light);
 
 // Medusae
 medusae.addTo(demo.scene);
