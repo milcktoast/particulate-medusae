@@ -20,7 +20,10 @@ module.exports = function (config) {
     },
     develop: {
       expand: true,
-      src: [config.source + 'scss/**/*.scss'],
+      src: [
+        config.source + 'scss/**/*.scss',
+        config.source + 'lib/**/*.js'
+      ],
       dest: config.deploy
     }
   };

@@ -20,6 +20,7 @@
   <body>
     <div id="container"></div>
     {% if TEMPLATE_DEBUG %}
+      <script src="{{ STATIC_URL }}lib/three/three.js"></script>
       <script src="{{ STATIC_URL }}js/libs.develop.js"></script>
       <script src="{{ STATIC_URL }}js/app.develop.js"></script>
       {# Run tests by appending ?test=true to the url #}
@@ -30,6 +31,7 @@
         }
       </script>
     {% else %}
+      <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r67/three.min.js"></script>
       <script src="{{ STATIC_URL }}js/libs.min.js"></script>
       <script src="{{ STATIC_URL }}js/app.min.js"></script>
     {% endif %}
