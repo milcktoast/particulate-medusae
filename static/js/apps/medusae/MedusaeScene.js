@@ -1,4 +1,4 @@
-var DEBUG_WIRE = false;
+var DEBUG_WIRE = true;
 
 var PTCL = Particulate;
 var GEOM = App.Geometry;
@@ -58,7 +58,11 @@ Medusae.prototype.createGeometry = function () {
     }
   }
 
-  this.createMembrane();
+  for (var j = 0; j < 3; j ++) {
+    this.createTail(j, 5);
+  }
+
+  // this.createMembrane();
 };
 
 function spineAngleIndices(a, b, start, howMany) {
@@ -155,7 +159,9 @@ Medusae.prototype.createRib = function (index, total) {
       LINKS.radial(spineCenter, start, segments, []));
 
     this.queueConstraints(spine);
-    this.addLinks(spine.indices);
+    if (index === 0) {
+      this.addLinks(spine.indices);
+    }
   }
 
   this.queueConstraints(rib, innerRib);
@@ -196,12 +202,61 @@ Medusae.prototype.createMembrane = function () {
   this.queueConstraints(membrane);
 };
 
+Medusae.prototype.createTail = function (index, total) {
+  var size = this.size;
+  var segments = 50;
+  var innerSize = 0.5;
+  var outerSize = innerSize * 1.8;
+  var linkSizeScale = 18;
+
+  var verts = this.verts;
+  var innerStart = verts.length / 3;
+  var outerStart = innerStart + segments;
+  var innerIndices = LINKS.line(innerStart, segments, [0, innerStart]);
+  var outerIndices = LINKS.line(outerStart, segments, []);
+
+  var linkConstraints = [];
+  var linkIndices = [];
+  var linkSize;
+
+  for (var i = 0; i < segments; i ++) {
+    GEOM.point(0, size - i * innerSize, 0, verts);
+  }
+
+  var angle = Math.PI * 2 * index / (total - 1);
+  var outerX, outerZ;
+
+  for (i = 0; i < segments; i ++) {
+    linkSize = sin(i / (segments - 1) * PI * 0.8);
+    outerX = cos(angle) * linkSize;
+    outerZ = sin(angle) * linkSize;
+
+    GEOM.point(outerX, size - i * outerSize, outerZ, verts);
+
+    linkIndices.push(innerStart + i, outerStart + i);
+    linkConstraints.push(DistanceConstraint.create(
+      linkSize * linkSizeScale,
+      innerStart + i, outerStart + i));
+  }
+
+  var inner = DistanceConstraint.create([innerSize * 0.5, innerSize * 2], innerIndices);
+  var outer = DistanceConstraint.create([outerSize * 0.5, outerSize * 2], outerIndices);
+  var axis = AxisConstraint.create(0, 1, innerIndices);
+
+  this.queueConstraints(inner, outer, axis);
+  this.queueConstraints(linkConstraints);
+
+  // this.addLinks(innerIndices);
+  this.addLinks(outerIndices);
+  this.addLinks(linkIndices);
+};
+
 Medusae.prototype.queueConstraint = function (constraint) {
   this._queuedConstraints.push(constraint);
 };
 
-Medusae.prototype.queueConstraints = function () {
-  _push.apply(this._queuedConstraints, arguments);
+Medusae.prototype.queueConstraints = function (constraints) {
+  _push.apply(this._queuedConstraints, constraints.length ? constraints : arguments);
 };
 
 Medusae.prototype.createSystem = function () {
@@ -338,7 +393,7 @@ var medusae = new Medusae();
 var demo = PTCL.DemoScene.create();
 demo.camera.position.set(200, 100, 0);
 
-var ambient = new THREE.AmbientLight(0xffffff);
+// var ambient = new THREE.AmbientLight(0xffffff);
 // demo.scene.add(ambient);
 
 var light = new THREE.PointLight(0xffffff, 1, 0);

@@ -1,5 +1,12 @@
 var Links = App.Links = {};
 
+Links.line = function (index, howMany, buffer) {
+  for (var i = 0; i < howMany - 1; i ++) {
+    buffer.push(index + i, index + i + 1);
+  }
+  return buffer;
+};
+
 Links.loop = function (index, howMany, buffer) {
   for (var i = 0; i < howMany - 1; i ++) {
     buffer.push(index + i, index + i + 1);
