@@ -29,12 +29,15 @@ var gravityForce = PTCL.DirectionalForce.create();
 function Medusae() {
   this.segments = 3 * 9;
   this.ribsCount = 20;
+  this.tailCount = 10;
+  this.tailSegments = 50;
   this.size = 20;
 
   this._queuedConstraints = [];
   this.verts = [];
   this.links = [];
   this.faces = [];
+  this.uvs = [];
 
   this.ribs = [];
   this.skins = [];
@@ -48,18 +51,20 @@ function Medusae() {
 
 Medusae.prototype.createGeometry = function () {
   var ribsCount = this.ribsCount;
+  var tailCount = this.tailCount;
+  var i, il;
 
   this.createCore();
 
-  for (var i = 0; i < ribsCount; i ++) {
+  for (i = 0, il = ribsCount; i < il; i ++) {
     this.createRib(i, ribsCount);
     if (i > 0) {
       this.createSkin(i - 1, i);
     }
   }
 
-  for (var j = 0; j < 3; j ++) {
-    this.createTail(j, 5);
+  for (i = 0, il = tailCount; i < il; i ++) {
+    this.createTail(i, tailCount);
   }
 
   // this.createMembrane();
@@ -79,15 +84,16 @@ Medusae.prototype.createCore = function () {
   var ribsCount = this.ribsCount;
   var size = this.size;
 
-  GEOM.point(0, 0, size, verts);
+  var topStart = this.topStart = 4;
+  GEOM.point(0, size, 0, verts);
+  GEOM.point(0, 0, 0, verts);
   GEOM.point(0, 0, 0, verts);
   GEOM.point(0, 0, 0, verts);
 
   var spine = DistanceConstraint.create([20, size], [0, 2]);
   var axis = AxisConstraint.create(0, 1, 2);
 
-  var topStart = 3;
-  var bottomStart = segments * (ribsCount - 1) + 3;
+  var bottomStart = segments * (ribsCount - 1) + topStart;
   var topAngle = AngleConstraint.create([PI * 0.35, PI * 0.65],
     spineAngleIndices(1, 0, topStart, segments));
   var bottomAngle = AngleConstraint.create([PI * 0.45, PI * 0.65],
@@ -128,7 +134,7 @@ Medusae.prototype.createRib = function (index, total) {
   var size = this.size;
   var yPos = size - (index / total) * size;
 
-  var start = index * segments + 3;
+  var start = index * segments + this.topStart;
   var radiusT = ribRadius(index / total);
   var radius = radiusT * 10 + 0.5;
 
@@ -204,13 +210,16 @@ Medusae.prototype.createMembrane = function () {
 
 Medusae.prototype.createTail = function (index, total) {
   var size = this.size;
-  var segments = 50;
-  var innerSize = 0.5;
+  var segments = this.tailSegments;
+  var innerSize = 1;
   var outerSize = innerSize * 1.8;
-  var linkSizeScale = 18;
+  var linkSizeScale = segments * 0.25;
+  var bottomPinMax = 20;
+  var startOffset = size;
 
   var verts = this.verts;
   var innerStart = verts.length / 3;
+  var innerEnd = innerStart + segments - 1;
   var outerStart = innerStart + segments;
   var innerIndices = LINKS.line(innerStart, segments, [0, innerStart]);
   var outerIndices = LINKS.line(outerStart, segments, []);
@@ -219,31 +228,31 @@ Medusae.prototype.createTail = function (index, total) {
   var linkIndices = [];
   var linkSize;
 
-  for (var i = 0; i < segments; i ++) {
-    GEOM.point(0, size - i * innerSize, 0, verts);
-  }
-
-  var angle = Math.PI * 2 * index / (total - 1);
+  var angle = Math.PI * 2 * index / total;
   var outerX, outerZ;
 
+  for (var i = 0; i < segments; i ++) {
+    GEOM.point(0, startOffset - i * innerSize, 0, verts);
+  }
+
   for (i = 0; i < segments; i ++) {
-    linkSize = sin(i / (segments - 1) * PI * 0.8);
+    linkSize = sin(i / (segments - 1) * PI * 0.8) * linkSizeScale;
     outerX = cos(angle) * linkSize;
     outerZ = sin(angle) * linkSize;
 
-    GEOM.point(outerX, size - i * outerSize, outerZ, verts);
+    GEOM.point(outerX, startOffset - i * outerSize, outerZ, verts);
 
     linkIndices.push(innerStart + i, outerStart + i);
     linkConstraints.push(DistanceConstraint.create(
-      linkSize * linkSizeScale,
-      innerStart + i, outerStart + i));
+      linkSize, innerStart + i, outerStart + i));
   }
 
-  var inner = DistanceConstraint.create([innerSize * 0.5, innerSize * 2], innerIndices);
-  var outer = DistanceConstraint.create([outerSize * 0.5, outerSize * 2], outerIndices);
+  var inner = DistanceConstraint.create([innerSize * 0.25, innerSize], innerIndices);
+  var outer = DistanceConstraint.create([outerSize * 0.25, outerSize], outerIndices);
   var axis = AxisConstraint.create(0, 1, innerIndices);
+  var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, 3);
 
-  this.queueConstraints(inner, outer, axis);
+  this.queueConstraints(inner, outer, axis, pin);
   this.queueConstraints(linkConstraints);
 
   // this.addLinks(innerIndices);
@@ -270,8 +279,16 @@ Medusae.prototype.createSystem = function () {
 
   system.setWeight(0, 0);
   system.setWeight(1, 0);
+  system.setWeight(3, 0);
   system.addPinConstraint(PointConstraint.create([0, this.size, 0], 0));
   system.addPinConstraint(PointConstraint.create([0, 0, 0], 1));
+  // TODO: Derive position from parameter
+  system.addPinConstraint(PointConstraint.create([0, -40, 0], 3));
+
+  // Resolve constraints before starting animation
+  for (i = 0, il = 200; i < il; i ++) {
+    system.tick(1);
+  }
 
   system.addForce(gravityForce);
 };
