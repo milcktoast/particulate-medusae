@@ -253,8 +253,8 @@ Medusae.prototype.createTail = function (index, total) {
     linkConstraints.push(DistanceConstraint.create(
       linkSize, innerIndex, outerIndex));
 
-    if (i > 3) {
-      braceIndices.push(innerIndex - 3, outerIndex);
+    if (i > 10) {
+      braceIndices.push(innerIndex - 10, outerIndex);
     }
 
     if (i > 1) {
@@ -264,7 +264,7 @@ Medusae.prototype.createTail = function (index, total) {
 
   var inner = DistanceConstraint.create([innerSize * 0.25, innerSize], innerIndices);
   var outer = DistanceConstraint.create([outerSize * 0.25, outerSize], outerIndices);
-  var brace = DistanceConstraint.create([linkSize * 0.35, Infinity], braceIndices);
+  var brace = DistanceConstraint.create([linkSize, Infinity], braceIndices);
   var axis = AxisConstraint.create(0, 1, innerIndices);
   var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, 3);
 
@@ -273,7 +273,6 @@ Medusae.prototype.createTail = function (index, total) {
 
   this.addLinks(outerIndices);
   this.addLinks(linkIndices);
-  // this.addLinks(braceIndices);
 };
 
 Medusae.prototype.queueConstraint = function (constraint) {
@@ -302,12 +301,12 @@ Medusae.prototype.createSystem = function () {
   // TODO: Derive position from parameter
   system.addPinConstraint(PointConstraint.create([0, -40, 0], 3));
 
+  system.addForce(gravityForce);
+
   // Resolve constraints before starting animation
   for (i = 0, il = 200; i < il; i ++) {
     system.tick(1);
   }
-
-  system.addForce(gravityForce);
 };
 
 Medusae.prototype.addLinks = function (indices) {
