@@ -1,5 +1,11 @@
 var Faces = App.Faces = {};
 
+Faces.quad = function (a, b, c, d, buffer) {
+  buffer.push(a, b, c);
+  buffer.push(c, d, a);
+  return buffer;
+};
+
 Faces.radial = function (indexCenter, index, howMany, buffer) {
   for (var i = 0, il = howMany - 1; i < il; i ++) {
     buffer.push(indexCenter, index + i + 1, index + i);
