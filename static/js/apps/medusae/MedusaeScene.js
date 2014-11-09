@@ -44,6 +44,7 @@ function Medusae() {
 
   this._membraneIndices = [];
 
+  this.item = new THREE.Object3D();
   this.createGeometry();
   this.createSystem();
   this.createMaterials();
@@ -228,11 +229,11 @@ Medusae.prototype.createTail = function (index, total) {
   var linkConstraints = [];
   var linkIndices = [];
   var braceIndices = [];
-  var linkSize;
 
   var outerAngle = Math.PI * 2 * index / total;
   var outerX, outerY, outerZ;
   var innerIndex, outerIndex;
+  var linkSize;
 
   for (var i = 0; i < segments; i ++) {
     GEOM.point(0, startOffset - i * innerSize, 0, verts);
@@ -264,7 +265,7 @@ Medusae.prototype.createTail = function (index, total) {
 
   var inner = DistanceConstraint.create([innerSize * 0.25, innerSize], innerIndices);
   var outer = DistanceConstraint.create([outerSize * 0.25, outerSize], outerIndices);
-  var brace = DistanceConstraint.create([linkSize, Infinity], braceIndices);
+  var brace = DistanceConstraint.create([linkSize * 0.5, Infinity], braceIndices);
   var axis = AxisConstraint.create(0, 1, innerIndices);
   var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, 3);
 
@@ -394,27 +395,30 @@ Medusae.prototype.createMaterials = function () {
       color : 0xffffff,
       transparent : true,
       blending : THREE.AdditiveBlending,
-      opacity : 0.1,
+      opacity : 0.05,
       depthTest : true,
       side : THREE.DoubleSide,
       shading : THREE.FlatShading
     }));
   this.tailMesh.scale.multiplyScalar(1.1);
 
-  this.positionAttr = dotsGeom.attributes.position;
+  // Parent object
+  var item = this.item;
+  // item.add(this.dots);
+  item.add(this.linesFaint);
+  item.add(this.linesFore);
+  item.add(this.skinMesh);
+  item.add(this.innerMesh);
+  item.add(this.tailMesh);
+
+  this.positionAttr = linesGeom.attributes.position;
 };
 
 Medusae.prototype.addTo = function (scene) {
-  // scene.add(this.dots);
-  scene.add(this.linesFaint);
-  scene.add(this.linesFore);
-  scene.add(this.skinMesh);
-  scene.add(this.innerMesh);
-  scene.add(this.tailMesh);
+  scene.add(this.item);
 };
 
 Medusae.prototype.update = function (delta) {
-  // this.updateCore(delta);
   this.system.tick(1);
   this.positionAttr.needsUpdate = true;
 };
@@ -427,9 +431,6 @@ var medusae = new Medusae();
 var demo = PTCL.DemoScene.create();
 demo.camera.position.set(200, 100, 0);
 
-// var ambient = new THREE.AmbientLight(0xffffff);
-// demo.scene.add(ambient);
-
 var light = new THREE.PointLight(0xffffff, 1, 0);
 light.position.set(200, 100, 0);
 demo.scene.add(light);
@@ -437,16 +438,7 @@ demo.scene.add(light);
 // Medusae
 medusae.addTo(demo.scene);
 
-// Bounds
-// var box = new THREE.Mesh(
-//   new THREE.BoxGeometry(200, 200, 200, 1, 1, 1),
-//   new THREE.MeshBasicMaterial({
-//     wireframe : true
-//   }));
-// demo.scene.add(box);
-
 var up = demo.controls.object.up;
-// var animateFrame = 0;
 demo.animate(function () {
   gravityForce.set(up.x * GRAVITY, up.y * GRAVITY, up.z * GRAVITY);
   medusae.update();
