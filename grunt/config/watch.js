@@ -27,6 +27,10 @@ module.exports = function (config) {
       files: [config.source + 'tests/{,**/}{,*.js}'],
       tasks: ['neuter:tests']
     },
+    handlebarsShaders: {
+      files: config.source + 'js/shaders/*',
+      tasks: ['handlebars:shaders']
+    },
     copy : {
       files: '<%= copy.build.src %>',
       tasks: ['newer:copy:build']

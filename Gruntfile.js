@@ -19,6 +19,7 @@ module.exports = function (grunt) {
     'clean',
     'connect',
     'copy',
+    'handlebars',
     'haychtml',
     'jshint',
     'neuter',
@@ -55,6 +56,7 @@ module.exports = function (grunt) {
     'clean',
 
     // JS
+    'handlebars',
     'neuter:libsDevelop',
     'neuter:app',
 
@@ -76,6 +78,7 @@ module.exports = function (grunt) {
 
     // JS
     'jshint',
+    'handlebars',
     'neuter:libsBuild',
     'neuter:app',
     'uglify',
