@@ -8,7 +8,10 @@
 module.exports = function (config) {
   return {
     app: {
-      src: config.static + 'js/{templates,app}.develop.js',
+      src: [
+        config.static + 'js/shaders.develop.js',
+        config.static + 'js/app.develop.js'
+      ],
       dest: config.static + 'js/app.min.js'
     },
     libs: {

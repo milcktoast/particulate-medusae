@@ -1,4 +1,4 @@
-var shaders = window.App.shaders;
+var shaders = window.App && window.App.shaders;
 window.App = {
   shaders : shaders
 };
