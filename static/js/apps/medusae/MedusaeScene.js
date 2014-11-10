@@ -2,7 +2,6 @@ var PTCL = Particulate;
 var GEOM = App.Geometry;
 var LINKS = App.Links;
 var FACES = App.Faces;
-var UVS = App.UVs;
 
 var Vec3 = PTCL.Vec3;
 var PointConstraint = PTCL.PointConstraint;
@@ -81,15 +80,18 @@ function spineAngleIndices(a, b, start, howMany) {
 
 Medusae.prototype.createCore = function () {
   var verts = this.verts;
+  var uvs = this.uvs;
   var segments = this.segments;
   var ribsCount = this.ribsCount;
   var size = this.size;
   var topStart = this.topStart = 4;
 
   GEOM.point(0, size, 0, verts);
+  uvs.push(0, 0);
 
   for (var i = 0, il = topStart - 1; i < il; i ++) {
     GEOM.point(0, 0, 0, verts);
+    uvs.push(0, 0);
   }
 
   var spine = DistanceConstraint.create([20, size], [0, 2]);
@@ -105,10 +107,6 @@ Medusae.prototype.createCore = function () {
   this.queueConstraints(topAngle, bottomAngle);
 
   FACES.radial(0, topStart, segments, this.bulbFaces);
-  UVS.radial(0, 0.1, segments, this.uvs);
-
-  // var faces = this.bulbFaces;
-  // var uvs = this.uvs;
 };
 
 function ribRadius(t) {
@@ -130,9 +128,20 @@ function innerRibIndices(offset, start, segments, buffer) {
   return buffer;
 }
 
+function ribUvs(sv, howMany, buffer) {
+  var su;
+  for (var i = 0, il = howMany - 1; i < il; i ++) {
+    su = i / howMany;
+    buffer.push(su, sv);
+  }
+  buffer.push(1, sv);
+  return buffer;
+}
+
 Medusae.prototype.createRib = function (index, total) {
   var segments = this.segments;
   var verts = this.verts;
+  var uvs = this.uvs;
   var size = this.size;
   var yPos = size - (index / total) * size;
 
@@ -141,6 +150,7 @@ Medusae.prototype.createRib = function (index, total) {
   var radius = radiusT * 10 + 0.5;
 
   GEOM.circle(segments, radius, yPos, verts);
+  ribUvs(index / total, segments, uvs);
 
   var ribIndices = LINKS.loop(start, segments, []);
   var ribLen = 2 * PI * radius / segments;
@@ -362,16 +372,20 @@ Medusae.prototype.createMaterials = function () {
   // Faces
   var faceGeom = new THREE.BufferGeometry();
   var faceIndices = new THREE.BufferAttribute();
+  var faceUvs = new THREE.BufferAttribute();
+
   faceIndices.array = new Uint16Array(this.bulbFaces);
+  faceUvs.array = new Float32Array(this.uvs);
+  faceUvs.itemSize = 2;
+
   faceGeom.addAttribute('position', vertices);
   faceGeom.addAttribute('index', faceIndices);
+  faceGeom.addAttribute('uv', faceUvs);
   faceGeom.computeVertexNormals();
 
   this.skinMesh = new THREE.Mesh(faceGeom,
-    new THREE.MeshLambertMaterial({
-      color : 0x411991,
-      emissive : 0x0f0a19,
-      shading : THREE.FlatShading
+    new App.BulbMaterial({
+      diffuse : 0x411991
     }));
 
   this.innerMesh = new THREE.Mesh(faceGeom,
