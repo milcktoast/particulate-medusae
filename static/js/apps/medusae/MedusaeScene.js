@@ -41,8 +41,6 @@ function Medusae() {
   this.ribs = [];
   this.skins = [];
 
-  this._membraneIndices = [];
-
   this.item = new THREE.Object3D();
   this.createGeometry();
   this.createSystem();
@@ -66,8 +64,6 @@ Medusae.prototype.createGeometry = function () {
   for (i = 0, il = tailCount; i < il; i ++) {
     this.createTail(i, tailCount);
   }
-
-  // this.createMembrane();
 };
 
 function spineAngleIndices(a, b, start, howMany) {
@@ -153,11 +149,12 @@ Medusae.prototype.createRib = function (index, total) {
   GEOM.circle(segments, radius, yPos, verts);
   ribUvs(index / total, segments, uvs);
 
+  // Outer rib structure
   var ribIndices = LINKS.loop(start, segments, []);
   var ribLen = 2 * PI * radius / segments;
-  // var ribLen = Vec3.distance(this.verts, ribIndices[0], ribIndices[1]);
   var rib = DistanceConstraint.create([ribLen * 0.9, ribLen], ribIndices);
 
+  // Inner rib sub-structure
   // TODO: Parmeterize sub-structure divisions
   var innerIndices = [];
   innerRibIndices(0, start, segments, innerIndices);
@@ -165,12 +162,9 @@ Medusae.prototype.createRib = function (index, total) {
   innerRibIndices(6, start, segments, innerIndices);
 
   var innerRibLen = 2 * PI * radius / 3;
-  // var innerRibLen = Vec3.distance(this.verts, innerIndices[0], innerIndices[1]);
   var innerRib = DistanceConstraint.create([innerRibLen * 0.8, innerRibLen], innerIndices);
 
-  // Push membrane angle indices
-  LINKS.loop3(start, segments, this._membraneIndices);
-
+  // Attach bulb to spine
   var spine, spineCenter;
   if (index === 0 || index === total - 1) {
     spineCenter = index === 0 ? 0 : 2;
@@ -184,8 +178,6 @@ Medusae.prototype.createRib = function (index, total) {
   }
 
   this.queueConstraints(rib, innerRib);
-  // this.addLinks(rib.indices);
-  // this.addLinks(innerRib.indices);
 
   this.ribs.push({
     start : start,
@@ -211,14 +203,6 @@ Medusae.prototype.createSkin = function (r0, r1) {
     a : r0,
     b : r1
   });
-};
-
-Medusae.prototype.createMembrane = function () {
-  var segments = this.segments;
-  var angle = (segments - 2) * PI / segments;
-  var membrane = AngleConstraint.create([angle * 0.8, angle * 1.1], this._membraneIndices);
-
-  this.queueConstraints(membrane);
 };
 
 Medusae.prototype.createTail = function (index, total) {
