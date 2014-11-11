@@ -215,6 +215,7 @@ Medusae.prototype.createTail = function (index, total) {
   var startOffset = size;
 
   var verts = this.verts;
+  var uvs = this.uvs;
   var innerStart = verts.length / 3;
   var innerEnd = innerStart + segments - 1;
   var outerStart = innerStart + segments;
@@ -232,6 +233,7 @@ Medusae.prototype.createTail = function (index, total) {
 
   for (var i = 0; i < segments; i ++) {
     GEOM.point(0, startOffset - i * innerSize, 0, verts);
+    uvs.push(0, i / (segments - 1));
   }
 
   for (i = 0; i < segments; i ++) {
@@ -244,6 +246,7 @@ Medusae.prototype.createTail = function (index, total) {
     outerY = startOffset - i * outerSize;
 
     GEOM.point(outerX, outerY, outerZ, verts);
+    uvs.push(1, i / (segments - 1));
 
     linkIndices.push(innerIndex, outerIndex);
     linkConstraints.push(DistanceConstraint.create(
@@ -318,6 +321,10 @@ Medusae.prototype.createMaterials = function () {
   vertices.array = this.verts;
   vertices.itemSize = 3;
 
+  var uvs = new THREE.BufferAttribute();
+  uvs.array = new Float32Array(this.uvs);
+  uvs.itemSize = 2;
+
   var indices = new THREE.BufferAttribute();
   indices.array = new Uint16Array(this.links);
 
@@ -357,15 +364,11 @@ Medusae.prototype.createMaterials = function () {
   // Faces
   var faceGeom = new THREE.BufferGeometry();
   var faceIndices = new THREE.BufferAttribute();
-  var faceUvs = new THREE.BufferAttribute();
-
   faceIndices.array = new Uint16Array(this.bulbFaces);
-  faceUvs.array = new Float32Array(this.uvs);
-  faceUvs.itemSize = 2;
 
   faceGeom.addAttribute('position', vertices);
   faceGeom.addAttribute('index', faceIndices);
-  faceGeom.addAttribute('uv', faceUvs);
+  faceGeom.addAttribute('uv', uvs);
   faceGeom.computeVertexNormals();
 
   this.skinMesh = new THREE.Mesh(faceGeom,
@@ -374,11 +377,7 @@ Medusae.prototype.createMaterials = function () {
     }));
 
   this.innerMesh = new THREE.Mesh(faceGeom,
-    new THREE.MeshLambertMaterial({
-      color : 0x4d1442,
-      emissive : 0x240e20,
-      // ambient : 0x84146e,
-      shading : THREE.FlatShading,
+    new App.BulbMaterial({
       side : THREE.BackSide
     }));
   this.innerMesh.scale.multiplyScalar(0.8);
@@ -388,16 +387,14 @@ Medusae.prototype.createMaterials = function () {
   tailFaceIndices.array = new Uint16Array(this.tailFaces);
   tailFaceGeom.addAttribute('position', vertices);
   tailFaceGeom.addAttribute('index', tailFaceIndices);
+  tailFaceGeom.addAttribute('uv', uvs);
 
   this.tailMesh = new THREE.Mesh(tailFaceGeom,
-    new THREE.MeshBasicMaterial({
-      color : 0xffffff,
+    new App.UVMaterial({
       transparent : true,
       blending : THREE.AdditiveBlending,
       opacity : 0.05,
-      depthTest : true,
-      side : THREE.DoubleSide,
-      shading : THREE.FlatShading
+      side : THREE.DoubleSide
     }));
   this.tailMesh.scale.multiplyScalar(1.1);
 
@@ -407,7 +404,7 @@ Medusae.prototype.createMaterials = function () {
   item.add(this.linesFaint);
   item.add(this.linesFore);
   item.add(this.skinMesh);
-  item.add(this.innerMesh);
+  // item.add(this.innerMesh);
   item.add(this.tailMesh);
 
   this.positionAttr = linesGeom.attributes.position;

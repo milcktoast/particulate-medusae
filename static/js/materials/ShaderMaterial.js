@@ -20,6 +20,10 @@ function ShaderMaterial(parameters) {
     vertexShader : compileShader(this.shader.vertexShader)
   });
 
+  this.transparent = parameters.transparent || false;
+  this.blending = parameters.blending || THREE.NormalBlending;
+  this.side = parameters.side || THREE.FrontSide;
+
   this.fog = !!parameters.fog;
   this.map = !!parameters.map;
   this.bumpMap = !!parameters.bumpMap;

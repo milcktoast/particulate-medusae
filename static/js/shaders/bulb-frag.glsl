@@ -43,7 +43,7 @@ void main() {
 
   color -= sin(uv.y * 5.0) * 0.5 + sin(uv.y * 2.5) * 1.5;
 
-  gl_FragColor = vec4(vec3(color * r, color * g, color * b), 1.0);
+  gl_FragColor = vec4(vec3(color * r, color * g, color * b), opacity);
 
   {{{chunks.envmap_fragment}}}
   {{{chunks.shadowmap_fragment}}}

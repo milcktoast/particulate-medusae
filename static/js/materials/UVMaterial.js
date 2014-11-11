@@ -2,18 +2,18 @@ require('./ShaderMaterial');
 var ShaderMaterial = App.ShaderMaterial;
 var uniforms = THREE.UniformsLib;
 
-App.BulbMaterial = BulbMaterial;
-function BulbMaterial(parameters) {
+App.UVMaterial = UVMaterial;
+function UVMaterial(parameters) {
   parameters = parameters || {};
   parameters.map = true;
   ShaderMaterial.call(this, parameters);
 }
 
-BulbMaterial.prototype = Object.create(ShaderMaterial.prototype);
+UVMaterial.prototype = Object.create(ShaderMaterial.prototype);
 
-BulbMaterial.prototype.shader = {
+UVMaterial.prototype.shader = {
   vertexShader : 'basic-vert',
-  fragmentShader : 'bulb-frag',
+  fragmentShader : 'uvs-frag',
 
   uniforms : THREE.UniformsUtils.merge([
     uniforms.common
