@@ -30,7 +30,7 @@ void main() {
 
   vec2 uv = vUv;
 
-  color -= sin(uv.x * 60.0) * 0.25 + sin(uv.x * 30.0 * scale) * 0.25 + 0.5;
+  color -= sin(uv.x * 60.0) * 0.25 + sin(uv.x * 60.0 * scale) * 0.25 + 0.75;
 
   color -= sin(uv.y * sin(uv.x         * 5.0) * 5.0 * scale) * 0.05;
   color -= sin(uv.y * sin((1.0 - uv.x) * 5.0) * 5.0 * scale) * 0.05;
