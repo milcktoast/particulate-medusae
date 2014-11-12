@@ -271,7 +271,7 @@ Medusae.prototype.createTail = function (index, total) {
   this.queueConstraints(linkConstraints);
 
   this.addLinks(outerIndices);
-  this.addLinks(linkIndices);
+  // this.addLinks(linkIndices);
 };
 
 Medusae.prototype.queueConstraint = function (constraint) {
@@ -390,10 +390,10 @@ Medusae.prototype.createMaterials = function () {
   tailFaceGeom.addAttribute('uv', uvs);
 
   this.tailMesh = new THREE.Mesh(tailFaceGeom,
-    new App.UVMaterial({
+    new App.TailMaterial({
       transparent : true,
       blending : THREE.AdditiveBlending,
-      opacity : 0.05,
+      opacity : 0.5,
       side : THREE.DoubleSide
     }));
   this.tailMesh.scale.multiplyScalar(1.1);
