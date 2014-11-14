@@ -15,15 +15,13 @@ var cos = Math.cos;
 var log = Math.log;
 var floor = Math.floor;
 var PI = Math.PI;
-var GRAVITY = -0.001;
 
 var _push = Array.prototype.push;
-
-var gravityForce = PTCL.DirectionalForce.create();
 
 // Medusae geometry
 // ---------------
 
+App.Medusae = Medusae;
 function Medusae() {
   this.segments = 3 * 9;
   this.ribsCount = 20;
@@ -42,10 +40,13 @@ function Medusae() {
   this.skins = [];
 
   this.item = new THREE.Object3D();
+
   this.createGeometry();
   this.createSystem();
   this.createMaterials();
 }
+
+Medusae.create = PTCL.ctor(Medusae);
 
 Medusae.prototype.createGeometry = function () {
   var ribsCount = this.ribsCount;
@@ -300,8 +301,6 @@ Medusae.prototype.createSystem = function () {
   // TODO: Derive position from parameter
   system.addPinConstraint(PointConstraint.create([0, -40, 0], 3));
 
-  system.addForce(gravityForce);
-
   // Resolve constraints before starting animation
   for (i = 0, il = 200; i < il; i ++) {
     system.tick(1);
@@ -418,26 +417,3 @@ Medusae.prototype.update = function (delta) {
   this.system.tick(1);
   this.positionAttr.needsUpdate = true;
 };
-
-var medusae = new Medusae();
-
-// Visualization
-// -------------
-
-var demo = PTCL.DemoScene.create();
-demo.camera.position.set(200, 100, 0);
-
-var light = new THREE.PointLight(0xffffff, 1, 0);
-light.position.set(200, 100, 0);
-demo.scene.add(light);
-
-// Medusae
-medusae.addTo(demo.scene);
-
-var up = demo.controls.object.up;
-demo.animate(function () {
-  gravityForce.set(up.x * GRAVITY, up.y * GRAVITY, up.z * GRAVITY);
-  medusae.update();
-  demo.update();
-  demo.render();
-});
