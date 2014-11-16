@@ -23,9 +23,11 @@ MainScene.create = Particulate.ctor(MainScene);
 MainScene.prototype.initItems = function () {
   var medusae = this.medusae = App.Medusae.create();
   var gravityForce = this.gravityForce = Particulate.DirectionalForce.create();
+  var dust = this.dust = App.Dust.create();
 
   medusae.system.addForce(gravityForce);
   medusae.addTo(this.scene);
+  dust.addTo(this.scene);
 };
 
 MainScene.prototype.initLights = function () {
@@ -65,6 +67,7 @@ MainScene.prototype.update = function () {
 
   this.gravityForce.set(up.x * gravity, up.y * gravity, up.z * gravity);
   this.medusae.update();
+  this.dust.update();
   this.controls.update();
 };
 

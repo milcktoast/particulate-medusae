@@ -328,11 +328,11 @@ Medusae.prototype.createMaterials = function () {
   indices.array = new Uint16Array(this.links);
 
   // Particles
-  var dotsGeom = new THREE.BufferGeometry();
-  dotsGeom.addAttribute('position', vertices);
+  // var dotsGeom = new THREE.BufferGeometry();
+  // dotsGeom.addAttribute('position', vertices);
 
-  this.dots = new THREE.ParticleSystem(dotsGeom,
-    new THREE.ParticleSystemMaterial({size: 2}));
+  // this.dots = new THREE.ParticleSystem(dotsGeom,
+  //   new THREE.ParticleSystemMaterial({size: 2}));
 
   // Connections
   var linesGeom = new THREE.BufferGeometry();
@@ -344,7 +344,7 @@ Medusae.prototype.createMaterials = function () {
       color : 0xffffff,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      opacity : 0.05,
+      opacity : 0.15,
       depthTest : false
     }));
 
@@ -353,7 +353,7 @@ Medusae.prototype.createMaterials = function () {
       color : 0xffffff,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      opacity : 0.25,
+      opacity : 0.3,
       depthTest : true
     }));
 
@@ -375,11 +375,11 @@ Medusae.prototype.createMaterials = function () {
       diffuse : 0x411991
     }));
 
-  this.innerMesh = new THREE.Mesh(faceGeom,
-    new App.BulbMaterial({
-      side : THREE.BackSide
-    }));
-  this.innerMesh.scale.multiplyScalar(0.8);
+  // this.innerMesh = new THREE.Mesh(faceGeom,
+  //   new App.BulbMaterial({
+  //     side : THREE.BackSide
+  //   }));
+  // this.innerMesh.scale.multiplyScalar(0.8);
 
   var tailFaceGeom = new THREE.BufferGeometry();
   var tailFaceIndices = new THREE.BufferAttribute();

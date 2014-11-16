@@ -36,5 +36,8 @@
       <script src="{{ STATIC_URL }}js/libs.min.js"></script>
       <script src="{{ STATIC_URL }}js/app.min.js"></script>
     {% endif %}
+    <script>
+      App.STATIC_URL = "{{ STATIC_URL }}";
+    </script>
   </body>
 </html>
