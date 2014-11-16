@@ -22,7 +22,10 @@ var _push = Array.prototype.push;
 // ---------------
 
 App.Medusae = Medusae;
-function Medusae() {
+function Medusae(opts) {
+  this.pxRatio = opts.pxRatio || 1;
+  this.lineWidth = this.pxRatio;
+
   this.segments = 3 * 9;
   this.ribsCount = 20;
   this.tailCount = 10;
@@ -342,6 +345,7 @@ Medusae.prototype.createMaterials = function () {
   this.linesFaint = new THREE.Line(linesGeom,
     new THREE.LineBasicMaterial({
       color : 0xffffff,
+      linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
       opacity : 0.15,
@@ -351,6 +355,7 @@ Medusae.prototype.createMaterials = function () {
   this.linesFore = new THREE.Line(linesGeom,
     new THREE.LineBasicMaterial({
       color : 0xffffff,
+      linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
       opacity : 0.3,

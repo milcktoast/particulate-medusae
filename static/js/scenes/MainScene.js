@@ -3,19 +3,20 @@ var ENABLE_PAN = false;
 
 App.MainScene = MainScene;
 function MainScene() {
-  this.el = document.getElementById('container');
-  this.renderer = new THREE.WebGLRenderer({antialias: false});
-  this.renderer.setClearColor(0x111111, 1);
-  this.el.appendChild(this.renderer.domElement);
+  var scene = this.scene = new THREE.Scene();
+  var camera = this.camera = new THREE.PerspectiveCamera(30, 1, 5, 3500);
 
-  this.scene = new THREE.Scene();
-  this.camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 5, 3500);
+  this.el = document.getElementById('container');
+  this.pxRatio = window.devicePixelRatio;
   this.gravity = -0.001;
 
+  this.initRenderer();
   this.initItems();
-  this.initLights();
   this.initControls();
   this.onWindowResize();
+
+  camera.position.set(200, 100, 0);
+  camera.lookAt(scene.position);
 
   this.animate = this.animate.bind(this);
   window.addEventListener('resize', this.onWindowResize.bind(this), false);
@@ -23,22 +24,30 @@ function MainScene() {
 
 MainScene.create = Particulate.ctor(MainScene);
 
+MainScene.prototype.initRenderer = function () {
+  this.renderer = new THREE.WebGLRenderer({
+    devicePixelRatio : this.pxRatio,
+    antialias : false
+  });
+
+  this.renderer.setClearColor(0x111111, 1);
+  this.el.appendChild(this.renderer.domElement);
+};
+
 MainScene.prototype.initItems = function () {
-  var medusae = this.medusae = App.Medusae.create();
+  var medusae = this.medusae = App.Medusae.create({
+    pxRatio : this.pxRatio
+  });
+
+  var dust = this.dust = App.Dust.create({
+    pxRatio : this.pxRatio
+  });
+
   var gravityForce = this.gravityForce = Particulate.DirectionalForce.create();
-  var dust = this.dust = App.Dust.create();
 
   medusae.system.addForce(gravityForce);
   medusae.addTo(this.scene);
   dust.addTo(this.scene);
-};
-
-MainScene.prototype.initLights = function () {
-  var light = new THREE.PointLight(0xffffff, 1, 0);
-
-  light.position.set(200, 100, 0);
-  this.camera.position.set(200, 100, 0);
-  this.scene.add(light);
 };
 
 MainScene.prototype.initControls = function () {

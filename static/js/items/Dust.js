@@ -1,5 +1,7 @@
 App.Dust = Dust;
-function Dust() {
+function Dust(opts) {
+  this.pxRatio = opts.pxRatio || 1;
+  this.particleSize = 2 * this.pxRatio;
   this.particleCount = 10000;
   this.area = 100;
   this.createParticles();
@@ -34,7 +36,7 @@ Dust.prototype.createParticles = function () {
 Dust.prototype.createMaterials = function () {
   var material = this.material = new App.DustMaterial({
     psColor : 0xffffff,
-    size : 2,
+    size : this.particleSize,
     scale : 100,
     area : this.area,
     transparent : true
