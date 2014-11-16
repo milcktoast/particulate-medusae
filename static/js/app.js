@@ -10,5 +10,5 @@ require('js/scenes/*');
 
 setTimeout(function () {
   var scene = App.MainScene.create();
-  scene.animate();
+  scene.loop.start();
 }, 0);

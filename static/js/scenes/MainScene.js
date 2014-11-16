@@ -18,7 +18,9 @@ function MainScene() {
   camera.position.set(200, 100, 0);
   camera.lookAt(scene.position);
 
-  this.animate = this.animate.bind(this);
+  this.loop = App.Looper.create(this, 'update', 'render');
+
+  document.addEventListener('keyup', this.onDocumentKey.bind(this), false);
   window.addEventListener('resize', this.onWindowResize.bind(this), false);
 }
 
@@ -76,6 +78,15 @@ MainScene.prototype.onWindowResize = function () {
   this.renderer.setSize(this.width, this.height);
 };
 
+MainScene.prototype.onDocumentKey = function (event) {
+  switch (event.which) {
+  case 32:
+    this.loop.toggle();
+    event.preventDefault();
+    break;
+  }
+};
+
 MainScene.prototype.update = function () {
   var up = this.controlsUp;
   var gravity = this.gravity;
@@ -88,10 +99,4 @@ MainScene.prototype.update = function () {
 
 MainScene.prototype.render = function () {
   this.renderer.render(this.scene, this.camera);
-};
-
-MainScene.prototype.animate = function () {
-  window.requestAnimationFrame(this.animate);
-  this.update();
-  this.render();
 };
