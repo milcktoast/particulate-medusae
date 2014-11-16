@@ -28,6 +28,8 @@ function Medusae(opts) {
 
   this.segments = 3 * 9;
   this.ribsCount = 20;
+  this.tentacleSegments = 100;
+  this.tentacleSegmentLength = 1;
   this.tailCount = 10;
   this.tailSegments = 50;
   this.size = 20;
@@ -40,6 +42,7 @@ function Medusae(opts) {
   this.uvs = [];
 
   this.ribs = [];
+  this.tentacles = [];
   this.skins = [];
 
   this.item = new THREE.Object3D();
@@ -53,6 +56,7 @@ Medusae.create = App.ctor(Medusae);
 
 Medusae.prototype.createGeometry = function () {
   var ribsCount = this.ribsCount;
+  var tentacleSegments = this.tentacleSegments;
   var tailCount = this.tailCount;
   var i, il;
 
@@ -62,6 +66,15 @@ Medusae.prototype.createGeometry = function () {
     this.createRib(i, ribsCount);
     if (i > 0) {
       this.createSkin(i - 1, i);
+    }
+  }
+
+  for (i = 0, il = tentacleSegments; i < il; i ++) {
+    this.createTentacleSegment(i, tentacleSegments);
+    if (i > 0) {
+      this.linkTentacle(i - 1, i);
+    } else {
+      this.attachTentacles();
     }
   }
 
@@ -207,6 +220,56 @@ Medusae.prototype.createSkin = function (r0, r1) {
     a : r0,
     b : r1
   });
+};
+
+function tentacleUvs(howMany, buffer) {
+  for (var i = 0, il = howMany; i < il; i ++) {
+    buffer.push(0, 0);
+  }
+  return buffer;
+}
+
+Medusae.prototype.createTentacleSegment = function (index, total) {
+  var segments = this.segments;
+  var verts = this.verts;
+  var uvs = this.uvs;
+
+  var radius = 10;
+  var yPos = - index * this.tentacleSegmentLength;
+  var start = verts.length / 3;
+
+  GEOM.circle(segments, radius, yPos, verts);
+  tentacleUvs(segments, uvs);
+
+  this.tentacles.push({
+    start : start
+  });
+};
+
+Medusae.prototype.attachTentacles = function () {
+  var segments = this.segments;
+  var rib = this.ribs[this.ribs.length - 1];
+  var tent = this.tentacles[0];
+  var dist = this.tentacleSegmentLength;
+
+  var tentacle = DistanceConstraint.create([dist * 0.5, dist],
+    LINKS.rings(rib.start, tent.start, segments, []));
+
+  this.queueConstraints(tentacle);
+  this.addLinks(tentacle.indices);
+};
+
+Medusae.prototype.linkTentacle = function (i0, i1) {
+  var segments = this.segments;
+  var tent0 = this.tentacles[i0];
+  var tent1 = this.tentacles[i1];
+  var dist = this.tentacleSegmentLength;
+
+  var tentacle = DistanceConstraint.create([dist * 0.5, dist],
+    LINKS.rings(tent0.start, tent1.start, segments, []));
+
+  this.queueConstraints(tentacle);
+  this.addLinks(tentacle.indices);
 };
 
 Medusae.prototype.createTail = function (index, total) {
