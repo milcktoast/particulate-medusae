@@ -1,3 +1,6 @@
+var ENABLE_ZOOM = false;
+var ENABLE_PAN = false;
+
 App.MainScene = MainScene;
 function MainScene() {
   this.el = document.getElementById('container');
@@ -40,13 +43,16 @@ MainScene.prototype.initLights = function () {
 
 MainScene.prototype.initControls = function () {
   var controls = new THREE.TrackballControls(this.camera, this.el);
-  controls.rotateSpeed = 1.5;
-  controls.zoomSpeed = 1.2;
-  controls.panSpeed = 0.9;
-  controls.noZoom = false;
-  controls.noPan = false;
-  controls.staticMoving = true;
-  controls.dynamicDampingFactor = 0.3;
+
+  controls.rotateSpeed = 0.75;
+  controls.zoomSpeed = 0.75;
+  controls.panSpeed = 0.6;
+
+  controls.noZoom = !ENABLE_ZOOM;
+  controls.noPan = !ENABLE_PAN;
+  controls.staticMoving = false;
+
+  controls.dynamicDampingFactor = 0.2;
   controls.keys = [65, 17, 16];
 
   this.controls = controls;
