@@ -87,13 +87,13 @@ MainScene.prototype.onDocumentKey = function (event) {
   }
 };
 
-MainScene.prototype.update = function () {
+MainScene.prototype.update = function (delta) {
   var up = this.controlsUp;
   var gravity = this.gravity;
 
   this.gravityForce.set(up.x * gravity, up.y * gravity, up.z * gravity);
-  this.medusae.update();
-  this.dust.update();
+  this.medusae.update(delta);
+  this.dust.update(delta);
   this.controls.update();
 };
 

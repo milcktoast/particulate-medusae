@@ -53,7 +53,6 @@ Dust.prototype.addTo = function (scene) {
   scene.add(this.item);
 };
 
-// TODO: Call update with frame time delta
 Dust.prototype.update = function (delta) {
-  this.timeAttr.value += 0.1;
+  this.timeAttr.value += delta * 0.01;
 };
