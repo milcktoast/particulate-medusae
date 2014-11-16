@@ -9,7 +9,7 @@ function Dust(opts) {
   this.createItem();
 }
 
-Dust.create = Particulate.ctor(Dust);
+Dust.create = App.ctor(Dust);
 
 Dust.prototype.createParticles = function () {
   var count = this.particleCount;

@@ -49,7 +49,7 @@ function Medusae(opts) {
   this.createMaterials();
 }
 
-Medusae.create = PTCL.ctor(Medusae);
+Medusae.create = App.ctor(Medusae);
 
 Medusae.prototype.createGeometry = function () {
   var ribsCount = this.ribsCount;

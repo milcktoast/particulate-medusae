@@ -33,4 +33,4 @@ function Looper(context, update, render) {
   };
 }
 
-Looper.create = Particulate.ctor(Looper);
+Looper.create = App.ctor(Looper);

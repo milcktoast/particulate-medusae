@@ -1,5 +1,6 @@
 var shaders = window.App && window.App.shaders;
 window.App = {
+  ctor : Particulate.ctor,
   shaders : shaders
 };
 

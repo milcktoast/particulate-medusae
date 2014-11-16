@@ -24,7 +24,7 @@ function MainScene() {
   window.addEventListener('resize', this.onWindowResize.bind(this), false);
 }
 
-MainScene.create = Particulate.ctor(MainScene);
+MainScene.create = App.ctor(MainScene);
 
 MainScene.prototype.initRenderer = function () {
   this.renderer = new THREE.WebGLRenderer({
