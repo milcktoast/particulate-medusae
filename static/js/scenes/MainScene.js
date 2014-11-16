@@ -11,9 +11,12 @@ function MainScene() {
   this.gravity = -0.001;
 
   this.initRenderer();
+  this.initFxComposer();
+  this.addPostFx();
+  this.onWindowResize();
+
   this.initItems();
   this.initControls();
-  this.onWindowResize();
 
   camera.position.set(200, 100, 0);
   camera.lookAt(scene.position);
@@ -27,13 +30,61 @@ function MainScene() {
 MainScene.create = App.ctor(MainScene);
 
 MainScene.prototype.initRenderer = function () {
-  this.renderer = new THREE.WebGLRenderer({
+  var renderer = this.renderer = new THREE.WebGLRenderer({
     devicePixelRatio : this.pxRatio,
     antialias : false
   });
 
-  this.renderer.setClearColor(0x111111, 1);
-  this.el.appendChild(this.renderer.domElement);
+  renderer.setClearColor(0x111111, 1);
+  renderer.autoClear = false;
+
+  this.el.appendChild(renderer.domElement);
+};
+
+MainScene.prototype.initFxComposer = function () {
+  var renderTarget = new THREE.WebGLRenderTarget(this.width, this.height, {
+    minFilter : THREE.LinearFilter,
+    magFilter : THREE.LinearMipMapLinearFilter,
+    format : THREE.RGBAFormat
+  });
+
+  this.composer = new THREE.EffectComposer(this.renderer, renderTarget);
+  this._passIndex = {};
+};
+
+MainScene.prototype.addPostFx = function () {
+  this.addPass(new THREE.RenderPass(this.scene, this.camera));
+  this.addPass(new THREE.BloomPass(0.8, 25, 4, 256));
+  this.addPass(new THREE.ShaderPass(THREE.CopyShader), true);
+};
+
+MainScene.prototype.addPass = function (name, pass, renderToScreen) {
+  if (typeof name === 'string') {
+    this._passIndex[name] = pass;
+  } else {
+    renderToScreen = pass;
+    pass = name;
+  }
+
+  pass.renderToScreen = renderToScreen || false;
+  this.composer.addPass(pass);
+  return pass;
+};
+
+MainScene.prototype.getPass = function (name) {
+  return this._passIndex[name];
+};
+
+MainScene.prototype.enablePass = function (name) {
+  var pass = this.getPass(name);
+  if (!pass) { return; }
+  pass.enabled = true;
+};
+
+MainScene.prototype.disablePass = function (name) {
+  var pass = this.getPass(name);
+  if (!pass) { return; }
+  pass.enabled = false;
 };
 
 MainScene.prototype.initItems = function () {
@@ -71,11 +122,20 @@ MainScene.prototype.initControls = function () {
 };
 
 MainScene.prototype.onWindowResize = function () {
-  this.width = window.innerWidth;
-  this.height = window.innerHeight;
-  this.camera.aspect = this.width / this.height;
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  var pxRatio = this.pxRatio;
+  var postWidth = width * pxRatio;
+  var postHeight = height * pxRatio;
+
+  this.width = width;
+  this.height = height;
+
+  this.camera.aspect = width / height;
   this.camera.updateProjectionMatrix();
-  this.renderer.setSize(this.width, this.height);
+
+  this.renderer.setSize(width, height);
+  this.composer.setSize(postWidth, postHeight);
 };
 
 MainScene.prototype.onDocumentKey = function (event) {
@@ -98,5 +158,6 @@ MainScene.prototype.update = function (delta) {
 };
 
 MainScene.prototype.render = function () {
-  this.renderer.render(this.scene, this.camera);
+  // this.renderer.render(this.scene, this.camera);
+  this.composer.render(0.01);
 };

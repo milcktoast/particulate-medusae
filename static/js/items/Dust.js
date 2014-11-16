@@ -46,7 +46,7 @@ Dust.prototype.createMaterials = function () {
 };
 
 Dust.prototype.createItem = function () {
-  this.item = new THREE.ParticleSystem(this.geometry, this.material);
+  this.item = new THREE.PointCloud(this.geometry, this.material);
 };
 
 Dust.prototype.addTo = function (scene) {

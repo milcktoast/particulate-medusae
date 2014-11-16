@@ -319,16 +319,9 @@ Medusae.prototype.addFaces = function (faceIndices) {
 };
 
 Medusae.prototype.createMaterials = function () {
-  var vertices = new THREE.BufferAttribute();
-  vertices.array = this.verts;
-  vertices.itemSize = 3;
-
-  var uvs = new THREE.BufferAttribute();
-  uvs.array = new Float32Array(this.uvs);
-  uvs.itemSize = 2;
-
-  var indices = new THREE.BufferAttribute();
-  indices.array = new Uint16Array(this.links);
+  var vertices = new THREE.BufferAttribute(this.verts, 3);
+  var uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
 
   // Particles
   // var dotsGeom = new THREE.BufferGeometry();
@@ -350,7 +343,7 @@ Medusae.prototype.createMaterials = function () {
       blending: THREE.AdditiveBlending,
       opacity : 0.15,
       depthTest : false
-    }));
+    }), THREE.LinePieces);
 
   this.linesFore = new THREE.Line(linesGeom,
     new THREE.LineBasicMaterial({
@@ -360,15 +353,14 @@ Medusae.prototype.createMaterials = function () {
       blending: THREE.AdditiveBlending,
       opacity : 0.3,
       depthTest : true
-    }));
+    }), THREE.LinePieces);
 
   this.linesFaint.scale.multiplyScalar(1.1);
   this.linesFore.scale.multiplyScalar(1.1);
 
   // Faces
   var faceGeom = new THREE.BufferGeometry();
-  var faceIndices = new THREE.BufferAttribute();
-  faceIndices.array = new Uint16Array(this.bulbFaces);
+  var faceIndices = new THREE.BufferAttribute(new Uint16Array(this.bulbFaces), 1);
 
   faceGeom.addAttribute('position', vertices);
   faceGeom.addAttribute('index', faceIndices);
@@ -387,8 +379,8 @@ Medusae.prototype.createMaterials = function () {
   // this.innerMesh.scale.multiplyScalar(0.8);
 
   var tailFaceGeom = new THREE.BufferGeometry();
-  var tailFaceIndices = new THREE.BufferAttribute();
-  tailFaceIndices.array = new Uint16Array(this.tailFaces);
+  var tailFaceIndices = new THREE.BufferAttribute(new Uint16Array(this.tailFaces), 1);
+
   tailFaceGeom.addAttribute('position', vertices);
   tailFaceGeom.addAttribute('index', tailFaceIndices);
   tailFaceGeom.addAttribute('uv', uvs);
