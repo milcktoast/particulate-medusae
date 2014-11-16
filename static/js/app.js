@@ -1,8 +1,11 @@
-var shaders = window.App && window.App.shaders;
-window.App = {
-  ctor : Particulate.ctor,
-  shaders : shaders
-};
+var App = Object.create({
+  log : (window.console && window.console.log.bind(window.console)) || function () {},
+  ctor : Particulate.ctor
+});
+
+App.shaders = window.App && window.App.shaders
+App.log('Particulate.js ' + Particulate.VERSION);
+window.App = App;
 
 require('js/helpers/*');
 require('js/materials/*');
