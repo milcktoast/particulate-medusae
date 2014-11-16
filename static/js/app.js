@@ -3,7 +3,7 @@ var App = Object.create({
   ctor : Particulate.ctor
 });
 
-App.shaders = window.App && window.App.shaders
+App.shaders = window.App && window.App.shaders;
 App.log('Particulate.js ' + Particulate.VERSION);
 window.App = App;
 
