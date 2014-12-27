@@ -18,70 +18,77 @@ var PI = Math.PI;
 
 var _push = Array.prototype.push;
 
-// Medusae geometry
-// ---------------
+// ..................................................
+// Medusae
+// ..................................................
 
 App.Medusae = Medusae;
 function Medusae(opts) {
   this.pxRatio = opts.pxRatio || 1;
   this.lineWidth = this.pxRatio;
 
-  this.segments = 3 * 9;
+  this.segments = 3 * 3 * 4;
   this.ribsCount = 20;
-  this.tentacleSegments = 100;
-  this.tentacleSegmentLength = 1;
+  this.tentacleGroupCount = 3;
+  this.tentacleSegments = 80;
+  this.tentacleSegmentLength = 2;
   this.tailCount = 10;
   this.tailSegments = 50;
   this.size = 20;
 
-  this._queuedConstraints = [];
-  this.verts = [];
-  this.links = [];
-  this.bulbFaces = [];
-  this.tailFaces = [];
-  this.uvs = [];
-
-  this.ribs = [];
-  this.tentacles = [];
-  this.skins = [];
-
   this.item = new THREE.Object3D();
-
+  this.createTempBuffers();
   this.createGeometry();
   this.createSystem();
   this.createMaterials();
+  this.removeTempBuffers();
 }
 
 Medusae.create = App.ctor(Medusae);
 
-Medusae.prototype.createGeometry = function () {
-  var ribsCount = this.ribsCount;
-  var tentacleSegments = this.tentacleSegments;
-  var tailCount = this.tailCount;
-  var i, il;
+Medusae.tempBuffers = [
+  'queuedConstraints',
+  'verts',
+  'links',
+  'weights',
+  'bulbFaces',
+  'tailFaces',
+  'uvs',
+  'ribs',
+  'tentacles',
+  'skins'
+];
 
-  this.createCore();
+Medusae.prototype.createTempBuffers = function () {
+  var names = Medusae.tempBuffers;
+  var name;
 
-  for (i = 0, il = ribsCount; i < il; i ++) {
-    this.createRib(i, ribsCount);
-    if (i > 0) {
-      this.createSkin(i - 1, i);
-    }
-  }
-
-  for (i = 0, il = tentacleSegments; i < il; i ++) {
-    this.createTentacleSegment(i, tentacleSegments);
-    if (i > 0) {
-      this.linkTentacle(i - 1, i);
-    } else {
-      this.attachTentacles();
-    }
-  }
-
-  for (i = 0, il = tailCount; i < il; i ++) {
-    this.createTail(i, tailCount);
+  for (var i = names.length - 1; i >= 0; i --) {
+    name = names[i];
+    this[name] = [];
   }
 };
+
+Medusae.prototype.removeTempBuffers = function () {
+  var names = Medusae.tempBuffers;
+  var name;
+
+  for (var i = names.length - 1; i >= 0; i --) {
+    name = names[i];
+    delete this[name];
+  }
+};
+
+Medusae.prototype.createGeometry = function () {
+  this.createCore();
+  this.createBulb();
+  this.createTentacles();
+  this.createTail();
+};
+
+// ..................................................
+// Core
+//
 
 function spineAngleIndices(a, b, start, howMany) {
   var indices = [];
@@ -120,6 +127,21 @@ Medusae.prototype.createCore = function () {
   this.queueConstraints(topAngle, bottomAngle);
 
   FACES.radial(0, topStart, segments, this.bulbFaces);
+};
+
+// ..................................................
+// Bulb
+//
+
+Medusae.prototype.createBulb = function () {
+  var ribsCount = this.ribsCount;
+
+  for (var i = 0, il = ribsCount; i < il; i ++) {
+    this.createRib(i, ribsCount);
+    if (i > 0) {
+      this.createSkin(i - 1, i);
+    }
+  }
 };
 
 function ribRadius(t) {
@@ -177,6 +199,7 @@ Medusae.prototype.createRib = function (index, total) {
   innerRibIndices(0, start, segments, innerIndices);
   innerRibIndices(3, start, segments, innerIndices);
   innerRibIndices(6, start, segments, innerIndices);
+  innerRibIndices(9, start, segments, innerIndices);
 
   var innerRibLen = 2 * PI * radius / 3;
   var innerRib = DistanceConstraint.create([innerRibLen * 0.8, innerRibLen], innerIndices);
@@ -195,6 +218,7 @@ Medusae.prototype.createRib = function (index, total) {
   }
 
   this.queueConstraints(rib, innerRib);
+  // this.addLinks(innerIndices);
 
   this.ribs.push({
     start : start,
@@ -222,6 +246,31 @@ Medusae.prototype.createSkin = function (r0, r1) {
   });
 };
 
+// ..................................................
+// Tentacles
+//
+
+Medusae.prototype.createTentacles = function () {
+  var tentacleGroupCount = this.tentacleGroupCount;
+
+  for (var i = 0, il = tentacleGroupCount; i < il; i ++) {
+    this.createTentacleGroup(i);
+  }
+};
+
+Medusae.prototype.createTentacleGroup = function (groupIndex) {
+  var tentacleSegments = this.tentacleSegments;
+
+  for (var i = 0, il = tentacleSegments; i < il; i ++) {
+    this.createTentacleSegment(groupIndex, i, tentacleSegments);
+    if (i > 0) {
+      this.linkTentacle(groupIndex, i - 1, i);
+    } else {
+      this.attachTentacles(groupIndex);
+    }
+  }
+};
+
 function tentacleUvs(howMany, buffer) {
   for (var i = 0, il = howMany; i < il; i ++) {
     buffer.push(0, 0);
@@ -229,7 +278,7 @@ function tentacleUvs(howMany, buffer) {
   return buffer;
 }
 
-Medusae.prototype.createTentacleSegment = function (index, total) {
+Medusae.prototype.createTentacleSegment = function (groupIndex, index, total) {
   var segments = this.segments;
   var verts = this.verts;
   var uvs = this.uvs;
@@ -240,16 +289,21 @@ Medusae.prototype.createTentacleSegment = function (index, total) {
 
   GEOM.circle(segments, radius, yPos, verts);
   tentacleUvs(segments, uvs);
+  this.queueWeights(start, segments, index / total * 0.5);
 
-  this.tentacles.push({
+  if (index === 0) {
+    this.tentacles.push([]);
+  }
+
+  this.tentacles[groupIndex].push({
     start : start
   });
 };
 
-Medusae.prototype.attachTentacles = function () {
+Medusae.prototype.attachTentacles = function (groupIndex) {
   var segments = this.segments;
-  var rib = this.ribs[this.ribs.length - 1];
-  var tent = this.tentacles[0];
+  var rib = this.ribs[this.ribs.length - groupIndex - 1];
+  var tent = this.tentacles[groupIndex][0];
   var dist = this.tentacleSegmentLength;
 
   var tentacle = DistanceConstraint.create([dist * 0.5, dist],
@@ -259,10 +313,11 @@ Medusae.prototype.attachTentacles = function () {
   this.addLinks(tentacle.indices);
 };
 
-Medusae.prototype.linkTentacle = function (i0, i1) {
+Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
   var segments = this.segments;
-  var tent0 = this.tentacles[i0];
-  var tent1 = this.tentacles[i1];
+  var tentacleGroup = this.tentacles[groupIndex];
+  var tent0 = tentacleGroup[i0];
+  var tent1 = tentacleGroup[i1];
   var dist = this.tentacleSegmentLength;
 
   var tentacle = DistanceConstraint.create([dist * 0.5, dist],
@@ -272,7 +327,19 @@ Medusae.prototype.linkTentacle = function (i0, i1) {
   this.addLinks(tentacle.indices);
 };
 
-Medusae.prototype.createTail = function (index, total) {
+// ..................................................
+// Tail / mouth
+//
+
+Medusae.prototype.createTail = function () {
+  var tailCount = this.tailCount;
+
+  for (var i = 0, il = tailCount; i < il; i ++) {
+    this.createTailSection(i, tailCount);
+  }
+};
+
+Medusae.prototype.createTailSection = function (index, total) {
   var size = this.size;
   var segments = this.tailSegments;
   var innerSize = 1;
@@ -341,21 +408,42 @@ Medusae.prototype.createTail = function (index, total) {
   // this.addLinks(linkIndices);
 };
 
-Medusae.prototype.queueConstraint = function (constraint) {
-  this._queuedConstraints.push(constraint);
-};
+// ..................................................
+// Physics simulation
+//
 
 Medusae.prototype.queueConstraints = function (constraints) {
-  _push.apply(this._queuedConstraints, constraints.length ? constraints : arguments);
+  _push.apply(this.queuedConstraints, constraints.length ? constraints : arguments);
+};
+
+Medusae.prototype.queueWeights = function (start, howMany, weight) {
+  var weights = this.weights;
+  var end = start + howMany;
+  var i, il;
+
+  if (weights.length - 1 < end) {
+    for (i = 0, il = end - weights.length; i < il; i ++) {
+      weights.push(1);
+    }
+  }
+
+  for (i = start, il = end; i < il; i ++) {
+    weights[i] = weight;
+  }
 };
 
 Medusae.prototype.createSystem = function () {
-  var queuedConstraints = this._queuedConstraints;
+  var queuedConstraints = this.queuedConstraints;
+  var queuedWeights = this.weights;
   var system = this.system = PTCL.ParticleSystem.create(this.verts, 2);
   this.verts = this.system.positions;
 
   for (var i = 0, il = queuedConstraints.length; i < il; i ++) {
     system.addConstraint(queuedConstraints[i]);
+  }
+
+  for (i = 0, il = queuedWeights.length; i < il; i ++) {
+    system.weights[i] = queuedWeights[i];
   }
 
   system.setWeight(0, 0);
@@ -372,6 +460,10 @@ Medusae.prototype.createSystem = function () {
     system.tick(1);
   }
 };
+
+// ..................................................
+// Mesh rendering
+//
 
 Medusae.prototype.addLinks = function (indices) {
   _push.apply(this.links, indices);
@@ -450,6 +542,7 @@ Medusae.prototype.createMaterials = function () {
 
   this.tailMesh = new THREE.Mesh(tailFaceGeom,
     new App.TailMaterial({
+      diffuse : 0xffffff,
       transparent : true,
       blending : THREE.AdditiveBlending,
       opacity : 0.5,
