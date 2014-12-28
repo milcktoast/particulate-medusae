@@ -23,6 +23,7 @@ function ShaderMaterial(parameters) {
   this.transparent = parameters.transparent || false;
   this.blending = parameters.blending || THREE.NormalBlending;
   this.side = parameters.side || THREE.FrontSide;
+  this.linewidth = parameters.linewidth || 1;
 
   this.fog = !!parameters.fog;
   this.map = !!parameters.map;
