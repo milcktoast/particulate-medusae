@@ -6,7 +6,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <title>SeaGen</title>
+    <title>Particulate Medusae</title>
 
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,7 +18,22 @@
     {% endif %}
   </head>
   <body>
+    <article id="info" class="modal">
+      <h1>Medusae</h1>
+      <p>
+        Built with <a href="http://particulatejs.org">particulate.js</a> and
+        <a href="http://threejs.org">three.js</a> by
+        <a href="http://twitter.com/jpweeks">jpweeks</a>.
+      </p>
+    </article>
+    <div id="cover-info" class="modal-cover"></div>
+
+    <div class="controls">
+      <div id="toggle-info" class="controls-button" title="About"></div>
+    </div>
+
     <div id="container"></div>
+
     {% if TEMPLATE_DEBUG %}
       <script src="{{ STATIC_URL }}lib/three/three.js"></script>
       <script src="{{ STATIC_URL }}js/libs.develop.js"></script>

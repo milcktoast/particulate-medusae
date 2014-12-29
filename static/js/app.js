@@ -11,6 +11,11 @@ require('js/helpers/*');
 require('js/materials/*');
 require('js/items/*');
 require('js/scenes/*');
+require('js/controllers/*');
+
+App.ModalController.create({
+  name : 'info'
+});
 
 setTimeout(function () {
   var scene = App.MainScene.create();

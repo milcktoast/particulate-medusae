@@ -1,8 +1,18 @@
 body {
-	font-family: $helvetica;
+  color: #fff;
+	font: 12px/1.2 Monaco, monospace;
 }
 
 h1 {
-	font-size: 30px;
-	padding: 20px;
+  margin: 0 0 8px;
+	font-size: 14px;
+}
+
+a {
+  color: #e30060;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
