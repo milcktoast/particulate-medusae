@@ -1,4 +1,4 @@
-var ENABLE_ZOOM = false;
+var ENABLE_ZOOM = true;
 var ENABLE_PAN = false;
 
 App.MainScene = MainScene;
@@ -15,8 +15,8 @@ function MainScene() {
   this.addPostFx();
   this.onWindowResize();
 
-  this.initItems();
   this.initControls();
+  this.initItems();
 
   camera.position.set(200, 100, 0);
   camera.lookAt(scene.position);
@@ -99,6 +99,7 @@ MainScene.prototype.initItems = function () {
   var gravityForce = this.gravityForce = Particulate.DirectionalForce.create();
 
   medusae.system.addForce(gravityForce);
+  medusae.relax(100);
   medusae.addTo(this.scene);
   dust.addTo(this.scene);
 };
