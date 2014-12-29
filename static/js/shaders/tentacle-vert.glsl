@@ -1,5 +1,3 @@
-uniform float size;
-uniform float scale;
 uniform float area;
 
 varying float centerDist;
@@ -17,5 +15,4 @@ void main() {
 
   {{{chunks.logdepthbuf_vertex}}}
   {{{chunks.worldpos_vertex}}}
-  {{{chunks.shadowmap_vertex}}}
 }
