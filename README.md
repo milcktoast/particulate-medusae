@@ -1,17 +1,20 @@
-Sea Gen
+Particulate Medusae
 ===========================================================
 
+Built with [particulate.js](http://particulatejs.org) and
+[three.js](http://threejs.org) by
+[jpweeks](http://twitter.com/jpweeks).
 
-Sea Gen dependencies
+Dependencies
 -----------------------------------------------------------
 
 You should have one path for each dependency.
 
 ```sh
-which node npm grunt yo
+which node npm grunt
 ```
 
-Installing Sea Gen
+Installing
 -----------------------------------------------------------
 
 ```sh
@@ -19,7 +22,7 @@ cd <PATH_TO_PROJECT>
 npm install
 ```
 
-Running the project
+Running
 -----------------------------------------------------------
 
 ```sh
