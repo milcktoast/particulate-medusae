@@ -40,6 +40,8 @@ function Medusae(opts) {
 
   this.tailCount = 10;
   this.tailSegments = 50;
+  this.tailSegmentSize = 1;
+  this.tailRadius = 9;
 
   this.item = new THREE.Object3D();
   this.createTempBuffers();
@@ -355,9 +357,9 @@ Medusae.prototype.createTail = function () {
 Medusae.prototype.createTailSection = function (index, total) {
   var size = this.size;
   var segments = this.tailSegments;
-  var innerSize = 1;
+  var innerSize = this.tailSegmentSize;
   var outerSize = innerSize * 1.8;
-  var linkSizeScale = segments * 0.25;
+  var linkSizeScale = this.tailRadius;
   var bottomPinMax = 20;
   var startOffset = size;
 
