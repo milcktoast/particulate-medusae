@@ -39,7 +39,8 @@ pip-log.txt
 .tox
 
 # Compiled static files
-deploy
+build
+index.html
 
 # npm
 node_modules

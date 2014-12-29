@@ -10,7 +10,7 @@ module.exports = function (config) {
     options: {
       port: 8000,
       hostname: '*',
-      base: config.deploy,
+      base: './',
       livereload: 38000,
       open: true
     },

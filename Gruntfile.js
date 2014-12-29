@@ -4,8 +4,8 @@
 var CONFIG = {
   pages: 'pages/',
   source: 'static/',
-  static: 'deploy/static/',
-  deploy: 'deploy/'
+  static: './build/static/',
+  deploy: './build/'
 };
 
 module.exports = function (grunt) {
