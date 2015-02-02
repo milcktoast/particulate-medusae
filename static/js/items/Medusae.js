@@ -26,6 +26,7 @@ App.Medusae = Medusae;
 function Medusae(opts) {
   this.pxRatio = opts.pxRatio || 1;
   this.lineWidth = this.pxRatio;
+  this.animTime = 0;
 
   this.segmentsCount = 4;
   this.ribsCount = 20;
@@ -42,6 +43,8 @@ function Medusae(opts) {
   this.tailSegments = 50;
   this.tailSegmentSize = 1;
   this.tailRadius = 9;
+
+  this.ribs = [];
 
   this.item = new THREE.Object3D();
   this.createTempBuffers();
@@ -61,7 +64,6 @@ Medusae.tempBuffers = [
   'bulbFaces',
   'tailFaces',
   'uvs',
-  'ribs',
   'tentacles',
   'tentacleIndices',
   'skins'
@@ -182,7 +184,7 @@ function ribUvs(sv, howMany, buffer) {
   return buffer;
 }
 
-Medusae.prototype.createInnerRib = function (start, radius) {
+Medusae.prototype.createInnerRib = function (start, length) {
   var segmentGroups = this.segmentsCount;
   var segments = this._totalSegments;
   var indices = [];
@@ -191,10 +193,7 @@ Medusae.prototype.createInnerRib = function (start, radius) {
     innerRibIndices(i * 3, start, segments, indices);
   }
 
-  var innerRibLen = 2 * PI * radius / 3;
-  var innerRib = DistanceConstraint.create([innerRibLen * 0.8, innerRibLen], indices);
-
-  this.queueConstraints(innerRib);
+  return DistanceConstraint.create([length * 0.8, length], indices);
 };
 
 Medusae.prototype.createRib = function (index, total) {
@@ -202,22 +201,24 @@ Medusae.prototype.createRib = function (index, total) {
   var verts = this.verts;
   var uvs = this.uvs;
   var size = this.size;
-  var yPos = size - (index / total) * size;
+  var yParam = index / total;
+  var yPos = size - yParam * size;
 
   var start = index * segments + this.topStart;
-  var radiusT = ribRadius(index / total);
+  var radiusT = ribRadius(yParam);
   var radius = radiusT * 10 + 0.5;
 
   GEOM.circle(segments, radius, yPos, verts);
-  ribUvs(index / total, segments, uvs);
+  ribUvs(yParam, segments, uvs);
 
   // Outer rib structure
   var ribIndices = LINKS.loop(start, segments, []);
-  var ribLen = 2 * PI * radius / segments;
-  var rib = DistanceConstraint.create([ribLen * 0.9, ribLen], ribIndices);
+  var outerLen = 2 * PI * radius / segments;
+  var outerRib = DistanceConstraint.create([outerLen * 0.9, outerLen], ribIndices);
 
   // Inner rib sub-structure
-  this.createInnerRib(start, radius);
+  var innerLen = 2 * PI * radius / 3;
+  var innerRib = this.createInnerRib(start, innerLen);
 
   // Attach bulb to spine
   var spine, spineCenter;
@@ -232,11 +233,15 @@ Medusae.prototype.createRib = function (index, total) {
     }
   }
 
-  this.queueConstraints(rib);
+  this.queueConstraints(outerRib, innerRib);
 
   this.ribs.push({
     start : start,
-    radius : radius
+    radius : radius,
+    yParam : yParam,
+    outer : outerRib,
+    inner : innerRib,
+    spine : spine
   });
 };
 
@@ -258,6 +263,31 @@ Medusae.prototype.createSkin = function (r0, r1) {
     a : r0,
     b : r1
   });
+};
+
+Medusae.prototype.updateBulb = function (delta) {
+  var time = this.animTime;
+  var phase = (sin(time) + 1) * 0.5;
+  var radiusOffset = 15;
+
+  var segments = this._totalSegments;
+  var ribs = this.ribs;
+  var rib, radius, outerLen, innerLen;
+
+  for (var i = 0, il = ribs.length; i < il; i ++) {
+    rib = ribs[i];
+    radius = rib.radius + rib.yParam * phase * radiusOffset;
+
+    outerLen = 2 * PI * radius / segments;
+    innerLen = 2 * PI * radius / 3;
+
+    rib.outer.setDistance(outerLen * 0.9, outerLen);
+    rib.inner.setDistance(innerLen * 0.8, innerLen);
+
+    if (rib.spine) {
+      rib.spine.setDistance(radius * 0.8, radius);
+    }
+  }
 };
 
 // ..................................................
@@ -599,6 +629,8 @@ Medusae.prototype.addTo = function (scene) {
 };
 
 Medusae.prototype.update = function (delta) {
+  this.animTime += delta * 0.001;
+  this.updateBulb(delta);
   this.system.tick(1);
   this.positionAttr.needsUpdate = true;
 };
