@@ -481,7 +481,6 @@ Medusae.prototype.createSystem = function () {
   var queuedConstraints = this.queuedConstraints;
   var queuedWeights = this.weights;
   var system = this.system = PTCL.ParticleSystem.create(this.verts, 2);
-  this.verts = this.system.positions;
 
   for (var i = 0, il = queuedConstraints.length; i < il; i ++) {
     system.addConstraint(queuedConstraints[i]);
@@ -523,13 +522,15 @@ Medusae.prototype.addFaces = function (faceIndices) {
 };
 
 Medusae.prototype.createMaterials = function () {
-  var vertices = new THREE.BufferAttribute(this.verts, 3);
+  var position = new THREE.BufferAttribute(this.system.positions, 3);
+  var positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
   var uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
   var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
 
   // Connections
   var linesGeom = new THREE.BufferGeometry();
-  linesGeom.addAttribute('position', vertices);
+  linesGeom.addAttribute('position', position);
+  // linesGeom.addAttribute('positionPrev', positionPrev);
   linesGeom.addAttribute('index', indices);
 
   this.linesFaint = new THREE.Line(linesGeom,
@@ -557,9 +558,10 @@ Medusae.prototype.createMaterials = function () {
   this.linesFore.scale.multiplyScalar(1.1);
 
   // Tentacles
-  var tentacleIndices = new THREE.BufferAttribute(new Uint16Array(this.tentacleIndices), 1);
   var tentacleGeom = new THREE.BufferGeometry();
-  tentacleGeom.addAttribute('position', vertices);
+  var tentacleIndices = new THREE.BufferAttribute(new Uint16Array(this.tentacleIndices), 1);
+  tentacleGeom.addAttribute('position', position);
+  tentacleGeom.addAttribute('positionPrev', positionPrev);
   tentacleGeom.addAttribute('index', tentacleIndices);
 
   this.tentacleFore = new THREE.Line(tentacleGeom,
@@ -579,7 +581,7 @@ Medusae.prototype.createMaterials = function () {
   var faceGeom = new THREE.BufferGeometry();
   var faceIndices = new THREE.BufferAttribute(new Uint16Array(this.bulbFaces), 1);
 
-  faceGeom.addAttribute('position', vertices);
+  faceGeom.addAttribute('position', position);
   faceGeom.addAttribute('index', faceIndices);
   faceGeom.addAttribute('uv', uvs);
   faceGeom.computeVertexNormals();
@@ -598,7 +600,7 @@ Medusae.prototype.createMaterials = function () {
   var tailFaceGeom = new THREE.BufferGeometry();
   var tailFaceIndices = new THREE.BufferAttribute(new Uint16Array(this.tailFaces), 1);
 
-  tailFaceGeom.addAttribute('position', vertices);
+  tailFaceGeom.addAttribute('position', position);
   tailFaceGeom.addAttribute('index', tailFaceIndices);
   tailFaceGeom.addAttribute('uv', uvs);
 
@@ -614,14 +616,15 @@ Medusae.prototype.createMaterials = function () {
 
   // Parent object
   var item = this.item;
-  item.add(this.linesFaint);
-  item.add(this.linesFore);
+  // item.add(this.linesFaint);
+  // item.add(this.linesFore);
   item.add(this.tentacleFore);
-  item.add(this.skinMesh);
-  // item.add(this.innerMesh);
-  item.add(this.tailMesh);
+  // item.add(this.skinMesh);
+  // item.add(this.tailMesh);
 
-  this.positionAttr = linesGeom.attributes.position;
+  this.positionAttr = tentacleGeom.attributes.position;
+  this.positionPrevAttr = tentacleGeom.attributes.positionPrev;
+  this.tentacleTime = this.tentacleFore.material.uniforms.time;
 };
 
 Medusae.prototype.addTo = function (scene) {
@@ -632,5 +635,11 @@ Medusae.prototype.update = function (delta) {
   this.animTime += delta * 0.001;
   this.updateBulb(delta);
   this.system.tick(1);
+
   this.positionAttr.needsUpdate = true;
+  this.positionPrevAttr.needsUpdate = true;
+};
+
+Medusae.prototype.updateGraphics = function (delta, stepProgress) {
+  this.tentacleTime.value = stepProgress;
 };

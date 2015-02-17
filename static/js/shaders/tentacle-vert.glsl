@@ -1,4 +1,7 @@
+uniform float time;
 uniform float area;
+
+attribute vec3 positionPrev;
 
 varying float centerDist;
 
@@ -9,7 +12,8 @@ void main() {
   {{{chunks.color_vertex}}}
 
   centerDist = length(position);
-  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+  vec4 mvPosition = modelViewMatrix *
+  	vec4(mix(positionPrev, position, time), 1.0);
 
   gl_Position = projectionMatrix * mvPosition;
 
