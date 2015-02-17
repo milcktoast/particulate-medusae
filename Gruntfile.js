@@ -59,6 +59,7 @@ module.exports = function (grunt) {
     'handlebars',
     'neuter:libsDevelop',
     'neuter:app',
+    'shaderChunks',
 
     // CSS
     'sass:develop',
@@ -81,6 +82,7 @@ module.exports = function (grunt) {
     'handlebars',
     'neuter:libsBuild',
     'neuter:app',
+    'shaderChunks',
     'uglify',
 
     // CSS

@@ -27,6 +27,10 @@ module.exports = function (config) {
       files: [config.source + 'tests/{,**/}{,*.js}'],
       tasks: ['neuter:tests']
     },
+    shaderChunks: {
+      files: config.source + 'js/shader-chunks/*',
+      tasks: ['shaderChunks']
+    },
     handlebarsShaders: {
       files: config.source + 'js/shaders/*',
       tasks: ['handlebars:shaders']
