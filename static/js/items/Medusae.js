@@ -530,11 +530,11 @@ Medusae.prototype.createMaterials = function () {
   // Connections
   var linesGeom = new THREE.BufferGeometry();
   linesGeom.addAttribute('position', position);
-  // linesGeom.addAttribute('positionPrev', positionPrev);
+  linesGeom.addAttribute('positionPrev', positionPrev);
   linesGeom.addAttribute('index', indices);
 
   this.linesFaint = new THREE.Line(linesGeom,
-    new THREE.LineBasicMaterial({
+    new App.TentacleMaterial({
       color : 0xffffff,
       opacity : 0.1,
       linewidth : this.lineWidth,
@@ -582,6 +582,7 @@ Medusae.prototype.createMaterials = function () {
   var faceIndices = new THREE.BufferAttribute(new Uint16Array(this.bulbFaces), 1);
 
   faceGeom.addAttribute('position', position);
+  faceGeom.addAttribute('positionPrev', positionPrev);
   faceGeom.addAttribute('index', faceIndices);
   faceGeom.addAttribute('uv', uvs);
   faceGeom.computeVertexNormals();
@@ -601,6 +602,7 @@ Medusae.prototype.createMaterials = function () {
   var tailFaceIndices = new THREE.BufferAttribute(new Uint16Array(this.tailFaces), 1);
 
   tailFaceGeom.addAttribute('position', position);
+  tailFaceGeom.addAttribute('positionPrev', positionPrev);
   tailFaceGeom.addAttribute('index', tailFaceIndices);
   tailFaceGeom.addAttribute('uv', uvs);
 
@@ -616,15 +618,23 @@ Medusae.prototype.createMaterials = function () {
 
   // Parent object
   var item = this.item;
-  // item.add(this.linesFaint);
-  // item.add(this.linesFore);
+  item.add(this.linesFaint);
+  item.add(this.linesFore);
   item.add(this.tentacleFore);
-  // item.add(this.skinMesh);
-  // item.add(this.tailMesh);
+  item.add(this.skinMesh);
+  item.add(this.tailMesh);
 
   this.positionAttr = tentacleGeom.attributes.position;
   this.positionPrevAttr = tentacleGeom.attributes.positionPrev;
-  this.tentacleTime = this.tentacleFore.material.uniforms.time;
+
+  // TODO: Simplify, make lerp-pos base material
+  this.timeAttrs = [
+    this.linesFaint.material.uniforms.time,
+    this.linesFore.material.uniforms.time,
+    this.tentacleFore.material.uniforms.time,
+    this.skinMesh.material.uniforms.time,
+    this.tailMesh.material.uniforms.time
+  ];
 };
 
 Medusae.prototype.addTo = function (scene) {
@@ -641,5 +651,8 @@ Medusae.prototype.update = function (delta) {
 };
 
 Medusae.prototype.updateGraphics = function (delta, stepProgress) {
-  this.tentacleTime.value = stepProgress;
+  var timeAttrs = this.timeAttrs;
+  for (var i = 0; i < timeAttrs.length; i++) {
+    timeAttrs[i].value = stepProgress;
+  }
 };

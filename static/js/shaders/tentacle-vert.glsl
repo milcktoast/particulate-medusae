@@ -11,8 +11,6 @@ void main() {
   centerDist = length(position);
 
   {{{chunks.lerp_pos_vertex}}}
-  gl_Position = projectionMatrix * mvPosition;
-
   {{{chunks.logdepthbuf_vertex}}}
   {{{chunks.worldpos_vertex}}}
 }
