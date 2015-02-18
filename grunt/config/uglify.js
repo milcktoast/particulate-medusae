@@ -9,6 +9,7 @@ module.exports = function (config) {
   return {
     app: {
       src: [
+        config.static + 'js/shader-chunks.develop.js',
         config.static + 'js/shaders.develop.js',
         config.static + 'js/app.develop.js'
       ],
