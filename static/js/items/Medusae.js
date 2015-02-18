@@ -37,7 +37,7 @@ function Medusae(opts) {
   this.tentacleGroupOffset = 1;
   this.tentacleSegments = 140;
   this.tentacleSegmentLength = 1;
-  this.tentacleWeightFactor = 2.5;
+  this.tentacleWeightFactor = 0.5;
 
   this.tailCount = 10;
   this.tailSegments = 50;
@@ -644,7 +644,7 @@ Medusae.prototype.addTo = function (scene) {
 Medusae.prototype.update = function (delta) {
   this.animTime += delta * 0.001;
   this.updateBulb(delta);
-  this.system.tick(1);
+  this.system.tick(delta * 0.001);
 
   this.positionAttr.needsUpdate = true;
   this.positionPrevAttr.needsUpdate = true;

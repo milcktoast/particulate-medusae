@@ -54,5 +54,5 @@ Dust.prototype.addTo = function (scene) {
 };
 
 Dust.prototype.updateGraphics = function (delta) {
-  this.timeAttr.value += delta * 0.001;
+  this.timeAttr.value += delta * 0.005;
 };
