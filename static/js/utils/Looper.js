@@ -6,6 +6,7 @@ function Looper(context, update, render, delta) {
 
   var stepTime = 0;
   var targetDelta = delta || (1 / 30 * 1000);
+  var maxDelta = targetDelta * 2;
 
   var isLooping = false;
   var lastTime;
@@ -30,7 +31,7 @@ function Looper(context, update, render, delta) {
   function animate() {
     if (!isLooping) { return; }
     var time = Date.now();
-    var delta = time - lastTime;
+    var delta = Math.min(maxDelta, time - lastTime);
 
     animateStep(delta);
     requestAnimationFrame(animate);
