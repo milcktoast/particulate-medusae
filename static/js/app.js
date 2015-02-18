@@ -7,7 +7,7 @@ App.shaders = window.App && window.App.shaders;
 App.log('Particulate.js ' + Particulate.VERSION);
 window.App = App;
 
-require('js/helpers/*');
+require('js/utils/*');
 require('js/materials/*');
 require('js/items/*');
 require('js/scenes/*');

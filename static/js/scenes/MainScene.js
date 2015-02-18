@@ -8,7 +8,7 @@ function MainScene() {
 
   this.el = document.getElementById('container');
   this.pxRatio = window.devicePixelRatio;
-  this.gravity = -0.001;
+  this.gravity = -0.9;
 
   this.initRenderer();
   this.initFxComposer();
@@ -21,7 +21,7 @@ function MainScene() {
   camera.position.set(200, 100, 0);
   camera.lookAt(scene.position);
 
-  this.loop = App.Looper.create(this, 'update', 'render');
+  this.loop = App.Looper.create(this, 'update', 'render', 1 / 30 * 1000);
 
   document.addEventListener('keyup', this.onDocumentKey.bind(this), false);
   window.addEventListener('resize', this.onWindowResize.bind(this), false);
@@ -154,11 +154,12 @@ MainScene.prototype.update = function (delta) {
 
   this.gravityForce.set(up.x * gravity, up.y * gravity, up.z * gravity);
   this.medusae.update(delta);
-  this.dust.update(delta);
-  this.controls.update();
 };
 
-MainScene.prototype.render = function () {
+MainScene.prototype.render = function (delta, stepProgress) {
   // this.renderer.render(this.scene, this.camera);
+  this.controls.update();
+  this.medusae.updateGraphics(delta, stepProgress);
+  this.dust.updateGraphics(delta, stepProgress);
   this.composer.render(0.01);
 };
