@@ -8,7 +8,7 @@ function MainScene() {
 
   this.el = document.getElementById('container');
   this.pxRatio = window.devicePixelRatio;
-  this.gravity = -0.001 * 10;
+  this.gravity = -0.0005;
 
   this.initRenderer();
   this.initFxComposer();
@@ -21,7 +21,7 @@ function MainScene() {
   camera.position.set(200, 100, 0);
   camera.lookAt(scene.position);
 
-  this.loop = App.Looper.create(this, 'update', 'render');
+  this.loop = App.Looper.create(this, 'update', 'render', 1 / 15 * 1000);
 
   document.addEventListener('keyup', this.onDocumentKey.bind(this), false);
   window.addEventListener('resize', this.onWindowResize.bind(this), false);

@@ -37,7 +37,7 @@ function Medusae(opts) {
   this.tentacleGroupOffset = 1;
   this.tentacleSegments = 140;
   this.tentacleSegmentLength = 1;
-  this.tentacleWeightFactor = 0.5;
+  this.tentacleWeightFactor = 2.5;
 
   this.tailCount = 10;
   this.tailSegments = 50;

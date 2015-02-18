@@ -1,11 +1,11 @@
 /*global requestAnimationFrame*/
 App.Looper = Looper;
-function Looper(context, update, render) {
+function Looper(context, update, render, delta) {
   var _update = context[update];
   var _render = context[render];
 
   var stepTime = 0;
-  var targetDelta = 1 / 5 * 1000;
+  var targetDelta = delta || (1 / 30 * 1000);
 
   var isLooping = false;
   var lastTime;
@@ -22,7 +22,7 @@ function Looper(context, update, render) {
       _update.call(context, targetDelta);
       steps --;
     }
-    
+
     var stepProgress = stepTime / targetDelta;
     _render.call(context, targetDelta, stepProgress);
   }
