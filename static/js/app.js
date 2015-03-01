@@ -13,11 +13,24 @@ require('js/items/*');
 require('js/scenes/*');
 require('js/controllers/*');
 
+var scene = App.MainScene.create();
+var audioToggle = App.ToggleController.create({
+  name : 'audio'
+});
+
 App.ModalController.create({
   name : 'info'
 });
 
 setTimeout(function () {
-  var scene = App.MainScene.create();
+  scene.initItems();
+  scene.initAudio();
+  scene.appendRenderer();
   scene.loop.start();
+
+  audioToggle.addListener(scene, 'toggleAudio');
 }, 0);
+
+setTimeout(function () {
+  audioToggle.toggleState();
+}, 2000);

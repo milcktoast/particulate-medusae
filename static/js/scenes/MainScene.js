@@ -13,10 +13,8 @@ function MainScene() {
   this.initRenderer();
   this.initFxComposer();
   this.addPostFx();
-  this.onWindowResize();
-
   this.initControls();
-  this.initItems();
+  this.onWindowResize();
 
   camera.position.set(200, 100, 0);
   camera.lookAt(scene.position);
@@ -29,6 +27,10 @@ function MainScene() {
 
 MainScene.create = App.ctor(MainScene);
 
+// ..................................................
+// Graphics
+//
+
 MainScene.prototype.initRenderer = function () {
   var renderer = this.renderer = new THREE.WebGLRenderer({
     devicePixelRatio : this.pxRatio,
@@ -37,8 +39,15 @@ MainScene.prototype.initRenderer = function () {
 
   renderer.setClearColor(0x111111, 1);
   renderer.autoClear = false;
+};
 
-  this.el.appendChild(renderer.domElement);
+MainScene.prototype.appendRenderer = function () {
+  var canvas = this.renderer.domElement;
+
+  this.el.appendChild(canvas);
+  setTimeout(function () {
+    canvas.className = 'active';
+  }, 0);
 };
 
 MainScene.prototype.initFxComposer = function () {
@@ -104,6 +113,27 @@ MainScene.prototype.initItems = function () {
   dust.addTo(this.scene);
 };
 
+MainScene.prototype.onWindowResize = function () {
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  var pxRatio = this.pxRatio;
+  var postWidth = width * pxRatio;
+  var postHeight = height * pxRatio;
+
+  this.width = width;
+  this.height = height;
+
+  this.camera.aspect = width / height;
+  this.camera.updateProjectionMatrix();
+
+  this.renderer.setSize(width, height);
+  this.composer.setSize(postWidth, postHeight);
+};
+
+// ..................................................
+// Controls
+//
+
 MainScene.prototype.initControls = function () {
   var controls = new THREE.TrackballControls(this.camera, this.el);
 
@@ -122,23 +152,6 @@ MainScene.prototype.initControls = function () {
   this.controlsUp = controls.object.up;
 };
 
-MainScene.prototype.onWindowResize = function () {
-  var width = window.innerWidth;
-  var height = window.innerHeight;
-  var pxRatio = this.pxRatio;
-  var postWidth = width * pxRatio;
-  var postHeight = height * pxRatio;
-
-  this.width = width;
-  this.height = height;
-
-  this.camera.aspect = width / height;
-  this.camera.updateProjectionMatrix();
-
-  this.renderer.setSize(width, height);
-  this.composer.setSize(postWidth, postHeight);
-};
-
 MainScene.prototype.onDocumentKey = function (event) {
   switch (event.which) {
   case 32:
@@ -148,12 +161,55 @@ MainScene.prototype.onDocumentKey = function (event) {
   }
 };
 
+// ..................................................
+// Audio
+//
+
+MainScene.prototype.initAudio = function () {
+  var audio = this.audio = App.AudioController.create({
+    baseUrl : App.STATIC_URL + 'audio/'
+  });
+
+  audio.addSound('bg-loop', 'bgLoop');
+  audio.createSound('bgLoop', {
+    loop : true
+  });
+};
+
+MainScene.prototype.beginAudio = function () {
+  var audio = this.audio;
+
+  audio.playSound('bgLoop');
+  audio.setVolume('bgLoop', 1);
+  this._audioIsPlaying = true;
+};
+
+MainScene.prototype.pauseAudio = function () {
+  var audio = this.audio;
+
+  audio.setVolume('bgLoop', 0);
+  this._audioIsPlaying = false;
+};
+
+MainScene.prototype.toggleAudio = function () {
+  if (this._audioIsPlaying) {
+    this.pauseAudio();
+  } else {
+    this.beginAudio();
+  }
+};
+
+// ..................................................
+// Loop
+//
+
 MainScene.prototype.update = function (delta) {
   var up = this.controlsUp;
   var gravity = this.gravity;
 
   this.gravityForce.set(up.x * gravity, up.y * gravity, up.z * gravity);
   this.medusae.update(delta);
+  this.audio.update(delta);
 };
 
 MainScene.prototype.render = function (delta, stepProgress) {

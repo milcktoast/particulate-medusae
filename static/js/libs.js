@@ -15,3 +15,5 @@ require('lib-extras/three/postprocessing/ShaderPass');
 require('lib-extras/three/postprocessing/TexturePass');
 require('lib-extras/three/postprocessing/MaskPass');
 require('lib-extras/three/postprocessing/BloomPass');
+
+require('lib/howler.js/howler.js');
