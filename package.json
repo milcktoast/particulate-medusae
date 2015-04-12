@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "dependencies": {
-    "three": "^0.69.0"
+    "three": "^0.70.0"
   },
   "devDependencies": {
     "grunt": "~0.4.2",
