@@ -3,6 +3,7 @@ require('lib/particulate/dist/particulate');
 
 require('lib-extras/three/controls/TrackballControls');
 require('lib-extras/three/geometries/PlaneBufferGeometry');
+require('lib-extras/three/geometries/SphereGeometry');
 
 require('lib-extras/three/shaders/BasicShader');
 require('lib-extras/three/shaders/CopyShader');

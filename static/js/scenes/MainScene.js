@@ -1,12 +1,16 @@
 var ENABLE_ZOOM = true;
 var ENABLE_PAN = false;
+var DEBUG_NUDGE = false;
 
 App.MainScene = MainScene;
 function MainScene() {
   var scene = this.scene = new THREE.Scene();
   var camera = this.camera = new THREE.PerspectiveCamera(30, 1, 5, 3500);
+  var el = this.el = document.getElementById('container');
 
-  this.el = document.getElementById('container');
+  this.mouse = new THREE.Vector2();
+  this.raycaster = new THREE.Raycaster();
+
   this.pxRatio = window.devicePixelRatio;
   this.gravity = -0.9;
 
@@ -20,6 +24,10 @@ function MainScene() {
   camera.lookAt(scene.position);
 
   this.loop = App.Looper.create(this, 'update', 'render', 1 / 30 * 1000);
+
+  el.addEventListener('mousedown', this.onMouseDown.bind(this), false);
+  el.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+  el.addEventListener('mouseup', this.onMouseUp.bind(this), false);
 
   document.addEventListener('keyup', this.onDocumentKey.bind(this), false);
   window.addEventListener('resize', this.onWindowResize.bind(this), false);
@@ -61,9 +69,14 @@ MainScene.prototype.initFxComposer = function () {
   this._passIndex = {};
 };
 
+// TODO: Tweak bloom fidelity
 MainScene.prototype.addPostFx = function () {
+  var bloomKernel = 20;
+  var bloomSigma = 4;
+  var bloomRes = 7;
+
   this.addPass(new THREE.RenderPass(this.scene, this.camera));
-  this.addPass(new THREE.BloomPass(0.8, 25, 4, 256));
+  this.addPass(new THREE.BloomPass(1, bloomKernel, bloomSigma, Math.pow(2, bloomRes)));
   this.addPass(new THREE.ShaderPass(THREE.CopyShader), true);
 };
 
@@ -105,10 +118,6 @@ MainScene.prototype.initItems = function () {
     pxRatio : this.pxRatio
   });
 
-  var gravityForce = this.gravityForce = Particulate.DirectionalForce.create();
-
-  medusae.system.addForce(gravityForce);
-  medusae.relax(100);
   medusae.addTo(this.scene);
   dust.addTo(this.scene);
 };
@@ -128,6 +137,48 @@ MainScene.prototype.onWindowResize = function () {
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
+};
+
+// ..................................................
+// Forces
+//
+
+MainScene.prototype.initForces = function () {
+  var medusae = this.medusae;
+  var gravityForce = this.gravityForce = Particulate.DirectionalForce.create();
+  var nudgeRadius = 50;
+  var nudgeForce = this.nudgeForce = App.PointRepulsorForce.create([20, 5, 0], {
+    radius : nudgeRadius,
+    intensity : 0
+  });
+
+  medusae.system.addForce(gravityForce);
+  medusae.relax(100);
+  medusae.system.addForce(nudgeForce);
+
+  if (DEBUG_NUDGE) { this.initDebugNudge(nudgeRadius); }
+};
+
+MainScene.prototype.initDebugNudge = function (radius) {
+  // var force = this.nudgeForce;
+  var item = this.debugNudge = new THREE.Mesh(
+    new THREE.SphereGeometry(radius, 8, 6),
+    new THREE.MeshBasicMaterial({
+      color : 0xffffff,
+      wireframe : true
+    }));
+
+  this.scene.add(item);
+};
+
+MainScene.prototype.updateDebugNudge = function () {
+  var force = this.nudgeForce;
+  var position = force.position;
+  var intensity = force.intensity || 0.0001;
+  var item = this.debugNudge;
+
+  item.scale.set(intensity, intensity, intensity);
+  item.position.set(position[0], position[1], position[2]);
 };
 
 // ..................................................
@@ -160,6 +211,49 @@ MainScene.prototype.onDocumentKey = function (event) {
     break;
   }
 };
+
+// ..................................................
+// Interaction
+//
+
+MainScene.prototype.onMouseDown = function (event) {
+  this.didDrag = false;
+};
+
+MainScene.prototype.onMouseMove = function (event) {
+  this.didDrag = true;
+};
+
+MainScene.prototype.onMouseUp = function (event) {
+  if (this.didDrag) { return; }
+  var mouse = this.mouse;
+
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+  this.nudgeMedusae();
+  event.preventDefault();
+};
+
+MainScene.prototype.nudgeMedusae = (function () {
+  var offset = new THREE.Vector3();
+
+  return function () {
+    var raycaster = this.raycaster;
+    raycaster.setFromCamera(this.mouse, this.camera);
+
+    var intersects = raycaster.intersectObject(this.medusae.bulbMesh);
+    if (!intersects.length) { return; }
+    var nudge = this.nudgeForce;
+    var point = intersects[0].point;
+
+    offset.copy(point).normalize().multiplyScalar(20);
+    point.add(offset);
+
+    nudge.intensity = 1;
+    nudge.set(point.x, point.y, point.z);
+  };
+}());
 
 // ..................................................
 // Audio
@@ -206,10 +300,16 @@ MainScene.prototype.toggleAudio = function () {
 MainScene.prototype.update = function (delta) {
   var up = this.controlsUp;
   var gravity = this.gravity;
+  var gravityForce = this.gravityForce;
+  var nudgeForce = this.nudgeForce;
 
-  this.gravityForce.set(up.x * gravity, up.y * gravity, up.z * gravity);
+  gravityForce.set(up.x * gravity, up.y * gravity, up.z * gravity);
+  nudgeForce.intensity *= 0.8;
+
   this.medusae.update(delta);
   this.audio.update(delta);
+
+  if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
 };
 
 MainScene.prototype.render = function (delta, stepProgress) {

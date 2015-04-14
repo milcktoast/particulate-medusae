@@ -1,6 +1,7 @@
 var App = Object.create({
-  log : (window.console && window.console.log.bind(window.console)) || function () {},
-  ctor : Particulate.ctor
+  ctor : Particulate.ctor,
+  log : (window.console && window.console.log.bind &&
+    window.console.log.bind(window.console)) || function () {}
 });
 
 App.shaders = window.App && window.App.shaders;
@@ -8,6 +9,7 @@ App.log('Particulate.js ' + Particulate.VERSION);
 window.App = App;
 
 require('js/utils/*');
+require('js/forces/*');
 require('js/materials/*');
 require('js/items/*');
 require('js/scenes/*');
@@ -24,6 +26,7 @@ App.ModalController.create({
 
 setTimeout(function () {
   scene.initItems();
+  scene.initForces();
   scene.initAudio();
   scene.appendRenderer();
   scene.loop.start();

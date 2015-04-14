@@ -587,7 +587,7 @@ Medusae.prototype.createMaterials = function () {
   faceGeom.addAttribute('uv', uvs);
   faceGeom.computeVertexNormals();
 
-  this.skinMesh = new THREE.Mesh(faceGeom,
+  this.bulbMesh = new THREE.Mesh(faceGeom,
     new App.BulbMaterial({
       diffuse : 0x411991
     }));
@@ -621,7 +621,7 @@ Medusae.prototype.createMaterials = function () {
   item.add(this.linesFaint);
   item.add(this.linesFore);
   item.add(this.tentacleFore);
-  item.add(this.skinMesh);
+  item.add(this.bulbMesh);
   item.add(this.tailMesh);
 
   this.positionAttr = tentacleGeom.attributes.position;
@@ -632,7 +632,7 @@ Medusae.prototype.createMaterials = function () {
     this.linesFaint.material.uniforms.time,
     this.linesFore.material.uniforms.time,
     this.tentacleFore.material.uniforms.time,
-    this.skinMesh.material.uniforms.time,
+    this.bulbMesh.material.uniforms.time,
     this.tailMesh.material.uniforms.time
   ];
 };
