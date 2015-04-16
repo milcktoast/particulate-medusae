@@ -176,7 +176,7 @@ function innerRibIndices(offset, start, segments, buffer) {
 function ribUvs(sv, howMany, buffer) {
   var st, su;
   for (var i = 1, il = howMany; i < il; i ++) {
-    st = (i + 1) / (howMany - 1);
+    st = i / howMany;
     su = (st <= 0.5 ? st : 1 - st) * 2;
     buffer.push(su, sv);
   }
