@@ -13,6 +13,7 @@ function AudioController(config) {
   this.baseUrl = config.baseUrl;
   this.sounds = {};
 
+  this.volume = config.volume == null ? 1 : config.volume;
   this.tweenVolume = Tweens.factorTween(this._volume, 0.05);
 }
 
@@ -40,8 +41,10 @@ AudioController.prototype.createSound = function (name, params) {
   sound = new Howl(params);
   sound.sid = name;
 
-  this._volume[name] = 0;
-  this._volumeTarget[name] = params.volume || 0;
+  var volume = params.volume == null ? 1 : params.volume;
+  this._volume[name] = volume;
+  this._volumeTarget[name] = volume;
+
   this.sounds[name] = sound;
   return sound;
 };
@@ -50,13 +53,13 @@ AudioController.prototype.getSound = function (name) {
   return this.sounds[name] || this.createSound(name);
 };
 
-AudioController.prototype.playSound = function (name) {
+AudioController.prototype.playSound = function (name, volume) {
   if (!this._isEnabled) { return; }
   var sound = this.getSound(name);
   if (!sound) { return; }
-  if (!sound._loaded) {
-    setTimeout(this.playSound.bind(this, name), 250);
-    return;
+
+  if (volume != null) {
+    this._volume[name] = this._volumeTarget[name] = volume;
   }
 
   this._playing[name] = true;
@@ -103,6 +106,7 @@ AudioController.prototype.update = function () {
   var names = this._soundNames;
   var playing = this._playing;
   var volumeTarget = this._volumeTarget;
+  var volumeGlobal = this.volume;
   var name, sound, volume;
 
   for (var i = 0, il = names.length; i < il; i ++) {
@@ -117,7 +121,7 @@ AudioController.prototype.update = function () {
       sound.pause();
     } else {
       if (!playing[name]) { this.playSound(name); }
-      sound.volume(volume);
+      sound.volume(volume * volumeGlobal);
     }
   }
 };

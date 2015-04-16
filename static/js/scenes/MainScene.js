@@ -246,12 +246,15 @@ MainScene.prototype.nudgeMedusae = (function () {
     if (!intersects.length) { return; }
     var nudge = this.nudgeForce;
     var point = intersects[0].point;
+    var sound = Math.random() > 0.5 ? 'bubbles1' : 'bubbles2';
 
     offset.copy(point).normalize().multiplyScalar(20);
     point.add(offset);
 
     nudge.intensity = 1;
     nudge.set(point.x, point.y, point.z);
+
+    this.audio.playSound(sound, 0.15);
   };
 }());
 
@@ -261,12 +264,17 @@ MainScene.prototype.nudgeMedusae = (function () {
 
 MainScene.prototype.initAudio = function () {
   var audio = this.audio = App.AudioController.create({
-    baseUrl : App.STATIC_URL + 'audio/'
+    baseUrl : App.STATIC_URL + 'audio/',
+    volume : 0.8
   });
 
   audio.addSound('bg-loop', 'bgLoop');
+  audio.addSound('bubbles-1', 'bubbles1');
+  audio.addSound('bubbles-2', 'bubbles2');
+
   audio.createSound('bgLoop', {
-    loop : true
+    loop : true,
+    volume : 0
   });
 };
 
