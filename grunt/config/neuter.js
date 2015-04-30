@@ -18,20 +18,9 @@ module.exports = function (config) {
       src: config.source + 'tests/tests.js',
       dest: config.static + 'js/tests.js'
     },
-    libsDevelop: {
+    libs: {
       options: {
         template : '{%= src %}'
-      },
-      src: config.source + 'js/libs.js',
-      dest: config.static + 'js/libs.develop.js'
-    },
-    libsBuild: {
-      options: {
-        template : '{%= src %}',
-        process : function (src) {
-          // Use the production version of ember in production.
-          return src.replace('lib/ember/ember.js', 'lib/ember/ember.prod.js');
-        }
       },
       src: config.source + 'js/libs.js',
       dest: config.static + 'js/libs.develop.js'

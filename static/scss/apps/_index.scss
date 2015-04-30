@@ -30,6 +30,27 @@
     display: inline-block;
     color: #fff;
   }
+
+  a {
+    position: relative;
+    display: inline-block;
+    color: #fff;
+    text-decoration: none;
+
+    &:after {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      border-bottom: 1px solid #fff;
+      opacity: 0.25;
+      content: "";
+    }
+
+    &:hover:after {
+      opacity: 1;
+    }
+  }
 }
 
 .info-section {
