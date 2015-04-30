@@ -39,10 +39,11 @@ function Medusae(opts) {
   this.tentacleSegmentLength = 1;
   this.tentacleWeightFactor = 0.5;
 
-  this.tailCount = 10;
+  this.tailCount = 30;
   this.tailSegments = 50;
   this.tailSegmentSize = 1;
   this.tailRadius = 9;
+  this.tailWeightFactor = 0.25;
 
   this.ribs = [];
 
@@ -443,11 +444,12 @@ Medusae.prototype.createTailSection = function (index, total) {
   var inner = DistanceConstraint.create([innerSize * 0.25, innerSize], innerIndices);
   var outer = DistanceConstraint.create([outerSize * 0.25, outerSize], outerIndices);
   var brace = DistanceConstraint.create([linkSize * 0.5, Infinity], braceIndices);
-  var axis = AxisConstraint.create(0, 1, innerIndices);
   var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, 3);
 
-  this.queueConstraints(inner, outer, brace, axis, pin);
+  this.queueConstraints(inner, outer, brace, pin);
   this.queueConstraints(linkConstraints);
+
+  this.queueWeights(innerStart, segments * 2, index / total * this.tailWeightFactor);
 
   this.addLinks(outerIndices);
   // this.addLinks(linkIndices);
