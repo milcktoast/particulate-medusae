@@ -18,18 +18,44 @@
     {% endif %}
   </head>
   <body>
-    <article id="info" class="modal">
+    <article id="info" class="modal info-modal">
       <h1>Medusae</h1>
-      <p>
-        Built with <a href="http://particulatejs.org">particulate.js</a> and
-        <a href="http://threejs.org">three.js</a> by
-        <a href="http://twitter.com/jpweeks">jpweeks</a>.
-      </p>
+      <div class="info-section">
+        <dl>
+          <dt>Concept, Design & Code</dt>
+          <dd><a href="http://jayweeks.com">Jay Weeks</a></dd>
+        </dl>
+        <dl>
+          <dt>Audio Design</dt>
+          <dd>JP Arsenault</a></dd>
+        </dl>
+      </div>
+      <div class="info-section">
+        <dl>
+          <dt>Physics</dt>
+          <dd><a href="http://particulatejs.org">Particulate</a></dd>
+        </dl>
+        <dl>
+          <dt>Graphics</dt>
+          <dd><a href="http://threejs.org">Three</a></dd>
+        </dl>
+        <dl>
+          <dt>Audio</dt>
+          <dd><a href="http://howlerjs.com/">Howler</a></dd>
+        </dl>
+      </div>
+      <div class="info-section">
+        <dl>
+          <dt>Source</dt>
+          <dd><a href="http://github.com/jpweeks/particulate-medusae">Github</a></dd>
+        </dl>
+      </div>
     </article>
     <div id="cover-info" class="modal-cover"></div>
 
     <div class="controls">
       <div id="toggle-info" class="controls-button" title="About"></div>
+      <div id="toggle-audio" class="controls-button" title="Audio"></div>
     </div>
 
     <div id="container"></div>
@@ -48,8 +74,7 @@
         }
       </script>
     {% else %}
-      <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r69/three.min.js"></script>
-      <script src="{{ STATIC_URL }}js/libs.min.js"></script>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
       <script src="{{ STATIC_URL }}js/app.min.js"></script>
     {% endif %}
     <script>

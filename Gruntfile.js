@@ -57,8 +57,7 @@ module.exports = function (grunt) {
 
     // JS
     'handlebars',
-    'neuter:libsDevelop',
-    'neuter:app',
+    'neuter',
     'shaderChunks',
 
     // CSS
@@ -80,8 +79,7 @@ module.exports = function (grunt) {
     // JS
     'jshint',
     'handlebars',
-    'neuter:libsBuild',
-    'neuter:app',
+    'neuter',
     'shaderChunks',
     'uglify',
 

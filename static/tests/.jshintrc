@@ -1,0 +1,40 @@
+{
+  "globals": {
+    "App"            : true,
+    "require"        : true,
+    "Particulate"    : true,
+    "Test"           : true,
+
+    "QUnit"          : false,
+    "asyncTest"      : false,
+    "deepEqual"      : false,
+    "equal"          : false,
+    "expect"         : false,
+    "module"         : false,
+    "notDeepEqual"   : false,
+    "notEqual"       : false,
+    "notStrictEqual" : false,
+    "ok"             : false,
+    "raises"         : false,
+    "start"          : false,
+    "stop"           : false,
+    "strictEqual"    : false,
+    "test"           : false,
+    "throws"         : false
+  },
+
+  "browser"          : true,
+  "curly"            : true,
+  "eqeqeq"           : true,
+  "eqnull"           : true,
+  "forin"            : true,
+  "indent"           : 2,
+  "latedef"          : "nofunc",
+  "maxcomplexity"    : 10,
+  "maxdepth"         : 3,
+  "newcap"           : true,
+  "noarg"            : true,
+  "quotmark"         : "single",
+  "undef"            : true,
+  "unused"           : "vars"
+}

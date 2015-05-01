@@ -1,18 +1,9 @@
 body {
   color: #fff;
-	font: 12px/1.2 Monaco, monospace;
+  font: 12px/1.2 Monaco, monospace;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1 {
-  margin: 0 0 8px;
-	font-size: 14px;
-}
-
-a {
-  color: #e30060;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
+  font-size: 14px;
 }

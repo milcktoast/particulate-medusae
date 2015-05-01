@@ -39,10 +39,11 @@ function Medusae(opts) {
   this.tentacleSegmentLength = 1;
   this.tentacleWeightFactor = 0.5;
 
-  this.tailCount = 10;
+  this.tailCount = 30;
   this.tailSegments = 50;
   this.tailSegmentSize = 1;
   this.tailRadius = 9;
+  this.tailWeightFactor = 0.25;
 
   this.ribs = [];
 
@@ -176,7 +177,7 @@ function innerRibIndices(offset, start, segments, buffer) {
 function ribUvs(sv, howMany, buffer) {
   var st, su;
   for (var i = 1, il = howMany; i < il; i ++) {
-    st = (i + 1) / (howMany - 1);
+    st = i / howMany;
     su = (st <= 0.5 ? st : 1 - st) * 2;
     buffer.push(su, sv);
   }
@@ -443,11 +444,12 @@ Medusae.prototype.createTailSection = function (index, total) {
   var inner = DistanceConstraint.create([innerSize * 0.25, innerSize], innerIndices);
   var outer = DistanceConstraint.create([outerSize * 0.25, outerSize], outerIndices);
   var brace = DistanceConstraint.create([linkSize * 0.5, Infinity], braceIndices);
-  var axis = AxisConstraint.create(0, 1, innerIndices);
   var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, 3);
 
-  this.queueConstraints(inner, outer, brace, axis, pin);
+  this.queueConstraints(inner, outer, brace, pin);
   this.queueConstraints(linkConstraints);
+
+  this.queueWeights(innerStart, segments * 2, index / total * this.tailWeightFactor);
 
   this.addLinks(outerIndices);
   // this.addLinks(linkIndices);
@@ -587,7 +589,7 @@ Medusae.prototype.createMaterials = function () {
   faceGeom.addAttribute('uv', uvs);
   faceGeom.computeVertexNormals();
 
-  this.skinMesh = new THREE.Mesh(faceGeom,
+  this.bulbMesh = new THREE.Mesh(faceGeom,
     new App.BulbMaterial({
       diffuse : 0x411991
     }));
@@ -621,7 +623,7 @@ Medusae.prototype.createMaterials = function () {
   item.add(this.linesFaint);
   item.add(this.linesFore);
   item.add(this.tentacleFore);
-  item.add(this.skinMesh);
+  item.add(this.bulbMesh);
   item.add(this.tailMesh);
 
   this.positionAttr = tentacleGeom.attributes.position;
@@ -632,7 +634,7 @@ Medusae.prototype.createMaterials = function () {
     this.linesFaint.material.uniforms.time,
     this.linesFore.material.uniforms.time,
     this.tentacleFore.material.uniforms.time,
-    this.skinMesh.material.uniforms.time,
+    this.bulbMesh.material.uniforms.time,
     this.tailMesh.material.uniforms.time
   ];
 };

@@ -1,30 +1,45 @@
+body {
+  background: #1b1b1b;
+}
+
 #container {
   @include absolute(0);
   overflow: hidden;
+
+  canvas {
+    opacity: 0;
+    transition: opacity 500ms 200ms;
+
+    &.active {
+      opacity: 1;
+    }
+  }
 }
 
 .controls {
   position: absolute;
   left: 0;
-  bottom: 0;
+  bottom: 10px;
   z-index: 2;
 }
 
 .controls-button {
+  position: relative;
+  display: block;
   width: 50px;
-  height: 50px;
+  height: 30px;
   cursor: pointer;
 
   &:before {
     position: absolute;
-    top: 20px;
+    top: 10px;
     left: 20px;
     width: 10px;
     height: 10px;
     border-radius: 2px;
 
     background: #fff;
-    transition: background 100ms;
+    transition: background 200ms;
     content: "";
   }
 
@@ -36,7 +51,7 @@
 
 .modal {
   $width: 300px;
-  $height: 120px;
+  $height: 220px;
 
   position: absolute;
   z-index: 2;
