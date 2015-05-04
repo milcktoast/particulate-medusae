@@ -1,5 +1,8 @@
+window.Test = { assert : {} };
+
 require('lib/qunit/qunit/qunit.js');
 
+require('./assert/*');
 require('./constraints/*');
 require('./forces/*');
 

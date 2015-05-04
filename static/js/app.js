@@ -1,5 +1,6 @@
 require('js/application/App');
 require('js/utils/*');
+require('js/constraints/*');
 require('js/forces/*');
 require('js/materials/*');
 require('js/items/*');
