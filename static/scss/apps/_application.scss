@@ -34,19 +34,41 @@ body {
     position: absolute;
     top: 10px;
     left: 20px;
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
+    border: 1px solid #fff;
     border-radius: 2px;
 
     background: #fff;
-    transition: background 200ms;
+    transition-property: border-color, background;
+    transition-duration: 200ms;
     content: "";
   }
 
-  &.active:before,
-  &:hover:before {
-    background: #e30060;
+  > .label {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    color: #fff;
+    opacity: 0;
+    visibility: hidden;
+
+    transform: translateY(-50%);
+    transition: all 150ms;
   }
+
+  &:hover > .label {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  &.active:before {
+    background: #e30060;
+    border-color: #e30060;
+  }
+
+  &:hover:before { border-color: #e30060; }
+  &.active:hover:before { border-color: #fff; }
 }
 
 .modal {
