@@ -393,6 +393,8 @@ Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
 // Tail / mouth
 //
 
+// TODO: Improve constraining tail within bulb
+// Perhaps with something as simple as a `dome` constraint
 Medusae.prototype.createTail = function () {
   var tailCount = this.tailCount;
 
@@ -495,6 +497,9 @@ Medusae.prototype.queueWeights = function (start, howMany, weight) {
   }
 };
 
+// TODO: Improve constraining system world position
+// Switch from absolute pin to axis constraints
+// Pin top end of axis, allow bottom to be affected by forces
 Medusae.prototype.createSystem = function () {
   var queuedConstraints = this.queuedConstraints;
   var queuedWeights = this.weights;
