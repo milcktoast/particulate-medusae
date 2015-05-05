@@ -160,14 +160,17 @@ MainScene.prototype.initForces = function () {
 };
 
 MainScene.prototype.initDebugNudge = function (radius) {
-  // var force = this.nudgeForce;
   var item = this.debugNudge = new THREE.Mesh(
-    new THREE.SphereGeometry(radius, 8, 6),
+    new THREE.SphereBufferGeometry(radius, 8, 6),
     new THREE.MeshBasicMaterial({
       color : 0xffffff,
-      wireframe : true
+      opacity : 0.2,
+      transparent : true
     }));
 
+  var wire = new THREE.WireframeHelper(item, 0xffffff);
+
+  this.scene.add(wire);
   this.scene.add(item);
 };
 
