@@ -56,3 +56,45 @@
 .info-section {
   margin: 12px 0 0;
 }
+
+.stats-panel {
+  position: absolute;
+  z-index: 1;
+  right: 20px;
+  bottom: 20px;
+
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 200ms;
+
+  dl {
+    display: inline-block;
+
+    &:not(:last-child):after {
+      display: inline-block;
+      padding: 0 4px;
+      color: #e30060;
+      content: "/";
+    }
+  }
+
+  dt {
+    display: inline-block;
+
+    &:after {
+      display: inline-block;
+      padding: 0 0 0 2px;
+      content: ":";
+    }
+  }
+
+  dd {
+    display: inline-block;
+  }
+
+  .show-info & {
+    opacity: 1;
+    visibility: visible;
+  }
+}

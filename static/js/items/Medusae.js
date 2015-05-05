@@ -2,6 +2,7 @@ var PTCL = Particulate;
 var GEOM = App.Geometry;
 var LINKS = App.Links;
 var FACES = App.Faces;
+var Tweens = App.Tweens;
 
 var Vec3 = PTCL.Vec3;
 var PointConstraint = PTCL.PointConstraint;
@@ -53,6 +54,7 @@ function Medusae(opts) {
   this.createSystem();
   this.createMaterials();
   this.removeTempBuffers();
+  this.initTweens();
 }
 
 Medusae.create = App.ctor(Medusae);
@@ -126,10 +128,6 @@ Medusae.prototype.createCore = function () {
 
   var pinTop = this.pinTop = 0;
   var pinBottom = this.pinBottom = 2;
-
-  var sizeMin = size * 0.9;
-  var sizeMax = size * 1.1;
-  var sizeRange = [sizeMin, sizeMax];
 
   var rangeTop = [size * 0.4, size * 0.6];
   var rangeMid = [0, size * 0.05];
@@ -541,11 +539,50 @@ Medusae.prototype.addFaces = function (faceIndices) {
   _push.apply(this.bulbFaces, faceIndices);
 };
 
+Medusae.prototype.createParticleTexture = function () {
+  var canvas = document.createElement('canvas');
+  var texture = new THREE.Texture(canvas);
+  var ctx = canvas.getContext('2d');
+
+  var size = Math.pow(2, 5);
+  var center = size * 0.5;
+  var offset = 0;
+
+  canvas.width = canvas.height = size;
+
+  ctx.lineWidth = size * 0.25;
+  ctx.strokeStyle = '#fff';
+
+  ctx.beginPath();
+  ctx.moveTo(center, offset);
+  ctx.lineTo(center, size - offset);
+  ctx.moveTo(offset, center);
+  ctx.lineTo(size - offset, center);
+  ctx.stroke();
+
+  texture.needsUpdate = true;
+  return texture;
+};
+
 Medusae.prototype.createMaterials = function () {
   var position = new THREE.BufferAttribute(this.system.positions, 3);
   var positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
   var uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
   var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
+
+  // Particles
+  var dotsGeom = new THREE.BufferGeometry();
+  dotsGeom.addAttribute('position', position);
+
+  this.dots = new THREE.PointCloud(dotsGeom,
+    new THREE.PointCloudMaterial({
+      size : 2,
+      opacity : 0.5,
+      map : this.createParticleTexture(),
+      transparent : true,
+      depthTest : false,
+      depthWrite : false
+    }));
 
   // Connections
   var linesGeom = new THREE.BufferGeometry();
@@ -638,6 +675,7 @@ Medusae.prototype.createMaterials = function () {
 
   // Parent object
   var item = this.item;
+  item.add(this.dots);
   item.add(this.linesFaint);
   item.add(this.linesFore);
   item.add(this.tentacleFore);
@@ -661,9 +699,31 @@ Medusae.prototype.addTo = function (scene) {
   scene.add(this.item);
 };
 
+Medusae.prototype.toggleDots = function () {
+  var visible = this._dotsAreVisible = !this._dotsAreVisible;
+  this._dotsOpacity = visible ? 1 : 0;
+};
+
+// ..................................................
+// Animation
+//
+
+Medusae.prototype.initTweens = function () {
+  this._tweens = {};
+  this.tween = Tweens.factorTween(this._tweens, 0.05);
+};
+
+Medusae.prototype.updateTweens = function (delta) {
+  var dotOpacity = this.tween('dots', this._dotsOpacity || 0);
+
+  this.dots.material.opacity = dotOpacity * 0.5;
+  this.dots.visible = dotOpacity > 0.001;
+};
+
 Medusae.prototype.update = function (delta) {
   this.animTime += delta * 0.001;
   this.updateBulb(delta);
+  this.updateTweens(delta);
   this.system.tick(delta * 0.001);
 
   this.positionAttr.needsUpdate = true;

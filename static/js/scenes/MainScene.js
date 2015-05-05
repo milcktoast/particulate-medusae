@@ -302,6 +302,15 @@ MainScene.prototype.toggleAudio = function () {
 };
 
 // ..................................................
+// Vis
+//
+
+MainScene.prototype.toggleDots = function () {
+  if (!this.medusae) { return; }
+  this.medusae.toggleDots();
+};
+
+// ..................................................
 // Loop
 //
 
