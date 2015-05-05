@@ -544,7 +544,7 @@ Medusae.prototype.createParticleTexture = function () {
   var texture = new THREE.Texture(canvas);
   var ctx = canvas.getContext('2d');
 
-  var size = Math.pow(2, 5);
+  var size = Math.pow(2, 6);
   var center = size * 0.5;
   var offset = 0;
 
@@ -576,7 +576,7 @@ Medusae.prototype.createMaterials = function () {
 
   this.dots = new THREE.PointCloud(dotsGeom,
     new THREE.PointCloudMaterial({
-      size : 2,
+      size : this.pxRatio * 2,
       opacity : 0.5,
       map : this.createParticleTexture(),
       transparent : true,
