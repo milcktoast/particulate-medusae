@@ -174,7 +174,7 @@ MainScene.prototype.initDebugNudge = function (radius) {
 MainScene.prototype.updateDebugNudge = function () {
   var force = this.nudgeForce;
   var position = force.position;
-  var intensity = force.intensity || 0.0001;
+  var intensity = Math.max(force.intensity, 0.0001);
   var item = this.debugNudge;
 
   item.scale.set(intensity, intensity, intensity);
