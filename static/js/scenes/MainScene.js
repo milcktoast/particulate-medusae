@@ -71,12 +71,12 @@ MainScene.prototype.initFxComposer = function () {
 
 // TODO: Tweak bloom fidelity
 MainScene.prototype.addPostFx = function () {
-  var bloomKernel = 20;
+  var bloomKernel = 25;
   var bloomSigma = 4;
-  var bloomRes = 7;
+  var bloomRes = 8;
 
   this.addPass(new THREE.RenderPass(this.scene, this.camera));
-  this.addPass(new THREE.BloomPass(1, bloomKernel, bloomSigma, Math.pow(2, bloomRes)));
+  this.addPass(new THREE.BloomPass(0.75, bloomKernel, bloomSigma, Math.pow(2, bloomRes)));
   this.addPass(new THREE.ShaderPass(THREE.CopyShader), true);
 };
 
