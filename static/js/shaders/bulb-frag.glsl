@@ -1,16 +1,5 @@
-uniform vec3 diffuse;
 uniform float opacity;
-
-{{{chunks.common}}}
-{{{chunks.color_pars_fragment}}}
-{{{chunks.map_pars_fragment}}}
-{{{chunks.alphamap_pars_fragment}}}
-{{{chunks.lightmap_pars_fragment}}}
-{{{chunks.envmap_pars_fragment}}}
-{{{chunks.fog_pars_fragment}}}
-{{{chunks.shadowmap_pars_fragment}}}
-{{{chunks.specularmap_pars_fragment}}}
-{{{chunks.logdepthbuf_pars_fragment}}}
+varying vec2 vUv;
 
 float scale = 20.0;
 float color = 2.0;
@@ -19,17 +8,6 @@ float g = 1.0;
 float b = 1.2;
 
 void main() {
-  vec3 outgoingLight = vec3(0.0);
-  vec4 diffuseColor = vec4(diffuse, opacity);
-
-  {{{chunks.logdepthbuf_fragment}}}
-  {{{chunks.map_fragment}}}
-  {{{chunks.alphamap_fragment}}}
-  {{{chunks.alphatest_fragment}}}
-  {{{chunks.specularmap_fragment}}}
-  {{{chunks.lightmap_fragment}}}
-  {{{chunks.color_fragment}}}
-
   vec2 uv = vUv;
 
   color -= sin(uv.x * 60.0) * 0.25 + sin(uv.x * 60.0 * scale) * 0.25 + 0.75;
@@ -45,12 +23,5 @@ void main() {
 
   color -= sin(uv.y * 5.0) * 0.5 + sin(uv.y * 2.5) * 1.5;
 
-  gl_FragColor = vec4(vec3(color * r, color * g, color * b), opacity);
-
-  {{{chunks.envmap_fragment}}}
-  {{{chunks.shadowmap_fragment}}}
-
-  {{{chunks.linear_to_gamma_fragment}}}
-
-  {{{chunks.fog_fragment}}}
+  gl_FragColor = vec4(color * r, color * g, color * b, opacity);
 }

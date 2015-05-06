@@ -2,16 +2,9 @@ uniform float size;
 uniform float scale;
 uniform float time;
 uniform float area;
-
 varying float centerDist;
 
-{{{chunks.common}}}
-{{{chunks.color_pars_vertex}}}
-{{{chunks.logdepthbuf_pars_vertex}}}
-
 void main() {
-  {{{chunks.color_vertex}}}
-
   float offsetY = mod(position.y - 1.0 * time, area) - area * 0.5;
   vec3 offsetPosition = vec3(
     position.x + sin(cos(offsetY * 0.1) + sin(offsetY * 0.1 + position.x * 0.1) * 2.0),
@@ -24,8 +17,4 @@ void main() {
 
   gl_PointSize = size * (scale / length(mvPosition.xyz));
   gl_Position = projectionMatrix * mvPosition;
-
-  {{{chunks.logdepthbuf_vertex}}}
-  {{{chunks.worldpos_vertex}}}
-  {{{chunks.shadowmap_vertex}}}
 }
