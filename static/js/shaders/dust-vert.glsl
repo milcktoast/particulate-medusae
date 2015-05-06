@@ -5,6 +5,7 @@ uniform float area;
 
 varying float centerDist;
 
+{{{chunks.common}}}
 {{{chunks.color_pars_vertex}}}
 {{{chunks.logdepthbuf_pars_vertex}}}
 

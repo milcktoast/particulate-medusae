@@ -4,6 +4,7 @@ uniform float area;
 
 varying float centerDist;
 
+{{{chunks.common}}}
 {{{chunks.color_pars_fragment}}}
 {{{chunks.fog_pars_fragment}}}
 {{{chunks.logdepthbuf_pars_fragment}}}

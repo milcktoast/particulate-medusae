@@ -1,3 +1,4 @@
+{{{chunks.common}}}
 {{{chunks.lerp_pos_pars_vertex}}}
 {{{chunks.map_pars_vertex}}}
 {{{chunks.lightmap_pars_vertex}}}

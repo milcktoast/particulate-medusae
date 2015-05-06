@@ -1,6 +1,7 @@
 uniform vec3 diffuse;
 uniform float opacity;
 
+{{{chunks.common}}}
 {{{chunks.color_pars_fragment}}}
 {{{chunks.map_pars_fragment}}}
 {{{chunks.alphamap_pars_fragment}}}
@@ -12,7 +13,8 @@ uniform float opacity;
 {{{chunks.logdepthbuf_pars_fragment}}}
 
 void main() {
-  gl_FragColor = vec4(diffuse, opacity);
+  vec3 outgoingLight = vec3(0.0);
+  vec4 diffuseColor = vec4(diffuse, opacity);
 
   {{{chunks.logdepthbuf_fragment}}}
   {{{chunks.map_fragment}}}
