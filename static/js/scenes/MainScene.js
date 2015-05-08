@@ -77,7 +77,7 @@ MainScene.prototype.addPostFx = function () {
 
   this.addPass(new THREE.RenderPass(this.scene, this.camera));
   this.addPass(new THREE.BloomPass(0.75, bloomKernel, bloomSigma, Math.pow(2, bloomRes)));
-  this.addPass('lensDirt', new App.LensDirtPass());
+  this.lensDirtPass = this.addPass(new App.LensDirtPass());
   this.addPass(new THREE.ShaderPass(THREE.CopyShader), true);
 };
 
@@ -138,7 +138,7 @@ MainScene.prototype.onWindowResize = function () {
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
-  this.getPass('lensDirt').setSize(postWidth, postHeight);
+  this.lensDirtPass.setSize(postWidth, postHeight);
 };
 
 // ..................................................
@@ -245,7 +245,9 @@ MainScene.prototype.nudgeMedusae = (function () {
 
   return function () {
     var raycaster = this.raycaster;
-    raycaster.setFromCamera(this.mouse, this.camera);
+    var mouse = this.mouse;
+
+    raycaster.setFromCamera(mouse, this.camera);
 
     var intersects = raycaster.intersectObject(this.medusae.bulbMesh);
     if (!intersects.length) { return; }
@@ -260,6 +262,7 @@ MainScene.prototype.nudgeMedusae = (function () {
     nudge.set(point.x, point.y, point.z);
 
     this.audio.playSound(sound, 0.15);
+    this.lensDirtPass.setGroup(10, mouse.x, mouse.y, 0.8);
   };
 }());
 
@@ -330,6 +333,7 @@ MainScene.prototype.update = function (delta) {
 
   this.medusae.update(delta);
   this.audio.update(delta);
+  this.lensDirtPass.update(delta);
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
 };

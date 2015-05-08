@@ -7,6 +7,7 @@
     "particulate": "~0.3.2",
     "handlebars": "1.3.0",
     "howler.js": "~1.1.25",
-    "qunit": "~1.18.0"
+    "qunit": "~1.18.0",
+    "noise": "git@github.com:josephg/noisejs.git#3861daee43d62f809126eb9783cf4091d4796ee8"
   }
 }

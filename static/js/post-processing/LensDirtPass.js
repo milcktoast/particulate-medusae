@@ -1,5 +1,15 @@
+require('./LensDirtTexture');
+
 App.LensDirtPass = LensDirtPass;
-function LensDirtPass() {
+function LensDirtPass(opts) {
+  opts = opts || {};
+
+  var quads = opts.quads || 100;
+  var textureSize = opts.textureSize || 1024;
+  var textureCells = opts.textureCells || 10;
+  var textureCellPad = opts.textureCellPad || 20;
+  var textureDetail = opts.textureDetail || 50;
+
   this.renderToScreen = false;
   this.enabled = true;
   this.needsSwap = false;
@@ -9,17 +19,24 @@ function LensDirtPass() {
   this.scene = new THREE.Scene();
   this.scale = 1;
 
-  this.geom = this.createQuadGeom(2, 10);
-  this.mesh = new THREE.Mesh(this.geom, new App.UVMaterial({
-    diffuse : 0xffffff,
+  this.textureMap = new App.LensDirtTexture(textureSize, textureCells, {
+    detail : textureDetail,
+    cellPad : textureCellPad
+  });
+
+  this.geom = this.createQuadGeom(quads, textureCells);
+  this.mesh = new THREE.Mesh(this.geom, new App.AlphaMaterial({
+    color : 0xffffff,
     opacity : 0.5,
+    map : this.textureMap.texture,
+    blending : THREE.AdditiveBlending,
     transparent : true
   }));
 
   this.scene.add(this.mesh);
 
-  this.setQuadPosition(0, 0.5, 0.5, Math.PI * 0.25, 0.1);
-  this.setQuadPosition(1, -0.5, -0.2, Math.PI * 0.15, 0.05);
+  this._quadIndex = 0;
+  this._quadCount = quads;
 }
 
 LensDirtPass.prototype.setSize = function (width, height) {
@@ -105,15 +122,29 @@ LensDirtPass.prototype._quadGeomUv = function (count, cells) {
   return uvAttr;
 };
 
+LensDirtPass.prototype._quadGeomAlpha = function (count) {
+  var alpha = new Float32Array(count * 4);
+  var alphaAttr = new THREE.BufferAttribute(alpha, 1);
+
+  return alphaAttr;
+};
+
 LensDirtPass.prototype.createQuadGeom = function (count, cells) {
   var geom = new THREE.BufferGeometry();
 
   geom.addAttribute('position', this._quadGeomPosition(count));
   geom.addAttribute('index', this._quadGeomIndex(count));
   geom.addAttribute('uv', this._quadGeomUv(count, cells));
+  geom.addAttribute('alpha', this._quadGeomAlpha(count));
 
   return geom;
 };
+
+// ..................................................
+// Geometry updates
+//
+
+LensDirtPass.prototype._quadIndex = 0;
 
 LensDirtPass.prototype.setQuadPosition = (function () {
   var pos = new THREE.Matrix4();
@@ -157,6 +188,54 @@ LensDirtPass.prototype.setQuadPosition = (function () {
     position.needsUpdate = true;
   };
 }());
+
+LensDirtPass.prototype.setQuadAlpha = function (index, alpha) {
+  var attr = this.geom.attributes.alpha;
+  var array = attr.array;
+  var ai = index * 4;
+
+  array[ai]     = alpha;
+  array[ai + 1] = alpha;
+  array[ai + 2] = alpha;
+  array[ai + 3] = alpha;
+
+  attr.needsUpdate = true;
+};
+
+LensDirtPass.prototype.setGroup = function (count, x, y, spread) {
+  var total = this._quadCount;
+  var index = this._quadIndex;
+  var qi = index;
+  var xi, yi, rot, scale;
+
+  for (var i = 0; i < count; i ++) {
+    xi = x + (Math.random() - 0.5) * spread;
+    yi = y + (Math.random() - 0.5) * spread;
+    rot = Math.random() * Math.PI * 2;
+    scale = Math.random() * 0.15;
+
+    this.setQuadPosition(qi, xi, yi, rot, scale);
+    this.setQuadAlpha(qi, 1);
+
+    qi = index + i;
+    if (qi >= total) {
+      index = this._quadIndex = 0;
+    }
+  }
+
+  this._quadIndex = qi;
+};
+
+LensDirtPass.prototype.update = function (delta) {
+  var alphaAttr = this.geom.attributes.alpha;
+  var alphaArray = alphaAttr.array;
+
+  for (var i = 0, il = alphaArray.length; i < il; i ++) {
+    alphaArray[i] *= 0.995;
+  }
+
+  alphaAttr.needsUpdate = true;
+};
 
 LensDirtPass.prototype.render = function (renderer, writeBuffer, readBuffer, delta) {
   if (this.renderToScreen) {
