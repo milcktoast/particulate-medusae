@@ -9,7 +9,7 @@ function LensDirtPass() {
   this.scene = new THREE.Scene();
   this.scale = 1;
 
-  this.geom = this.createQuadGeom(2);
+  this.geom = this.createQuadGeom(2, 10);
   this.mesh = new THREE.Mesh(this.geom, new App.UVMaterial({
     diffuse : 0xffffff,
     opacity : 0.5,
@@ -43,20 +43,21 @@ LensDirtPass.prototype.setSize = function (width, height) {
   camera.updateProjectionMatrix();
 };
 
-// TODO: Add uv attribute
-LensDirtPass.prototype.createQuadGeom = function (count) {
+// ..................................................
+// Quad geometry
+//
+
+LensDirtPass.prototype._quadGeomPosition = function (count) {
   var verts = new Float32Array(count * 4 * 3);
+  var positionAttr = new THREE.BufferAttribute(verts, 3);
+
+  return positionAttr;
+};
+
+LensDirtPass.prototype._quadGeomIndex = function (count) {
   var indices = new Uint16Array(count * 6);
-  var uvs = new Float32Array(count * 4 * 2);
-
-  var geom = new THREE.BufferGeometry();
-  var position = new THREE.BufferAttribute(verts, 3);
-  var index = new THREE.BufferAttribute(indices, 1);
-  var uv = new THREE.BufferAttribute(uvs, 2);
-
-  var qi = 0;
-  var qj = 0;
-  var qk = 0;
+  var indexAttr = new THREE.BufferAttribute(indices, 1);
+  var qi = 0, qj = 0;
   var a, b, c, d;
 
   for (var i = 0; i < count; i ++) {
@@ -72,23 +73,44 @@ LensDirtPass.prototype.createQuadGeom = function (count) {
     indices[qj + 4] = d;
     indices[qj + 5] = a;
 
-    uvs[qk]     = 0; // au
-    uvs[qk + 1] = 0; // av
-    uvs[qk + 2] = 1; // bu
-    uvs[qk + 3] = 0; // bv
-    uvs[qk + 4] = 1; // cu
-    uvs[qk + 5] = 1; // cv
-    uvs[qk + 6] = 0; // du
-    uvs[qk + 7] = 1; // dv
-
     qi += 4;
     qj += 6;
-    qk += 8;
   }
 
-  geom.addAttribute('position', position);
-  geom.addAttribute('index', index);
-  geom.addAttribute('uv', uv);
+  return indexAttr;
+};
+
+LensDirtPass.prototype._quadGeomUv = function (count, cells) {
+  var uvs = new Float32Array(count * 4 * 2);
+  var uvAttr = new THREE.BufferAttribute(uvs, 2);
+  var step = 1 / cells;
+  var qi = 0, row = 0, col = 0;
+
+  for (var i = 0; i < count; i ++) {
+    uvs[qi]     = uvs[qi + 6] = step * col;       // au, du
+    uvs[qi + 1] = uvs[qi + 3] = step * row;       // av, bv
+    uvs[qi + 2] = uvs[qi + 4] = step * (col + 1); // bu, cu
+    uvs[qi + 5] = uvs[qi + 7] = step * (row + 1); // cv, dv
+
+    qi += 8;
+
+    if (++ col === cells) {
+      col = 0;
+      if (++ row === cells) {
+        row = 0;
+      }
+    }
+  }
+
+  return uvAttr;
+};
+
+LensDirtPass.prototype.createQuadGeom = function (count, cells) {
+  var geom = new THREE.BufferGeometry();
+
+  geom.addAttribute('position', this._quadGeomPosition(count));
+  geom.addAttribute('index', this._quadGeomIndex(count));
+  geom.addAttribute('uv', this._quadGeomUv(count, cells));
 
   return geom;
 };

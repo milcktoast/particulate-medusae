@@ -5,6 +5,7 @@ require('lib/qunit/qunit/qunit.js');
 require('./assert/*');
 require('./constraints/*');
 require('./forces/*');
+require('./post-processing/*');
 
 function setFavicon(uri) {
   var link = document.getElementById('favicon');
