@@ -18,7 +18,7 @@ module.exports = function (config) {
       options : {
         namespace : 'App.shaders'
       },
-      src : config.source + 'js/shaders/{,*/}*',
+      src : config.source + 'glsl/shaders/{,*/}*',
       dest : config.static + 'js/shaders.develop.js'
     }
   };

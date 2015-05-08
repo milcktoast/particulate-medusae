@@ -6,7 +6,7 @@ var path = require('path');
 module.exports = function (grunt) {
 	grunt.config('shaderChunks', {
 		develop : {
-			src : 'static/js/shader-chunks/*',
+			src : 'static/glsl/shader-chunks/*',
 			dest : 'build/static/js/shader-chunks.develop.js'
 		}
 	});
