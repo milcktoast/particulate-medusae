@@ -77,6 +77,7 @@ MainScene.prototype.addPostFx = function () {
 
   this.addPass(new THREE.RenderPass(this.scene, this.camera));
   this.addPass(new THREE.BloomPass(0.75, bloomKernel, bloomSigma, Math.pow(2, bloomRes)));
+  this.addPass('lensDirt', new App.LensDirtPass());
   this.addPass(new THREE.ShaderPass(THREE.CopyShader), true);
 };
 
@@ -137,6 +138,7 @@ MainScene.prototype.onWindowResize = function () {
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
+  this.getPass('lensDirt').setSize(postWidth, postHeight);
 };
 
 // ..................................................
