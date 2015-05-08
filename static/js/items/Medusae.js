@@ -32,7 +32,7 @@ function Medusae(opts) {
   this.segmentsCount = 4;
   this.ribsCount = 20;
   this.size = 25;
-  this._totalSegments = this.segmentsCount * 3 * 3;
+  this.totalSegments = this.segmentsCount * 3 * 3;
 
   this.tentacleGroupCount = 4;
   this.tentacleGroupOffset = 1;
@@ -116,7 +116,7 @@ function spineAngleIndices(a, b, start, howMany) {
 Medusae.prototype.createCore = function () {
   var verts = this.verts;
   var uvs = this.uvs;
-  var segments = this._totalSegments;
+  var segments = this.totalSegments;
   var ribsCount = this.ribsCount;
   var size = this.size;
   var offsets = [size, 0, -size * 2, 0, -size * 0.5, -size];
@@ -130,12 +130,12 @@ Medusae.prototype.createCore = function () {
   var pinBottom = this.pinBottom = 2;
 
   var rangeTop = [size * 0.4, size * 0.6];
-  var rangeMid = [0, size * 0.05];
+  var rangeMid = [size * 0.4, size * 0.6];
   var rangeBottom = [0, size * 2];
 
   var spineA = DistanceConstraint.create(rangeTop, [0, indexTop]);
   var spineB = DistanceConstraint.create(rangeTop, [1, indexTop]);
-  var spineC = DistanceConstraint.create(rangeMid, [1, indexMid]);
+  var spineC = DistanceConstraint.create(rangeMid, [indexTop, indexMid]);
   var spineD = DistanceConstraint.create(rangeBottom, [2, indexBottom]);
   var axis = AxisConstraint.create(0, 1, [indexTop, indexMid, indexBottom]);
 
@@ -203,7 +203,7 @@ function ribUvs(sv, howMany, buffer) {
 
 Medusae.prototype.createInnerRib = function (start, length) {
   var segmentGroups = this.segmentsCount;
-  var segments = this._totalSegments;
+  var segments = this.totalSegments;
   var indices = [];
 
   for (var i = 0, il = segmentGroups; i < il; i ++) {
@@ -214,7 +214,7 @@ Medusae.prototype.createInnerRib = function (start, length) {
 };
 
 Medusae.prototype.createRib = function (index, total) {
-  var segments = this._totalSegments;
+  var segments = this.totalSegments;
   var verts = this.verts;
   var uvs = this.uvs;
   var size = this.size;
@@ -263,7 +263,7 @@ Medusae.prototype.createRib = function (index, total) {
 };
 
 Medusae.prototype.createSkin = function (r0, r1) {
-  var segments = this._totalSegments;
+  var segments = this.totalSegments;
   var rib0 = this.ribs[r0];
   var rib1 = this.ribs[r1];
 
@@ -287,7 +287,7 @@ Medusae.prototype.updateBulb = function (delta) {
   var phase = (sin(time) + 1) * 0.5;
   var radiusOffset = 15;
 
-  var segments = this._totalSegments;
+  var segments = this.totalSegments;
   var ribs = this.ribs;
   var rib, radius, outerLen, innerLen;
 
@@ -340,7 +340,7 @@ function tentacleUvs(howMany, buffer) {
 }
 
 Medusae.prototype.createTentacleSegment = function (groupIndex, index, total) {
-  var segments = this._totalSegments;
+  var segments = this.totalSegments;
   var verts = this.verts;
   var uvs = this.uvs;
 
@@ -362,7 +362,7 @@ Medusae.prototype.createTentacleSegment = function (groupIndex, index, total) {
 };
 
 Medusae.prototype.attachTentacles = function (groupIndex) {
-  var segments = this._totalSegments;
+  var segments = this.totalSegments;
   var groupOffset = groupIndex * this.tentacleGroupOffset;
   var rib = this.ribs[this.ribs.length - groupOffset - 1];
   var tent = this.tentacles[groupIndex][0];
@@ -376,7 +376,7 @@ Medusae.prototype.attachTentacles = function (groupIndex) {
 };
 
 Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
-  var segments = this._totalSegments;
+  var segments = this.totalSegments;
   var tentacleGroup = this.tentacles[groupIndex];
   var tent0 = tentacleGroup[i0];
   var tent1 = tentacleGroup[i1];
