@@ -10,8 +10,8 @@ function LensDirtPass() {
   this.scale = 1;
 
   this.geom = this.createQuadGeom(2);
-  this.mesh = new THREE.Mesh(this.geom, new THREE.MeshBasicMaterial({
-    color : 0xffffff,
+  this.mesh = new THREE.Mesh(this.geom, new App.UVMaterial({
+    diffuse : 0xffffff,
     opacity : 0.5,
     transparent : true
   }));
@@ -47,34 +47,48 @@ LensDirtPass.prototype.setSize = function (width, height) {
 LensDirtPass.prototype.createQuadGeom = function (count) {
   var verts = new Float32Array(count * 4 * 3);
   var indices = new Uint16Array(count * 6);
+  var uvs = new Float32Array(count * 4 * 2);
 
   var geom = new THREE.BufferGeometry();
   var position = new THREE.BufferAttribute(verts, 3);
   var index = new THREE.BufferAttribute(indices, 1);
+  var uv = new THREE.BufferAttribute(uvs, 2);
 
-  var qv = 0;
   var qi = 0;
+  var qj = 0;
+  var qk = 0;
   var a, b, c, d;
 
   for (var i = 0; i < count; i ++) {
-    a = qv;
-    b = qv + 1;
-    c = qv + 2;
-    d = qv + 3;
+    a = qi;
+    b = qi + 1;
+    c = qi + 2;
+    d = qi + 3;
 
-    indices[qi]     = a;
-    indices[qi + 1] = b;
-    indices[qi + 2] = c;
-    indices[qi + 3] = c;
-    indices[qi + 4] = d;
-    indices[qi + 5] = a;
+    indices[qj]     = a;
+    indices[qj + 1] = b;
+    indices[qj + 2] = c;
+    indices[qj + 3] = c;
+    indices[qj + 4] = d;
+    indices[qj + 5] = a;
 
-    qv += 4;
-    qi += 6;
+    uvs[qk]     = 0; // au
+    uvs[qk + 1] = 0; // av
+    uvs[qk + 2] = 1; // bu
+    uvs[qk + 3] = 0; // bv
+    uvs[qk + 4] = 1; // cu
+    uvs[qk + 5] = 1; // cv
+    uvs[qk + 6] = 0; // du
+    uvs[qk + 7] = 1; // dv
+
+    qi += 4;
+    qj += 6;
+    qk += 8;
   }
 
   geom.addAttribute('position', position);
   geom.addAttribute('index', index);
+  geom.addAttribute('uv', uv);
 
   return geom;
 };
