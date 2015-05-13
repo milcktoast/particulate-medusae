@@ -24,6 +24,8 @@ function ShaderMaterial(parameters) {
   this.blending = parameters.blending || THREE.NormalBlending;
   this.side = parameters.side || THREE.FrontSide;
   this.linewidth = parameters.linewidth || 1;
+  this.depthTest = parameters.depthTest != null ? parameters.depthTest : true;
+  this.depthWrite = parameters.depthWrite != null ? parameters.depthWrite : true;
 
   this.fog = !!parameters.fog;
   this.map = !!parameters.map;
