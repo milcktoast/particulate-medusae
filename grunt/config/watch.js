@@ -21,7 +21,7 @@ module.exports = function (config) {
     },
     neuterLibs: {
       files: [config.source + 'js/libs.js'],
-      tasks: ['neuter:libsDevelop']
+      tasks: ['neuter:libs']
     },
     neuterTests: {
       files: [config.source + 'tests/{,**/}{,*.js}'],
