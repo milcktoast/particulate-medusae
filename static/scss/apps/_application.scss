@@ -39,7 +39,7 @@ body {
     border: 1px solid #fff;
     border-radius: 2px;
 
-    background: #fff;
+    background: rgba(#fff, 0.15);
     transition-property: border-color, background;
     transition-duration: 200ms;
     content: "";
@@ -56,6 +56,16 @@ body {
 
     transform: translateY(-50%);
     transition: all 150ms;
+
+    &:before {
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      width: 8px;
+      border-top: 1px solid #fff;
+      margin-right: 6px;
+      content: "";
+    }
   }
 
   &:hover > .label {
@@ -90,7 +100,7 @@ body {
   background: rgba(#111, 0.9);
   opacity: 0;
   visibility: hidden;
-  transform: scale(0.9);
+  transform: scale(0.95);
   transition: all 200ms ease-in;
 
   &.active,
@@ -107,5 +117,5 @@ body {
   background: rgba(#111, 0.5);
   opacity: 0;
   visibility: hidden;
-  transition: all 200ms;
+  transition: all 200ms ease-in;
 }
