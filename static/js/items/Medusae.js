@@ -681,18 +681,20 @@ Medusae.prototype.createMaterials = function () {
   this.linesFaint = new THREE.Line(linesGeom,
     new App.TentacleMaterial({
       color : 0xffffff,
-      opacity : 0.1,
+      area : 600,
+      opacity : 0.2,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      depthTest : false
+      depthTest : false,
+      depthWrite : false
     }), THREE.LinePieces);
 
   this.linesFore = new THREE.Line(linesGeom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
-      area : 200,
-      opacity : 0.3,
+      area : 600,
+      opacity : 0.4,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
@@ -712,15 +714,16 @@ Medusae.prototype.createMaterials = function () {
   this.tentacleFore = new THREE.Line(tentacleGeom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
-      area : 200,
+      area : 600,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
       opacity : 0.5,
-      depthTest : true
+      depthTest : true,
+      depthWrite : false
     }), THREE.LinePieces);
 
-  this.tentacleFore.scale.multiplyScalar(0.8);
+  // this.tentacleFore.scale.multiplyScalar(0.8);
 
   // Faces
   var faceGeom = new THREE.BufferGeometry();
