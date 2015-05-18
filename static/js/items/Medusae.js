@@ -29,18 +29,22 @@ function Medusae(opts) {
   this.lineWidth = this.pxRatio;
   this.animTime = 0;
 
-  this.segmentsCount = 4;
-  this.ribsCount = 20;
   this.size = 25;
+  this.segmentsCount = 6;
   this.totalSegments = this.segmentsCount * 3 * 3;
 
-  this.tentacleGroupCount = 10;
+  this.ribsCount = 15;
+  this.ribRadius = 25;
+
+  this.tentacleGroupStart = 0;
   this.tentacleGroupOffset = 2;
+  this.tentacleGroupCount = 6;
   this.tentacleSegments = 100;
   this.tentacleSegmentLength = 1.5;
   this.tentacleWeightFactor = 0.5;
 
   this.tailRibsCount = 10;
+  this.tailRibRadiusFactor = 20;
   // this.tailCount = 30;
   // this.tailSegments = 50;
   // this.tailSegmentSize = 1;
@@ -241,7 +245,7 @@ Medusae.prototype.createRib = function (index, total) {
   // Attach bulb to spine
   var spine, spineCenter;
   if (index === 0 || index === total - 1) {
-    spineCenter = index === 0 ? this.indexTop : this.indexMid;
+    spineCenter = index === 0 ? this.indexTop : this.indexBottom;
     spine = DistanceConstraint.create([radius * 0.8, radius],
       LINKS.radial(spineCenter, start, segments, []));
 
@@ -322,19 +326,21 @@ Medusae.prototype.createTentacles = function () {
   var tentacleGroupCount = this.tentacleGroupCount;
 
   for (var i = 0, il = tentacleGroupCount; i < il; i ++) {
-    this.createTentacleGroup(i);
+    this.createTentacleGroup(i, tentacleGroupCount);
   }
 };
 
-Medusae.prototype.createTentacleGroup = function (groupIndex) {
-  var tentacleSegments = this.tentacleSegments;
+Medusae.prototype.createTentacleGroup = function (index, total) {
+  var ratio = index / total;
+  var segments = this.tentacleSegments;
+  var count = segments * ratio * 0.25 + segments * 0.75;
 
-  for (var i = 0, il = tentacleSegments; i < il; i ++) {
-    this.createTentacleSegment(groupIndex, i, tentacleSegments);
+  for (var i = 0, il = count; i < il; i ++) {
+    this.createTentacleSegment(index, i, count);
     if (i > 0) {
-      this.linkTentacle(groupIndex, i - 1, i);
+      this.linkTentacle(index, i - 1, i);
     } else {
-      this.attachTentacles(groupIndex);
+      this.attachTentacles(index);
     }
   }
 };
@@ -351,7 +357,7 @@ Medusae.prototype.createTentacleSegment = function (groupIndex, index, total) {
   var verts = this.verts;
   var uvs = this.uvs;
 
-  var radius = 20 * (0.25 * sin(index * 0.1) + 0.5);
+  var radius = 20 * (0.25 * sin(index * 0.25) + 0.5);
   var yPos = - index * this.tentacleSegmentLength;
   var start = verts.length / 3;
 
@@ -369,11 +375,13 @@ Medusae.prototype.createTentacleSegment = function (groupIndex, index, total) {
 };
 
 Medusae.prototype.attachTentacles = function (groupIndex) {
+  var ribs = this.ribs;
+  var tailRibs = this.tailRibs;
   var segments = this.totalSegments;
-  var groupOffset = groupIndex * this.tentacleGroupOffset;
-  var rib = this.tailRibs[this.tailRibs.length - groupOffset - 1] ||
-    this.ribs[this.ribs.length - groupOffset + this.tailRibs.length - 1];
-  // var rib = this.ribs[this.ribs.length - groupOffset - 1];
+  var groupOffset = this.tentacleGroupStart + this.tentacleGroupOffset * groupIndex;
+  
+  var rib = tailRibs[tailRibs.length - groupOffset - 1] ||
+    ribs[ribs.length - groupOffset + tailRibs.length - 1];
   var tent = this.tentacles[groupIndex][0];
   var dist = this.tentacleSegmentLength;
 
@@ -429,12 +437,12 @@ Medusae.prototype.createTailRib = function (index, total) {
   var uvs = this.uvs;
   var size = this.size;
   var yParam = index / total;
-  var yPos = lastRib.yPos - yParam * size * 1.2;
+  var yPos = lastRib.yPos - yParam * size * 0.9;
 
   var start = this.verts.length / 3;
   var radiusT = tailRibRadius(yParam);
   var radius = radiusT * lastRib.radius;
-  var radiusOuter = radius + yParam * 25;
+  var radiusOuter = radius + yParam * this.tailRibRadiusFactor;
 
   GEOM.circle(segments, radius, yPos, verts);
   ribUvs(yParam, segments, uvs);
@@ -451,7 +459,7 @@ Medusae.prototype.createTailRib = function (index, total) {
   // Attach to spine
   var spine, spineCenter;
   if (index === total - 1) {
-    spineCenter = this.indexBottom;
+    spineCenter = this.indexMid;
     spine = DistanceConstraint.create([radius * 0.8, radius],
       LINKS.radial(spineCenter, start, segments, []));
 
