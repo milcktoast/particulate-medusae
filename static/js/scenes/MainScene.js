@@ -16,6 +16,7 @@ function MainScene() {
   this.pxRatio = PMath.clamp(1.5, 2, window.devicePixelRatio);
   this.gravity = -0.9;
 
+  this.usePostFx = false;
   this.initRenderer();
   this.initFxComposer();
   this.addPostFx();
@@ -133,6 +134,10 @@ MainScene.prototype.initItems = function () {
 
   medusae.addTo(this.scene);
   dust.addTo(this.scene);
+};
+
+MainScene.prototype.togglePostFx = function (isEnabled) {
+  this.usePostFx = isEnabled;
 };
 
 MainScene.prototype.onWindowResize = function () {
@@ -360,5 +365,10 @@ MainScene.prototype.render = function (delta, stepProgress) {
   this.controls.update();
   this.medusae.updateGraphics(delta, stepProgress);
   this.dust.updateGraphics(delta, stepProgress);
-  this.composer.render(0.01);
+
+  if (this.usePostFx) {
+    this.composer.render(0.01);
+  } else {
+    this.renderer.render(this.scene, this.camera);
+  }
 };

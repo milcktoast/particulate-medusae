@@ -6,7 +6,7 @@ function Looper(context, update, render, delta) {
 
   var stepTime = 0;
   var targetDelta = delta || (1 / 30 * 1000);
-  var maxDelta = targetDelta * 2;
+  var maxDelta = targetDelta;
 
   var isLooping = false;
   var lastTime;

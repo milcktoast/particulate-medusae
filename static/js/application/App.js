@@ -48,6 +48,11 @@ App.register('index', function index() {
   var audioToggle = App.ToggleController.create({ name : 'audio' });
   var dotsToggle = App.ToggleController.create({ name : 'dots' });
 
+  var postFxToggle = App.ToggleController.create({
+    name : 'postfx',
+    isActive : scene.usePostFx
+  });
+
   App.ModalController.create({
     name : 'info'
   });
@@ -61,6 +66,7 @@ App.register('index', function index() {
   updateSystemUI(scene);
 
   audioToggle.addListener(scene, 'toggleAudio');
+  postFxToggle.addListener(scene, 'togglePostFx');
   dotsToggle.addListener(scene, 'toggleDots');
   dotsToggle.addListener(App, 'toggleStats');
 
