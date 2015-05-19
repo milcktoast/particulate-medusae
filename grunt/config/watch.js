@@ -21,18 +21,18 @@ module.exports = function (config) {
     },
     neuterLibs: {
       files: [config.source + 'js/libs.js'],
-      tasks: ['neuter:libsDevelop']
+      tasks: ['neuter:libs']
     },
     neuterTests: {
       files: [config.source + 'tests/{,**/}{,*.js}'],
       tasks: ['neuter:tests']
     },
     shaderChunks: {
-      files: config.source + 'js/shader-chunks/*',
+      files: config.source + 'glsl/shader-chunks/*',
       tasks: ['shaderChunks']
     },
     handlebarsShaders: {
-      files: config.source + 'js/shaders/*',
+      files: config.source + 'glsl/shaders/*',
       tasks: ['handlebars:shaders']
     },
     copy : {

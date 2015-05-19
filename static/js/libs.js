@@ -1,9 +1,11 @@
-require('lib/handlebars/handlebars.runtime.js');
+require('lib/handlebars/handlebars.runtime');
 require('lib/particulate/dist/particulate');
+require('lib/noise/perlin');
+require('lib/howler.js/howler');
 
 require('lib-extras/three/controls/TrackballControls');
 require('lib-extras/three/geometries/PlaneBufferGeometry');
-require('lib-extras/three/geometries/SphereGeometry');
+require('lib-extras/three/geometries/SphereBufferGeometry');
 
 require('lib-extras/three/shaders/BasicShader');
 require('lib-extras/three/shaders/CopyShader');
@@ -16,5 +18,3 @@ require('lib-extras/three/postprocessing/ShaderPass');
 require('lib-extras/three/postprocessing/TexturePass');
 require('lib-extras/three/postprocessing/MaskPass');
 require('lib-extras/three/postprocessing/BloomPass');
-
-require('lib/howler.js/howler.js');

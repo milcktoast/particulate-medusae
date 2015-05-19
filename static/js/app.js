@@ -1,7 +1,9 @@
 require('js/application/App');
 require('js/utils/*');
+require('js/constraints/*');
 require('js/forces/*');
 require('js/materials/*');
+require('js/post-processing/*');
 require('js/items/*');
 require('js/scenes/*');
 require('js/controllers/*');

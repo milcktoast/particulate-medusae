@@ -7,6 +7,7 @@ function ToggleController(config) {
   this._toggleClassName = toggle.className;
   this._listeners = [];
 
+  this.updateEl();
   toggle.addEventListener('click', this.toggleState.bind(this), false);
 }
 
@@ -30,13 +31,15 @@ ToggleController.prototype.triggerListeners = function () {
 };
 
 ToggleController.prototype.toggleState = function (event) {
-  if (this.isActive) {
-    this.toggle.className = this._toggleClassName;
-    this.isActive = false;
-  } else {
-    this.toggle.className += ' active';
-    this.isActive = true;
-  }
-
+  this.isActive = !this.isActive;
+  this.updateEl();
   this.triggerListeners();
+};
+
+ToggleController.prototype.updateEl = function () {
+  if (this.isActive) {
+    this.toggle.className += ' active';
+  } else {
+    this.toggle.className = this._toggleClassName;
+  }
 };

@@ -1,3 +1,5 @@
+var PMath = Particulate.Math;
+
 var ENABLE_ZOOM = true;
 var ENABLE_PAN = false;
 var DEBUG_NUDGE = false;
@@ -11,9 +13,10 @@ function MainScene() {
   this.mouse = new THREE.Vector2();
   this.raycaster = new THREE.Raycaster();
 
-  this.pxRatio = window.devicePixelRatio;
+  this.pxRatio = PMath.clamp(1.5, 2, window.devicePixelRatio);
   this.gravity = -0.9;
 
+  this.usePostFx = true;
   this.initRenderer();
   this.initFxComposer();
   this.addPostFx();
@@ -41,11 +44,11 @@ MainScene.create = App.ctor(MainScene);
 
 MainScene.prototype.initRenderer = function () {
   var renderer = this.renderer = new THREE.WebGLRenderer({
-    devicePixelRatio : this.pxRatio,
     antialias : false
   });
 
   renderer.setClearColor(0x111111, 1);
+  renderer.setPixelRatio(this.pxRatio);
   renderer.autoClear = false;
 };
 
@@ -71,13 +74,24 @@ MainScene.prototype.initFxComposer = function () {
 
 // TODO: Tweak bloom fidelity
 MainScene.prototype.addPostFx = function () {
-  var bloomKernel = 20;
-  var bloomSigma = 4;
-  var bloomRes = 7;
+  var bloomStrength = 0.8;
+  var bloomKernel = 30;
+  var bloomSigma = 8;
+  var bloomRes = 256;
 
-  this.addPass(new THREE.RenderPass(this.scene, this.camera));
-  this.addPass(new THREE.BloomPass(1, bloomKernel, bloomSigma, Math.pow(2, bloomRes)));
-  this.addPass(new THREE.ShaderPass(THREE.CopyShader), true);
+  var renderPass = new THREE.RenderPass(this.scene, this.camera);
+  var bloomPass = new THREE.BloomPass(bloomStrength, bloomKernel, bloomSigma, bloomRes);
+  var copyPass = new THREE.ShaderPass(THREE.CopyShader);
+
+  var lensDirtPass = this.lensDirtPass = new App.LensDirtPass({
+    quads : 200,
+    textureSize : 2048
+  });
+
+  this.addPass(renderPass);
+  this.addPass(bloomPass);
+  this.addPass(lensDirtPass);
+  this.addPass(copyPass, true);
 };
 
 MainScene.prototype.addPass = function (name, pass, renderToScreen) {
@@ -122,6 +136,10 @@ MainScene.prototype.initItems = function () {
   dust.addTo(this.scene);
 };
 
+MainScene.prototype.togglePostFx = function (isEnabled) {
+  this.usePostFx = isEnabled;
+};
+
 MainScene.prototype.onWindowResize = function () {
   var width = window.innerWidth;
   var height = window.innerHeight;
@@ -137,6 +155,7 @@ MainScene.prototype.onWindowResize = function () {
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
+  this.lensDirtPass.setSize(postWidth, postHeight);
 };
 
 // ..................................................
@@ -152,29 +171,34 @@ MainScene.prototype.initForces = function () {
     intensity : 0
   });
 
+  // TODO: Reduce need for initial relaxation loops
+  // improve initial geometry / constraint alignment
+  medusae.relax(25);
   medusae.system.addForce(gravityForce);
-  medusae.relax(100);
   medusae.system.addForce(nudgeForce);
 
   if (DEBUG_NUDGE) { this.initDebugNudge(nudgeRadius); }
 };
 
 MainScene.prototype.initDebugNudge = function (radius) {
-  // var force = this.nudgeForce;
   var item = this.debugNudge = new THREE.Mesh(
-    new THREE.SphereGeometry(radius, 8, 6),
+    new THREE.SphereBufferGeometry(radius, 8, 6),
     new THREE.MeshBasicMaterial({
       color : 0xffffff,
-      wireframe : true
+      opacity : 0.2,
+      transparent : true
     }));
 
+  var wire = new THREE.WireframeHelper(item, 0xffffff);
+
+  this.scene.add(wire);
   this.scene.add(item);
 };
 
 MainScene.prototype.updateDebugNudge = function () {
   var force = this.nudgeForce;
   var position = force.position;
-  var intensity = force.intensity || 0.0001;
+  var intensity = Math.max(force.intensity, 0.0001);
   var item = this.debugNudge;
 
   item.scale.set(intensity, intensity, intensity);
@@ -191,6 +215,9 @@ MainScene.prototype.initControls = function () {
   controls.rotateSpeed = 0.75;
   controls.zoomSpeed = 0.75;
   controls.panSpeed = 0.6;
+
+  controls.minDistance = 50;
+  controls.maxDistance = 300;
 
   controls.noZoom = !ENABLE_ZOOM;
   controls.noPan = !ENABLE_PAN;
@@ -240,7 +267,9 @@ MainScene.prototype.nudgeMedusae = (function () {
 
   return function () {
     var raycaster = this.raycaster;
-    raycaster.setFromCamera(this.mouse, this.camera);
+    var mouse = this.mouse;
+
+    raycaster.setFromCamera(mouse, this.camera);
 
     var intersects = raycaster.intersectObject(this.medusae.bulbMesh);
     if (!intersects.length) { return; }
@@ -255,6 +284,7 @@ MainScene.prototype.nudgeMedusae = (function () {
     nudge.set(point.x, point.y, point.z);
 
     this.audio.playSound(sound, 0.15);
+    this.lensDirtPass.setGroup(10, mouse.x, mouse.y, 0.8);
   };
 }());
 
@@ -302,6 +332,15 @@ MainScene.prototype.toggleAudio = function () {
 };
 
 // ..................................................
+// Vis
+//
+
+MainScene.prototype.toggleDots = function () {
+  if (!this.medusae) { return; }
+  this.medusae.toggleDots();
+};
+
+// ..................................................
 // Loop
 //
 
@@ -316,6 +355,7 @@ MainScene.prototype.update = function (delta) {
 
   this.medusae.update(delta);
   this.audio.update(delta);
+  this.lensDirtPass.update(delta);
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
 };
@@ -325,5 +365,10 @@ MainScene.prototype.render = function (delta, stepProgress) {
   this.controls.update();
   this.medusae.updateGraphics(delta, stepProgress);
   this.dust.updateGraphics(delta, stepProgress);
-  this.composer.render(0.01);
+
+  if (this.usePostFx) {
+    this.composer.render(0.01);
+  } else {
+    this.renderer.render(this.scene, this.camera);
+  }
 };

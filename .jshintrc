@@ -3,7 +3,8 @@
     "require"      : true,
     "THREE"        : true,
     "Particulate"  : true,
-    "App"          : true
+    "App"          : true,
+    "noise"        : true
   },
 
   "browser"        : true,

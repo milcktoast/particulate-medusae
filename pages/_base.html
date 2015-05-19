@@ -49,13 +49,42 @@
           <dt>Source</dt>
           <dd><a href="http://github.com/jpweeks/particulate-medusae">Github</a></dd>
         </dl>
+        <dl>
+          <dt>Process</dt>
+          <dd><a href="https://www.flickr.com/photos/jpweeks/sets/72157646887502644/">Flickr</a></dd>
+        </dl>
       </div>
     </article>
     <div id="cover-info" class="modal-cover"></div>
 
     <div class="controls">
-      <div id="toggle-info" class="controls-button" title="About"></div>
-      <div id="toggle-audio" class="controls-button" title="Audio"></div>
+      <div id="toggle-info" class="controls-button">
+        <div class="label">About</div>
+      </div>
+      <div id="toggle-dots" class="controls-button">
+        <div class="label">Particles</div>
+      </div>
+      <div id="toggle-audio" class="controls-button">
+        <div class="label">Audio</div>
+      </div>
+      <div id="toggle-postfx" class="controls-button">
+        <div class="label">Post FX</div>
+      </div>
+    </div>
+
+    <div class="stats-panel">
+      <dl>
+        <dt>Particles</dt>
+        <dd id="particle-count"></dd>
+      </dl>
+      <dl>
+        <dt>Constraints</dt>
+        <dd id="constraint-count"></dd>
+      </dl>
+      <dl>
+        <dt>Forces</dt>
+        <dd id="force-count"></dd>
+      </dl>
     </div>
 
     <div id="container"></div>
@@ -74,7 +103,7 @@
         }
       </script>
     {% else %}
-      <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
+      <script src="//cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
       <script src="{{ STATIC_URL }}js/app.min.js"></script>
     {% endif %}
     <script>

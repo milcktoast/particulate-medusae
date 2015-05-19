@@ -1,3 +1,7 @@
+attribute float alpha;
+varying float vAlpha;
+
+{{{chunks.common}}}
 {{{chunks.map_pars_vertex}}}
 {{{chunks.lightmap_pars_vertex}}}
 {{{chunks.envmap_pars_vertex}}}
@@ -8,6 +12,8 @@
 {{{chunks.logdepthbuf_pars_vertex}}}
 
 void main() {
+  vAlpha = alpha;
+
   {{{chunks.map_vertex}}}
   {{{chunks.lightmap_vertex}}}
   {{{chunks.color_vertex}}}
