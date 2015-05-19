@@ -16,7 +16,7 @@ function MainScene() {
   this.pxRatio = PMath.clamp(1.5, 2, window.devicePixelRatio);
   this.gravity = -0.9;
 
-  this.usePostFx = false;
+  this.usePostFx = true;
   this.initRenderer();
   this.initFxComposer();
   this.addPostFx();
