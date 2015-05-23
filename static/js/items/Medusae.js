@@ -51,13 +51,10 @@ function Medusae(opts) {
   // this.tailRadius = 9;
   // this.tailWeightFactor = 0.25;
 
-  this.ribs = [];
-
-  this.item = new THREE.Object3D();
   this.createTempBuffers();
   this.createGeometry();
   this.createSystem();
-  this.createMaterials();
+  this.createSceneItem();
   this.removeTempBuffers();
   this.initTweens();
 }
@@ -167,6 +164,8 @@ Medusae.prototype.createCore = function () {
 
 Medusae.prototype.createBulb = function () {
   var ribsCount = this.ribsCount;
+
+  this.ribs = [];
 
   for (var i = 0, il = ribsCount; i < il; i ++) {
     this.createRib(i, ribsCount);
@@ -379,7 +378,7 @@ Medusae.prototype.attachTentacles = function (groupIndex) {
   var tailRibs = this.tailRibs;
   var segments = this.totalSegments;
   var groupOffset = this.tentacleGroupStart + this.tentacleGroupOffset * groupIndex;
-  
+
   var rib = tailRibs[tailRibs.length - groupOffset - 1] ||
     ribs[ribs.length - groupOffset + tailRibs.length - 1];
   var tent = this.tentacles[groupIndex][0];
@@ -635,7 +634,28 @@ Medusae.prototype.addFaces = function (faceIndices) {
   _push.apply(this.bulbFaces, faceIndices);
 };
 
-Medusae.prototype.createParticleTexture = function () {
+Medusae.prototype.createSceneItem = function () {
+  this.item = new THREE.Group();
+  this.position = new THREE.BufferAttribute(this.system.positions, 3);
+  this.positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
+  this.uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
+
+  this.createMaterialsDots();
+  this.createMaterialsLines();
+  this.createMaterialsTentacles();
+  this.createMaterialsBulb();
+  // this.createMaterialsTail();
+
+  this.positionAttr = this.linesFore.geometry.attributes.position;
+  this.positionPrevAttr = this.linesFore.geometry.attributes.positionPrev;
+};
+
+Medusae.prototype.addTimeAttr = function (item) {
+  if (!this.timeAttrs) { this.timeAttrs = []; }
+  this.timeAttrs.push(item.material.uniforms.time);
+};
+
+Medusae.prototype.createTextureDots = function () {
   var canvas = document.createElement('canvas');
   var texture = new THREE.Texture(canvas);
   var ctx = canvas.getContext('2d');
@@ -660,33 +680,34 @@ Medusae.prototype.createParticleTexture = function () {
   return texture;
 };
 
-Medusae.prototype.createMaterials = function () {
-  var position = new THREE.BufferAttribute(this.system.positions, 3);
-  var positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
-  var uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
-  var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
+Medusae.prototype.createMaterialsDots = function () {
+  var geom = new THREE.BufferGeometry();
 
-  // Particles
-  var dotsGeom = new THREE.BufferGeometry();
-  dotsGeom.addAttribute('position', position);
+  geom.addAttribute('position', this.position);
 
-  this.dots = new THREE.PointCloud(dotsGeom,
+  var dots = this.dots = new THREE.PointCloud(geom,
     new THREE.PointCloudMaterial({
       size : this.pxRatio * 2,
       opacity : 0.5,
-      map : this.createParticleTexture(),
+      map : this.createTextureDots(),
       transparent : true,
       depthTest : false,
       depthWrite : false
     }));
 
-  // Connections
-  var linesGeom = new THREE.BufferGeometry();
-  linesGeom.addAttribute('position', position);
-  linesGeom.addAttribute('positionPrev', positionPrev);
-  linesGeom.addAttribute('index', indices);
+  this.item.add(dots);
+};
 
-  this.linesFaint = new THREE.Line(linesGeom,
+Medusae.prototype.createMaterialsLines = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
+  var scale = 1.1;
+
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('index', indices);
+
+  var faint = this.linesFaint = new THREE.Line(geom,
     new App.TentacleMaterial({
       color : 0xffffff,
       area : 600,
@@ -698,7 +719,7 @@ Medusae.prototype.createMaterials = function () {
       depthWrite : false
     }), THREE.LinePieces);
 
-  this.linesFore = new THREE.Line(linesGeom,
+  var fore = this.linesFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
       area : 600,
@@ -709,17 +730,25 @@ Medusae.prototype.createMaterials = function () {
       depthTest : true
     }), THREE.LinePieces);
 
-  this.linesFaint.scale.multiplyScalar(1.1);
-  this.linesFore.scale.multiplyScalar(1.1);
+  faint.scale.multiplyScalar(scale);
+  fore.scale.multiplyScalar(scale);
 
-  // Tentacles
-  var tentacleGeom = new THREE.BufferGeometry();
-  var tentacleIndices = new THREE.BufferAttribute(new Uint16Array(this.tentacleIndices), 1);
-  tentacleGeom.addAttribute('position', position);
-  tentacleGeom.addAttribute('positionPrev', positionPrev);
-  tentacleGeom.addAttribute('index', tentacleIndices);
+  this.addTimeAttr(faint);
+  this.addTimeAttr(fore);
 
-  this.tentacleFore = new THREE.Line(tentacleGeom,
+  this.item.add(faint);
+  this.item.add(fore);
+};
+
+Medusae.prototype.createMaterialsTentacles = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.tentacleIndices), 1);
+
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('index', indices);
+
+  var tentacle = this.tentacleFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
       area : 600,
@@ -732,31 +761,38 @@ Medusae.prototype.createMaterials = function () {
     }), THREE.LinePieces);
 
   // this.tentacleFore.scale.multiplyScalar(0.8);
+  this.addTimeAttr(tentacle);
+  this.item.add(tentacle);
+};
 
-  // Faces
-  var faceGeom = new THREE.BufferGeometry();
-  var faceIndices = new THREE.BufferAttribute(new Uint16Array(this.bulbFaces), 1);
+Medusae.prototype.createMaterialsBulb = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.bulbFaces), 1);
 
-  faceGeom.addAttribute('position', position);
-  faceGeom.addAttribute('positionPrev', positionPrev);
-  faceGeom.addAttribute('index', faceIndices);
-  faceGeom.addAttribute('uv', uvs);
-  faceGeom.computeVertexNormals();
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('uv', this.uvs);
+  geom.addAttribute('index', indices);
 
-  this.bulbMesh = new THREE.Mesh(faceGeom,
+  var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
       diffuse : 0x411991
     }));
 
-  var tailFaceGeom = new THREE.BufferGeometry();
-  var tailFaceIndices = new THREE.BufferAttribute(new Uint16Array(this.tailFaces), 1);
+  this.addTimeAttr(bulb);
+  this.item.add(bulb);
+};
 
-  tailFaceGeom.addAttribute('position', position);
-  tailFaceGeom.addAttribute('positionPrev', positionPrev);
-  tailFaceGeom.addAttribute('index', tailFaceIndices);
-  tailFaceGeom.addAttribute('uv', uvs);
+Medusae.prototype.createMaterialsTail = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.tailFaces), 1);
 
-  this.tailMesh = new THREE.Mesh(tailFaceGeom,
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('index', indices);
+  geom.addAttribute('uv', this.uvs);
+
+  var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
       diffuse : 0xffffff,
       transparent : true,
@@ -764,28 +800,10 @@ Medusae.prototype.createMaterials = function () {
       opacity : 0.5,
       side : THREE.DoubleSide
     }));
+
   // this.tailMesh.scale.multiplyScalar(1.1);
-
-  // Parent object
-  var item = this.item;
-  item.add(this.dots);
-  item.add(this.linesFaint);
-  item.add(this.linesFore);
-  item.add(this.tentacleFore);
-  item.add(this.bulbMesh);
-  item.add(this.tailMesh);
-
-  this.positionAttr = tentacleGeom.attributes.position;
-  this.positionPrevAttr = tentacleGeom.attributes.positionPrev;
-
-  // TODO: Simplify, make lerp-pos base material
-  this.timeAttrs = [
-    this.linesFaint.material.uniforms.time,
-    this.linesFore.material.uniforms.time,
-    this.tentacleFore.material.uniforms.time,
-    this.bulbMesh.material.uniforms.time,
-    this.tailMesh.material.uniforms.time
-  ];
+  this.addTimeAttr(tail);
+  this.item.add(tail);
 };
 
 Medusae.prototype.addTo = function (scene) {
