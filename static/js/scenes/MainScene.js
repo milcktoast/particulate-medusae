@@ -14,7 +14,7 @@ function MainScene() {
   this.raycaster = new THREE.Raycaster();
 
   this.pxRatio = PMath.clamp(1.5, 2, window.devicePixelRatio);
-  this.gravity = -0.9;
+  this.gravity = -2;
 
   this.usePostFx = true;
   this.initRenderer();
@@ -350,7 +350,11 @@ MainScene.prototype.update = function (delta) {
   var gravityForce = this.gravityForce;
   var nudgeForce = this.nudgeForce;
 
-  gravityForce.set(up.x * gravity, up.y * gravity, up.z * gravity);
+  gravityForce.set(
+    up.x * gravity * 0.2,
+    up.y * gravity,
+    up.z * gravity * 0.2);
+
   nudgeForce.intensity *= 0.8;
 
   this.medusae.update(delta);
