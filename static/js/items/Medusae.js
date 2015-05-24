@@ -30,9 +30,12 @@ function Medusae(opts) {
   this.animTime = 0;
 
   this.size = 25;
-  this.segmentsCount = 6;
+
+  // TODO: Increase segments
+  this.segmentsCount = 8;
   this.totalSegments = this.segmentsCount * 3 * 3;
 
+  // TODO: Increase rib count
   this.ribsCount = 15;
   this.ribRadius = 25;
 
@@ -51,13 +54,10 @@ function Medusae(opts) {
   // this.tailRadius = 9;
   // this.tailWeightFactor = 0.25;
 
-  this.ribs = [];
-
-  this.item = new THREE.Object3D();
   this.createTempBuffers();
   this.createGeometry();
   this.createSystem();
-  this.createMaterials();
+  this.createSceneItem();
   this.removeTempBuffers();
   this.initTweens();
 }
@@ -73,7 +73,7 @@ Medusae.tempBuffers = [
   'tailFaces',
   'uvs',
   'tentacles',
-  'tentacleIndices',
+  'tentLinks',
   'skins'
 ];
 
@@ -144,9 +144,10 @@ Medusae.prototype.createCore = function () {
   var spineD = DistanceConstraint.create(rangeBottom, [2, indexBottom]);
   var axis = AxisConstraint.create(0, 1, [indexTop, indexMid, indexBottom]);
 
-  // var bottomStart = segments * (ribsCount - 1) + topStart;
   var topAngle = AngleConstraint.create([PI * 0.35, PI * 0.65],
     spineAngleIndices(this.pinTop, indexTop, topStart, segments));
+
+  // var bottomStart = segments * (ribsCount - 1) + topStart;
   // var bottomAngle = AngleConstraint.create([PI * 0.45, PI * 0.65],
   //   spineAngleIndices(pinBottom, indexBottom, bottomStart, segments));
 
@@ -167,6 +168,8 @@ Medusae.prototype.createCore = function () {
 
 Medusae.prototype.createBulb = function () {
   var ribsCount = this.ribsCount;
+
+  this.ribs = [];
 
   for (var i = 0, il = ribsCount; i < il; i ++) {
     this.createRib(i, ribsCount);
@@ -331,18 +334,28 @@ Medusae.prototype.createTentacles = function () {
 };
 
 Medusae.prototype.createTentacleGroup = function (index, total) {
+  var rib = this.tentacleRib(index);
   var ratio = index / total;
   var segments = this.tentacleSegments;
   var count = segments * ratio * 0.25 + segments * 0.75;
 
   for (var i = 0, il = count; i < il; i ++) {
-    this.createTentacleSegment(index, i, count);
+    this.createTentacleSegment(index, i, count, rib);
     if (i > 0) {
       this.linkTentacle(index, i - 1, i);
     } else {
-      this.attachTentacles(index);
+      this.attachTentacles(index, rib);
     }
   }
+};
+
+Medusae.prototype.tentacleRib = function (groupIndex) {
+  var ribs = this.ribs;
+  var tailRibs = this.tailRibs;
+  var groupOffset = this.tentacleGroupStart + this.tentacleGroupOffset * groupIndex;
+
+  return tailRibs[tailRibs.length - groupOffset - 1] ||
+    ribs[ribs.length - groupOffset + tailRibs.length - 1];
 };
 
 function tentacleUvs(howMany, buffer) {
@@ -352,12 +365,12 @@ function tentacleUvs(howMany, buffer) {
   return buffer;
 }
 
-Medusae.prototype.createTentacleSegment = function (groupIndex, index, total) {
+Medusae.prototype.createTentacleSegment = function (groupIndex, index, total, rib) {
   var segments = this.totalSegments;
   var verts = this.verts;
   var uvs = this.uvs;
 
-  var radius = 20 * (0.25 * sin(index * 0.25) + 0.5);
+  var radius = rib.radius * (0.25 * sin(index * 0.25) + 0.5);
   var yPos = - index * this.tentacleSegmentLength;
   var start = verts.length / 3;
 
@@ -374,22 +387,16 @@ Medusae.prototype.createTentacleSegment = function (groupIndex, index, total) {
   });
 };
 
-Medusae.prototype.attachTentacles = function (groupIndex) {
-  var ribs = this.ribs;
-  var tailRibs = this.tailRibs;
-  var segments = this.totalSegments;
-  var groupOffset = this.tentacleGroupStart + this.tentacleGroupOffset * groupIndex;
-  
-  var rib = tailRibs[tailRibs.length - groupOffset - 1] ||
-    ribs[ribs.length - groupOffset + tailRibs.length - 1];
+Medusae.prototype.attachTentacles = function (groupIndex, rib) {
   var tent = this.tentacles[groupIndex][0];
+  var segments = this.totalSegments;
   var dist = this.tentacleSegmentLength;
 
   var tentacle = DistanceConstraint.create([dist * 0.5, dist],
     LINKS.rings(rib.start, tent.start, segments, []));
 
   this.queueConstraints(tentacle);
-  this.addLinks(tentacle.indices, this.tentacleIndices);
+  this.addLinks(tentacle.indices, this.tentLinks);
 };
 
 Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
@@ -403,7 +410,7 @@ Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
     LINKS.rings(tent0.start, tent1.start, segments, []));
 
   this.queueConstraints(tentacle);
-  this.addLinks(tentacle.indices, this.tentacleIndices);
+  this.addLinks(tentacle.indices, this.tentLinks);
 };
 
 // ..................................................
@@ -429,6 +436,16 @@ Medusae.prototype.createTail = function () {
 function tailRibRadius(t) {
   return sin(0.25 * t * PI + 0.5 * PI) * (1 - 0.9 * t);
 }
+
+// function tailRibUvs(sv, howMany, buffer) {
+//   var su;
+//   for (var i = 1, il = howMany; i < il; i ++) {
+//     su = i % 2;
+//     buffer.push(su, sv);
+//   }
+//   buffer.push(0, sv);
+//   return buffer;
+// }
 
 Medusae.prototype.createTailRib = function (index, total) {
   var lastRib = this.ribs[this.ribs.length - 1];
@@ -464,9 +481,11 @@ Medusae.prototype.createTailRib = function (index, total) {
       LINKS.radial(spineCenter, start, segments, []));
 
     this.queueConstraints(spine);
+    // this.addLinks(spine.indices);
   }
 
   this.queueConstraints(mainRib, innerRib);
+  // this.addLinks(mainRib.indices);
 
   this.tailRibs.push({
     start : start,
@@ -491,7 +510,7 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
   this.queueConstraints(skin);
   this.addLinks(skin.indices);
 
-  FACES.rings(rib0.start, rib1.start, segments, this.bulbFaces);
+  FACES.rings(rib0.start, rib1.start, segments, this.tailFaces);
 };
 
 Medusae.prototype.createTailFin = function (index, total) {
@@ -626,16 +645,41 @@ Medusae.prototype.relax = function (iterations) {
 // Mesh rendering
 //
 
-Medusae.prototype.addLinks = function (indices, buffer) {
-  buffer = buffer || this.links;
-  _push.apply(buffer, indices);
+function pushToBuffer(attr) {
+  return function (items, buffer) {
+    buffer = buffer || this[attr];
+    _push.apply(buffer, items);
+  };
+}
+
+Medusae.prototype.addLinks = pushToBuffer('links');
+Medusae.prototype.addFaces = pushToBuffer('bulbFaces');
+
+Medusae.prototype.addTimeAttr = function (item) {
+  if (!this.timeAttrs) { this.timeAttrs = []; }
+  this.timeAttrs.push(item.material.uniforms.time);
 };
 
-Medusae.prototype.addFaces = function (faceIndices) {
-  _push.apply(this.bulbFaces, faceIndices);
+Medusae.prototype.createSceneItem = function () {
+  this.item = new THREE.Group();
+  this.position = new THREE.BufferAttribute(this.system.positions, 3);
+  this.positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
+  this.uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
+
+  this.timeAttrs = [];
+  this.createMaterialsDots();
+  this.createMaterialsLines();
+  this.createMaterialsTentacles();
+  this.createMaterialsBulb();
+  this.createMaterialsTail();
+
+  this.positionAttr = this.linesFore.geometry.attributes.position;
+  this.positionPrevAttr = this.linesFore.geometry.attributes.positionPrev;
+
+  this.item.position.setY(20);
 };
 
-Medusae.prototype.createParticleTexture = function () {
+Medusae.prototype.createTextureDots = function () {
   var canvas = document.createElement('canvas');
   var texture = new THREE.Texture(canvas);
   var ctx = canvas.getContext('2d');
@@ -660,37 +704,40 @@ Medusae.prototype.createParticleTexture = function () {
   return texture;
 };
 
-Medusae.prototype.createMaterials = function () {
-  var position = new THREE.BufferAttribute(this.system.positions, 3);
-  var positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
-  var uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
-  var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
+Medusae.prototype.createMaterialsDots = function () {
+  var geom = new THREE.BufferGeometry();
 
-  // Particles
-  var dotsGeom = new THREE.BufferGeometry();
-  dotsGeom.addAttribute('position', position);
+  geom.addAttribute('position', this.position);
 
-  this.dots = new THREE.PointCloud(dotsGeom,
+  var dots = this.dots = new THREE.PointCloud(geom,
     new THREE.PointCloudMaterial({
       size : this.pxRatio * 2,
       opacity : 0.5,
-      map : this.createParticleTexture(),
+      map : this.createTextureDots(),
       transparent : true,
       depthTest : false,
       depthWrite : false
     }));
 
-  // Connections
-  var linesGeom = new THREE.BufferGeometry();
-  linesGeom.addAttribute('position', position);
-  linesGeom.addAttribute('positionPrev', positionPrev);
-  linesGeom.addAttribute('index', indices);
+  this.item.add(dots);
+};
 
-  this.linesFaint = new THREE.Line(linesGeom,
+Medusae.prototype.createMaterialsLines = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
+
+  var area = 400;
+  var scale = 1.1;
+
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('index', indices);
+
+  var faint = this.linesFaint = new THREE.Line(geom,
     new App.TentacleMaterial({
       color : 0xffffff,
-      area : 600,
-      opacity : 0.2,
+      area : area,
+      opacity : 0.25,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
@@ -698,94 +745,88 @@ Medusae.prototype.createMaterials = function () {
       depthWrite : false
     }), THREE.LinePieces);
 
-  this.linesFore = new THREE.Line(linesGeom,
+  var fore = this.linesFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
-      area : 600,
-      opacity : 0.4,
+      area : area,
+      opacity : 0.5,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      depthTest : true
+      // depthTest : true,
+      // depthWrite : false
     }), THREE.LinePieces);
 
-  this.linesFaint.scale.multiplyScalar(1.1);
-  this.linesFore.scale.multiplyScalar(1.1);
+  faint.scale.multiplyScalar(scale);
+  fore.scale.multiplyScalar(scale);
 
-  // Tentacles
-  var tentacleGeom = new THREE.BufferGeometry();
-  var tentacleIndices = new THREE.BufferAttribute(new Uint16Array(this.tentacleIndices), 1);
-  tentacleGeom.addAttribute('position', position);
-  tentacleGeom.addAttribute('positionPrev', positionPrev);
-  tentacleGeom.addAttribute('index', tentacleIndices);
+  this.addTimeAttr(faint);
+  this.addTimeAttr(fore);
 
-  this.tentacleFore = new THREE.Line(tentacleGeom,
+  this.item.add(faint);
+  this.item.add(fore);
+};
+
+Medusae.prototype.createMaterialsTentacles = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.tentLinks), 1);
+
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('index', indices);
+
+  var tentacle = this.tentacleFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
       area : 600,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      opacity : 0.5,
+      opacity : 0.25,
       depthTest : true,
       depthWrite : false
     }), THREE.LinePieces);
 
   // this.tentacleFore.scale.multiplyScalar(0.8);
+  this.addTimeAttr(tentacle);
+  this.item.add(tentacle);
+};
 
-  // Faces
-  var faceGeom = new THREE.BufferGeometry();
-  var faceIndices = new THREE.BufferAttribute(new Uint16Array(this.bulbFaces), 1);
+Medusae.prototype.createMaterialsBulb = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.bulbFaces), 1);
 
-  faceGeom.addAttribute('position', position);
-  faceGeom.addAttribute('positionPrev', positionPrev);
-  faceGeom.addAttribute('index', faceIndices);
-  faceGeom.addAttribute('uv', uvs);
-  faceGeom.computeVertexNormals();
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('uv', this.uvs);
+  geom.addAttribute('index', indices);
 
-  this.bulbMesh = new THREE.Mesh(faceGeom,
+  var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
-      diffuse : 0x411991
+      diffuse : new THREE.Color(1.6, 1.0, 1.2)
     }));
 
-  var tailFaceGeom = new THREE.BufferGeometry();
-  var tailFaceIndices = new THREE.BufferAttribute(new Uint16Array(this.tailFaces), 1);
+  this.addTimeAttr(bulb);
+  this.item.add(bulb);
+};
 
-  tailFaceGeom.addAttribute('position', position);
-  tailFaceGeom.addAttribute('positionPrev', positionPrev);
-  tailFaceGeom.addAttribute('index', tailFaceIndices);
-  tailFaceGeom.addAttribute('uv', uvs);
+Medusae.prototype.createMaterialsTail = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.tailFaces), 1);
 
-  this.tailMesh = new THREE.Mesh(tailFaceGeom,
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('uv', this.uvs);
+  geom.addAttribute('index', indices);
+
+  var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : 0xffffff,
-      transparent : true,
-      blending : THREE.AdditiveBlending,
-      opacity : 0.5,
-      side : THREE.DoubleSide
+      diffuse : new THREE.Color(1.6, 1.0, 1.2)
     }));
+
   // this.tailMesh.scale.multiplyScalar(1.1);
-
-  // Parent object
-  var item = this.item;
-  item.add(this.dots);
-  item.add(this.linesFaint);
-  item.add(this.linesFore);
-  item.add(this.tentacleFore);
-  item.add(this.bulbMesh);
-  item.add(this.tailMesh);
-
-  this.positionAttr = tentacleGeom.attributes.position;
-  this.positionPrevAttr = tentacleGeom.attributes.positionPrev;
-
-  // TODO: Simplify, make lerp-pos base material
-  this.timeAttrs = [
-    this.linesFaint.material.uniforms.time,
-    this.linesFore.material.uniforms.time,
-    this.tentacleFore.material.uniforms.time,
-    this.bulbMesh.material.uniforms.time,
-    this.tailMesh.material.uniforms.time
-  ];
+  this.addTimeAttr(tail);
+  this.item.add(tail);
 };
 
 Medusae.prototype.addTo = function (scene) {

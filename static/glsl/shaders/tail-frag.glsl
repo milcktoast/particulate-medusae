@@ -2,17 +2,19 @@ uniform vec3 diffuse;
 uniform float opacity;
 varying vec2 vUv;
 
+float scale = 20.0;
+float saturation = 1.5;
+
 void main() {
   vec2 uv = vUv;
-  float xa = 1.0 - uv.x;
 
-  float color = (sin(uv.y * 800.0) - sin((1.0 - uv.x) * 3.0 + 1.2)) * uv.y;
-  color = smoothstep(-0.65, 1.0, color);
+  saturation -= sin(uv.y * 10.0 * scale) * 0.45 + uv.y * 1.5 + sin(uv.x * 20.0 * scale) * 0.1 + 0.85;
 
-	color -= (sin(uv.y * 500.0) * 0.25 + sin(1.0 - uv.y * 100.0) * 0.1) * xa;
+  saturation -= sin(uv.y * sin(uv.x         * 5.0) * 5.0 * scale) * 0.05;
+  saturation -= sin(uv.y * sin((1.0 - uv.x) * 5.0) * 5.0 * scale) * 0.05;
 
-	color -= (sin(uv.x * 100.0) * 0.1 + cos(uv.x * 180.0) * 0.05) * xa;
-	color -= (sin(uv.x * 100.0) * 0.1 + cos(uv.x * 200.0) * 0.15) * xa;
+  saturation -= sin(uv.y * sin(uv.y + cos(uv.x)       * 2.0) * 10.0 * scale) * 0.15;
+  saturation -= sin(uv.y * sin(uv.y + cos(1.0 - uv.x) * 2.0) * 10.0 * scale) * 0.15;
 
-  gl_FragColor = vec4(vec3(color) * diffuse, color * opacity);
+  gl_FragColor = vec4(diffuse * saturation, opacity * saturation);
 }
