@@ -30,9 +30,12 @@ function Medusae(opts) {
   this.animTime = 0;
 
   this.size = 25;
-  this.segmentsCount = 6;
+
+  // TODO: Increase segments
+  this.segmentsCount = 8;
   this.totalSegments = this.segmentsCount * 3 * 3;
 
+  // TODO: Increase rib count
   this.ribsCount = 15;
   this.ribRadius = 25;
 
@@ -141,9 +144,10 @@ Medusae.prototype.createCore = function () {
   var spineD = DistanceConstraint.create(rangeBottom, [2, indexBottom]);
   var axis = AxisConstraint.create(0, 1, [indexTop, indexMid, indexBottom]);
 
-  // var bottomStart = segments * (ribsCount - 1) + topStart;
   var topAngle = AngleConstraint.create([PI * 0.35, PI * 0.65],
     spineAngleIndices(this.pinTop, indexTop, topStart, segments));
+
+  // var bottomStart = segments * (ribsCount - 1) + topStart;
   // var bottomAngle = AngleConstraint.create([PI * 0.45, PI * 0.65],
   //   spineAngleIndices(pinBottom, indexBottom, bottomStart, segments));
 
@@ -662,19 +666,17 @@ Medusae.prototype.createSceneItem = function () {
   this.positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
   this.uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
 
+  this.timeAttrs = [];
   this.createMaterialsDots();
   this.createMaterialsLines();
   this.createMaterialsTentacles();
   this.createMaterialsBulb();
-  // this.createMaterialsTail();
+  this.createMaterialsTail();
 
   this.positionAttr = this.linesFore.geometry.attributes.position;
   this.positionPrevAttr = this.linesFore.geometry.attributes.positionPrev;
-};
 
-Medusae.prototype.addTimeAttr = function (item) {
-  if (!this.timeAttrs) { this.timeAttrs = []; }
-  this.timeAttrs.push(item.material.uniforms.time);
+  this.item.position.setY(20);
 };
 
 Medusae.prototype.createTextureDots = function () {
@@ -723,6 +725,8 @@ Medusae.prototype.createMaterialsDots = function () {
 Medusae.prototype.createMaterialsLines = function () {
   var geom = new THREE.BufferGeometry();
   var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
+
+  var area = 400;
   var scale = 1.1;
 
   geom.addAttribute('position', this.position);
@@ -732,8 +736,8 @@ Medusae.prototype.createMaterialsLines = function () {
   var faint = this.linesFaint = new THREE.Line(geom,
     new App.TentacleMaterial({
       color : 0xffffff,
-      area : 600,
-      opacity : 0.2,
+      area : area,
+      opacity : 0.25,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
@@ -744,12 +748,13 @@ Medusae.prototype.createMaterialsLines = function () {
   var fore = this.linesFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
-      area : 600,
-      opacity : 0.4,
+      area : area,
+      opacity : 0.5,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      depthTest : true
+      // depthTest : true,
+      // depthWrite : false
     }), THREE.LinePieces);
 
   faint.scale.multiplyScalar(scale);
@@ -764,7 +769,7 @@ Medusae.prototype.createMaterialsLines = function () {
 
 Medusae.prototype.createMaterialsTentacles = function () {
   var geom = new THREE.BufferGeometry();
-  var indices = new THREE.BufferAttribute(new Uint16Array(this.tentacleIndices), 1);
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.tentLinks), 1);
 
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
@@ -777,7 +782,7 @@ Medusae.prototype.createMaterialsTentacles = function () {
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      opacity : 0.5,
+      opacity : 0.25,
       depthTest : true,
       depthWrite : false
     }), THREE.LinePieces);
@@ -798,7 +803,7 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
-      diffuse : 0x411991
+      diffuse : new THREE.Color(1.6, 1.0, 1.2)
     }));
 
   this.addTimeAttr(bulb);
@@ -811,16 +816,12 @@ Medusae.prototype.createMaterialsTail = function () {
 
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
-  geom.addAttribute('index', indices);
   geom.addAttribute('uv', this.uvs);
+  geom.addAttribute('index', indices);
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : 0xffffff,
-      transparent : true,
-      blending : THREE.AdditiveBlending,
-      opacity : 0.5,
-      side : THREE.DoubleSide
+      diffuse : new THREE.Color(1.6, 1.0, 1.2)
     }));
 
   // this.tailMesh.scale.multiplyScalar(1.1);
