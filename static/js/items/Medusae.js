@@ -852,14 +852,13 @@ Medusae.prototype.updateTweens = function (delta) {
 
   this.dots.material.opacity = dotOpacity * 0.5;
   this.dots.visible = dotOpacity > 0.001;
-  this.tweensNeedUpdate = Math.abs(dotOpacity - this._dotsOpacity) > 0.001;
+  this.needsRender = Math.abs(dotOpacity - this._dotsOpacity) > 0.001;
 };
 
 Medusae.prototype.update = function (delta) {
   this.animTime += delta * 0.001;
   this.updateRibs(this.ribs, delta);
   this.updateRibs(this.tailRibs, delta);
-  this.updateTweens(delta);
   this.system.tick(delta * 0.001);
 
   this.positionAttr.needsUpdate = true;
