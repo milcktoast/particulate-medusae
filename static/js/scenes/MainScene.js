@@ -402,8 +402,6 @@ MainScene.prototype.update = function (delta) {
     this.lensDirtPass.update(delta);
   } else {
     this.statsPhysics.reset();
-    this.medusae.updateTweens(delta);
-    this.needsRender = this.medusae.tweensNeedUpdate;
   }
 
   this.audio.update(delta);
@@ -413,8 +411,9 @@ MainScene.prototype.update = function (delta) {
 
 MainScene.prototype.preRender = function (delta, stepProgress) {
   this.controls.update();
+  this.medusae.updateTweens(delta);
 
-  if (this.shouldAnimate || this.needsRender) {
+  if (this.shouldAnimate || this.needsRender || this.medusae.needsRender) {
     this.render(delta, stepProgress);
     this.needsRender = false;
   } else {
