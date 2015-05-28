@@ -8,7 +8,8 @@ App.MainScene = MainScene;
 function MainScene() {
   var scene = this.scene = new THREE.Scene();
   var camera = this.camera = new THREE.PerspectiveCamera(30, 1, 5, 3500);
-  var el = this.el = document.getElementById('container');
+  var el = this.element = document.getElementById('container');
+  this.statsElement = document.getElementById('container-graphs');
 
   this.mouse = new THREE.Vector2();
   this.raycaster = new THREE.Raycaster();
@@ -17,16 +18,19 @@ function MainScene() {
   this.gravity = -2;
 
   this.usePostFx = true;
+  this.shouldAnimate = true;
+
   this.initRenderer();
   this.initFxComposer();
   this.addPostFx();
   this.initControls();
+  this.initStats();
   this.onWindowResize();
 
   camera.position.set(200, 100, 0);
   camera.lookAt(scene.position);
 
-  this.loop = App.Looper.create(this, 'update', 'render', 1 / 30 * 1000);
+  this.loop = App.Looper.create(this, 'update', 'preRender', 1 / 30 * 1000);
 
   el.addEventListener('mousedown', this.onMouseDown.bind(this), false);
   el.addEventListener('mousemove', this.onMouseMove.bind(this), false);
@@ -55,7 +59,7 @@ MainScene.prototype.initRenderer = function () {
 MainScene.prototype.appendRenderer = function () {
   var canvas = this.renderer.domElement;
 
-  this.el.appendChild(canvas);
+  this.element.appendChild(canvas);
   setTimeout(function () {
     canvas.className = 'active';
   }, 0);
@@ -156,6 +160,7 @@ MainScene.prototype.onWindowResize = function () {
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
   this.lensDirtPass.setSize(postWidth, postHeight);
+  this.needsRender = true;
 };
 
 // ..................................................
@@ -210,7 +215,7 @@ MainScene.prototype.updateDebugNudge = function () {
 //
 
 MainScene.prototype.initControls = function () {
-  var controls = new THREE.TrackballControls(this.camera, this.el);
+  var controls = new THREE.TrackballControls(this.camera, this.element);
 
   controls.rotateSpeed = 0.75;
   controls.zoomSpeed = 0.75;
@@ -226,14 +231,21 @@ MainScene.prototype.initControls = function () {
   controls.dynamicDampingFactor = 0.2;
   controls.keys = [65, 17, 16];
 
+  controls.addEventListener('change', this.onControlsChange.bind(this));
+
   this.controls = controls;
   this.controlsUp = controls.object.up;
+};
+
+MainScene.prototype.onControlsChange = function () {
+  this.needsRender = true;
 };
 
 MainScene.prototype.onDocumentKey = function (event) {
   switch (event.which) {
   case 32:
-    this.loop.toggle();
+    // this.loop.toggle();
+    this.shouldAnimate = !this.shouldAnimate;
     event.preventDefault();
     break;
   }
@@ -252,7 +264,7 @@ MainScene.prototype.onMouseMove = function (event) {
 };
 
 MainScene.prototype.onMouseUp = function (event) {
-  if (this.didDrag) { return; }
+  if (this.didDrag || !this.shouldAnimate) { return; }
   var mouse = this.mouse;
 
   mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -341,6 +353,32 @@ MainScene.prototype.toggleDots = function () {
 };
 
 // ..................................................
+// Stats
+//
+
+MainScene.prototype.initStats = function () {
+  var el = this.statsElement;
+
+  this.statsPhysics = App.GraphComponent.create({
+    label: 'Physics (ms)'
+  });
+
+  this.statsGraphics = App.GraphComponent.create({
+    label: 'Graphics (ms)',
+    updateFactor: 0.025
+  });
+
+  this.statsPost = App.GraphComponent.create({
+    label: 'Post FX (ms)',
+    updateFactor: 0.025
+  });
+
+  this.statsPhysics.appendTo(el);
+  this.statsGraphics.appendTo(el);
+  this.statsPost.appendTo(el);
+};
+
+// ..................................................
 // Loop
 //
 
@@ -357,22 +395,54 @@ MainScene.prototype.update = function (delta) {
 
   nudgeForce.intensity *= 0.8;
 
-  this.medusae.update(delta);
+  if (this.shouldAnimate) {
+    this.statsPhysics.start();
+    this.medusae.update(delta);
+    this.statsPhysics.end();
+    this.lensDirtPass.update(delta);
+  } else {
+    this.statsPhysics.reset();
+    this.medusae.updateTweens(delta);
+    this.needsRender = this.medusae.tweensNeedUpdate;
+  }
+
   this.audio.update(delta);
-  this.lensDirtPass.update(delta);
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
 };
 
-MainScene.prototype.render = function (delta, stepProgress) {
-  // this.renderer.render(this.scene, this.camera);
+MainScene.prototype.preRender = function (delta, stepProgress) {
   this.controls.update();
-  this.medusae.updateGraphics(delta, stepProgress);
-  this.dust.updateGraphics(delta, stepProgress);
+
+  if (this.shouldAnimate || this.needsRender) {
+    this.render(delta, stepProgress);
+    this.needsRender = false;
+  } else {
+    this.statsGraphics.reset();
+    this.statsPost.reset();
+  }
+
+  this.statsPhysics.update();
+  this.statsGraphics.update();
+  this.statsPost.update();
+};
+
+MainScene.prototype.render = function (delta, stepProgress) {
+  this.statsGraphics.start();
+
+  if (this.shouldAnimate) {
+    this.medusae.updateGraphics(delta, stepProgress);
+    this.dust.updateGraphics(delta, stepProgress);
+  }
 
   if (this.usePostFx) {
+    this.statsPost.start();
     this.composer.render(0.01);
+    this.statsPost.end();
   } else {
+    this.statsPost.reset();
     this.renderer.render(this.scene, this.camera);
   }
+
+  this.statsGraphics.end();
 };

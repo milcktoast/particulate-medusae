@@ -1,5 +1,5 @@
-App.ModalController = ModalController;
-function ModalController(config) {
+App.ModalComponent = ModalComponent;
+function ModalComponent(config) {
   var name = config.name;
   var cover = document.getElementById('cover-' + name);
   var toggle = this.toggle = document.getElementById('toggle-' + name);
@@ -13,9 +13,9 @@ function ModalController(config) {
   cover.addEventListener('click', this.toggleState.bind(this), false);
 }
 
-ModalController.create = App.ctor(ModalController);
+ModalComponent.create = App.ctor(ModalComponent);
 
-ModalController.prototype.toggleState = function (event) {
+ModalComponent.prototype.toggleState = function (event) {
   if (this.isActive) {
     this.modal.className = this._modalClassName;
     this.toggle.className = this._toggleClassName;

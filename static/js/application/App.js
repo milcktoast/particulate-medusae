@@ -45,15 +45,15 @@ function updateSystemUI(scene) {
 
 App.register('index', function index() {
   var scene = App.MainScene.create();
-  var audioToggle = App.ToggleController.create({ name : 'audio' });
-  var dotsToggle = App.ToggleController.create({ name : 'dots' });
+  var audioToggle = App.ToggleComponent.create({ name : 'audio' });
+  var dotsToggle = App.ToggleComponent.create({ name : 'dots' });
 
-  var postFxToggle = App.ToggleController.create({
+  var postFxToggle = App.ToggleComponent.create({
     name : 'postfx',
     isActive : scene.usePostFx
   });
 
-  App.ModalController.create({
+  App.ModalComponent.create({
     name : 'info'
   });
 
