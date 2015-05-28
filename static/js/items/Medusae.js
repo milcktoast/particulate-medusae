@@ -835,7 +835,7 @@ Medusae.prototype.addTo = function (scene) {
 
 Medusae.prototype.toggleDots = function () {
   var visible = this._dotsAreVisible = !this._dotsAreVisible;
-  this._dotsOpacity = visible ? 1 : 0;
+  this._dotsOpacity = visible ? 0.75 : 0;
 };
 
 // ..................................................
@@ -852,6 +852,7 @@ Medusae.prototype.updateTweens = function (delta) {
 
   this.dots.material.opacity = dotOpacity * 0.5;
   this.dots.visible = dotOpacity > 0.001;
+  this.tweensNeedUpdate = Math.abs(dotOpacity - this._dotsOpacity) > 0.001;
 };
 
 Medusae.prototype.update = function (delta) {

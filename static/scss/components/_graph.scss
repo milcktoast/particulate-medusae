@@ -1,0 +1,19 @@
+.stats-item {
+  position: relative;
+  margin: 10px 0;
+
+  > .label {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 2px 4px 0;
+
+    color: #fff;
+    background: rgba(#111, 0.5);
+  }
+
+  > .graph {
+    position: relative;
+    display: block;
+  }
+}

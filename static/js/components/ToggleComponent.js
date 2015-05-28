@@ -1,5 +1,5 @@
-App.ToggleController = ToggleController;
-function ToggleController(config) {
+App.ToggleComponent = ToggleComponent;
+function ToggleComponent(config) {
   var name = config.name;
   var toggle = this.toggle = document.getElementById('toggle-' + name);
 
@@ -11,16 +11,16 @@ function ToggleController(config) {
   toggle.addEventListener('click', this.toggleState.bind(this), false);
 }
 
-ToggleController.create = App.ctor(ToggleController);
+ToggleComponent.create = App.ctor(ToggleComponent);
 
-ToggleController.prototype.addListener = function (context, fn) {
+ToggleComponent.prototype.addListener = function (context, fn) {
   this._listeners.push({
     context : context,
     fn : fn
   });
 };
 
-ToggleController.prototype.triggerListeners = function () {
+ToggleComponent.prototype.triggerListeners = function () {
   var listeners = this._listeners;
   var listener;
 
@@ -30,13 +30,13 @@ ToggleController.prototype.triggerListeners = function () {
   }
 };
 
-ToggleController.prototype.toggleState = function (event) {
+ToggleComponent.prototype.toggleState = function (event) {
   this.isActive = !this.isActive;
   this.updateEl();
   this.triggerListeners();
 };
 
-ToggleController.prototype.updateEl = function () {
+ToggleComponent.prototype.updateEl = function () {
   if (this.isActive) {
     this.toggle.className += ' active';
   } else {

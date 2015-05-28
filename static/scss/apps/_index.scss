@@ -1,3 +1,30 @@
+#container {
+  @include absolute(0);
+  overflow: hidden;
+
+  > canvas {
+    opacity: 0;
+    transition: opacity 500ms 200ms;
+
+    &.active {
+      opacity: 1;
+    }
+  }
+}
+
+#container-graphs {
+  position: absolute;
+  right: 0;
+  bottom: 30px;
+}
+
+#container-stats {
+  position: absolute;
+  z-index: 1;
+  right: 20px;
+  bottom: 20px;
+}
+
 .info-modal {
   h1 {
     margin: 4px 0 8px;
@@ -58,11 +85,6 @@
 }
 
 .stats-panel {
-  position: absolute;
-  z-index: 1;
-  right: 20px;
-  bottom: 20px;
-
   color: #fff;
   opacity: 0;
   visibility: hidden;

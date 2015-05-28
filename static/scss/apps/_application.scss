@@ -2,20 +2,6 @@ body {
   background: #1b1b1b;
 }
 
-#container {
-  @include absolute(0);
-  overflow: hidden;
-
-  canvas {
-    opacity: 0;
-    transition: opacity 500ms 200ms;
-
-    &.active {
-      opacity: 1;
-    }
-  }
-}
-
 .controls {
   position: absolute;
   left: 0;
