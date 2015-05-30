@@ -1,6 +1,7 @@
 /*global requestAnimationFrame*/
 App.Looper = Looper;
 function Looper(context, update, render, delta) {
+  var _this = this;
   var _update = context[update];
   var _render = context[render];
 
@@ -17,6 +18,7 @@ function Looper(context, update, render, delta) {
 
     if (steps > 0) {
       stepTime -= steps * targetDelta;
+      _this.didUpdate = true;
     }
 
     while (steps > 0) {
@@ -33,6 +35,7 @@ function Looper(context, update, render, delta) {
     var time = Date.now();
     var delta = Math.min(maxDelta, time - lastTime);
 
+    _this.didUpdate = false;
     animateStep(delta);
     requestAnimationFrame(animate);
     lastTime = time;
