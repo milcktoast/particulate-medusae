@@ -711,8 +711,7 @@ Medusae.prototype.createMaterialsDots = function () {
 
   var dots = this.dots = new THREE.PointCloud(geom,
     new THREE.PointCloudMaterial({
-      size : this.pxRatio * 2,
-      opacity : 0.5,
+      size : this.pxRatio * 0.75,
       map : this.createTextureDots(),
       transparent : true,
       depthTest : false,
@@ -835,7 +834,7 @@ Medusae.prototype.addTo = function (scene) {
 
 Medusae.prototype.toggleDots = function () {
   var visible = this._dotsAreVisible = !this._dotsAreVisible;
-  this._dotsOpacity = visible ? 0.75 : 0;
+  this._dotsOpacity = visible ? 1 : 0;
 };
 
 // ..................................................
