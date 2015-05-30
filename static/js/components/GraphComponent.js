@@ -104,7 +104,7 @@ GraphComponent.prototype._startTime = 0;
 GraphComponent.prototype._endTime = 0;
 GraphComponent.prototype._textTick = 0;
 
-GraphComponent.prototype.update = function () {
+GraphComponent.prototype.update = function (value, skipLabel) {
   var width = this.fullWidth;
   var height = this.fullHeight;
   var pxRatio = this.pxRatio;
@@ -115,11 +115,19 @@ GraphComponent.prototype.update = function () {
   var btx = this.btx;
   var ctx = this.ctx;
 
-  var value = this._endTime - this._startTime;
-  var current = this.current += (value - this.current) * this.updateFactor;
-  var max = this.max *= 0.99;
+  var current, max;
 
-  if (current > max) { max = this.max = current; }
+  if (value == null) {
+    value = this._endTime - this._startTime;
+    current = this.current += (value - this.current) * this.updateFactor;
+    max = this.max *= 0.99;
+  } else {
+    current = max = value;
+  }
+
+  if (current > max) {
+    max = this.max = current;
+  }
 
   btx.clearRect(0, 0, width, height);
   btx.drawImage(canvas, -drawOffset * pxRatio, 0, width, height);
@@ -130,8 +138,10 @@ GraphComponent.prototype.update = function () {
     0, current * height / (max || 1), pxRatio, height,
     width - pxRatio, 0, pxRatio, height);
 
-  if (++ this._textTick > 6) {
+  if (!skipLabel && ++ this._textTick > 6) {
     this._textTick = 0;
     this._valueEl.textContent = current.toFixed(3);
   }
+
+  this._startTime = this._endTime = 0;
 };

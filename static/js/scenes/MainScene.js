@@ -142,6 +142,7 @@ MainScene.prototype.initItems = function () {
 
 MainScene.prototype.togglePostFx = function (isEnabled) {
   this.usePostFx = isEnabled;
+  this.needsRender = true;
 };
 
 MainScene.prototype.onWindowResize = function () {
@@ -360,17 +361,17 @@ MainScene.prototype.initStats = function () {
   var el = this.statsElement;
 
   this.statsPhysics = App.GraphComponent.create({
-    label: 'Physics (ms)'
+    label : 'Physics (ms)'
   });
 
   this.statsGraphics = App.GraphComponent.create({
-    label: 'Graphics (ms)',
-    updateFactor: 0.025
+    label : 'Graphics (ms)',
+    updateFactor : 0.025
   });
 
   this.statsPost = App.GraphComponent.create({
-    label: 'Post FX (ms)',
-    updateFactor: 0.025
+    label : 'Post FX (ms)',
+    updateFactor : 0.025
   });
 
   this.statsPhysics.appendTo(el);
@@ -400,8 +401,6 @@ MainScene.prototype.update = function (delta) {
     this.medusae.update(delta);
     this.statsPhysics.end();
     this.lensDirtPass.update(delta);
-  } else {
-    this.statsPhysics.reset();
   }
 
   this.audio.update(delta);
@@ -421,7 +420,12 @@ MainScene.prototype.preRender = function (delta, stepProgress) {
     this.statsPost.reset();
   }
 
-  this.statsPhysics.update();
+  if (this.loop.didUpdate) {
+    this.statsPhysics.update();
+  } else {
+    this.statsPhysics.update(0, true);
+  }
+
   this.statsGraphics.update();
   this.statsPost.update();
 };
