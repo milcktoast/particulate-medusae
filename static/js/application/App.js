@@ -45,11 +45,20 @@ function updateSystemUI(scene) {
 
 App.register('index', function index() {
   var scene = App.MainScene.create();
-  var audioToggle = App.ToggleComponent.create({ name : 'audio' });
-  var dotsToggle = App.ToggleComponent.create({ name : 'dots' });
+
+  var dotsToggle = App.ToggleComponent.create({
+    name : 'dots',
+    key : 73
+  });
+
+  var audioToggle = App.ToggleComponent.create({
+    name : 'audio',
+    key : 79
+  });
 
   var postFxToggle = App.ToggleComponent.create({
     name : 'postfx',
+    key : 80,
     isActive : scene.usePostFx
   });
 
