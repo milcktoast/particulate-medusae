@@ -26,7 +26,7 @@ var _push = Array.prototype.push;
 App.Medusae = Medusae;
 function Medusae(opts) {
   this.pxRatio = opts.pxRatio || 1;
-  this.lineWidth = this.pxRatio;
+  this.lineWidth = 1; //this.pxRatio;
   this.animTime = 0;
 
   this.size = 25;
@@ -888,8 +888,8 @@ Medusae.prototype.updateTweens = function (delta) {
 
   this.bulbOpacity.value = meshOpacity;
   this.tailOpacity.value = meshOpacity;
-  this.linesInnerOpacity.value = dotOpacity * 0.25;
-  this.dots.material.opacity = dotOpacity * 0.5;
+  this.linesInnerOpacity.value = dotOpacity * 0.5;
+  this.dots.material.opacity = dotOpacity * 0.25;
 
   this.linesInner.visible = dotsAreVisible;
   this.dots.visible = dotsAreVisible;
