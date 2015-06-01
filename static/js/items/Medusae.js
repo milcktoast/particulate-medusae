@@ -74,6 +74,7 @@ Medusae.tempBuffers = [
   'uvs',
   'tentacles',
   'tentLinks',
+  'innerLinks',
   'skins'
 ];
 
@@ -131,21 +132,22 @@ Medusae.prototype.createCore = function () {
   var indexMid = this.indexMid = topStart - 2;
   var indexBottom = this.indexBottom = topStart - 1;
 
-  this.pinTop = 0;
-  this.pinBottom = 2;
+  var pinTop = this.pinTop = 0;
+  var pinMid = this.pinMid = 1;
+  var pinBottom = this.pinBottom = 2;
 
   var rangeTop = [size * 0.4, size * 0.6];
   var rangeMid = [size * 0.4, size * 0.6];
   var rangeBottom = [0, size * 0.5];
 
-  var spineA = DistanceConstraint.create(rangeTop, [0, indexTop]);
-  var spineB = DistanceConstraint.create(rangeTop, [1, indexTop]);
+  var spineA = DistanceConstraint.create(rangeTop, [pinTop, indexTop]);
+  var spineB = DistanceConstraint.create(rangeTop, [pinMid, indexTop]);
   var spineC = DistanceConstraint.create(rangeMid, [indexTop, indexMid]);
-  var spineD = DistanceConstraint.create(rangeBottom, [2, indexBottom]);
-  var axis = AxisConstraint.create(0, 1, [indexTop, indexMid, indexBottom]);
+  var spineD = DistanceConstraint.create(rangeBottom, [pinBottom, indexBottom]);
+  var axis = AxisConstraint.create(pinTop, pinMid, [indexTop, indexMid, indexBottom]);
 
-  var topAngle = AngleConstraint.create([PI * 0.35, PI * 0.65],
-    spineAngleIndices(this.pinTop, indexTop, topStart, segments));
+  var topAngle = AngleConstraint.create([PI * 0.45, PI * 0.65],
+    spineAngleIndices(pinBottom, indexTop, topStart, segments));
 
   // var bottomStart = segments * (ribsCount - 1) + topStart;
   // var bottomAngle = AngleConstraint.create([PI * 0.45, PI * 0.65],
@@ -255,9 +257,13 @@ Medusae.prototype.createRib = function (index, total) {
     this.queueConstraints(spine);
     if (index === 0) {
       this.addLinks(spine.indices);
+    } else {
+      this.addLinks(spine.indices, this.innerLinks);
     }
   }
 
+  this.addLinks(outerRib.indices, this.innerLinks);
+  this.addLinks(innerRib.indices, this.innerLinks);
   this.queueConstraints(outerRib, innerRib);
 
   this.ribs.push({
@@ -669,6 +675,7 @@ Medusae.prototype.createSceneItem = function () {
   this.timeAttrs = [];
   this.createMaterialsDots();
   this.createMaterialsLines();
+  this.createMaterialsInnerLines();
   this.createMaterialsTentacles();
   this.createMaterialsBulb();
   this.createMaterialsTail();
@@ -766,6 +773,30 @@ Medusae.prototype.createMaterialsLines = function () {
   this.item.add(fore);
 };
 
+Medusae.prototype.createMaterialsInnerLines = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.innerLinks), 1);
+
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('index', indices);
+
+  var inner = this.linesInner = new THREE.Line(geom,
+    new App.TentacleMaterial({
+      diffuse : 0xf99ebd,
+      area : 500,
+      linewidth : this.lineWidth,
+      transparent : true,
+      blending : THREE.AdditiveBlending,
+      depthTest : false,
+      depthWrite : false
+    }), THREE.LinePieces);
+
+  this.linesInnerOpacity = inner.material.uniforms.opacity;
+  this.addTimeAttr(inner);
+  this.item.add(inner);
+};
+
 Medusae.prototype.createMaterialsTentacles = function () {
   var geom = new THREE.BufferGeometry();
   var indices = new THREE.BufferAttribute(new Uint16Array(this.tentLinks), 1);
@@ -805,6 +836,7 @@ Medusae.prototype.createMaterialsBulb = function () {
       diffuse : new THREE.Color(1.6, 1.0, 1.2)
     }));
 
+  this.bulbOpacity = bulb.material.uniforms.opacity;
   this.addTimeAttr(bulb);
   this.item.add(bulb);
 };
@@ -824,6 +856,7 @@ Medusae.prototype.createMaterialsTail = function () {
     }));
 
   // this.tailMesh.scale.multiplyScalar(1.1);
+  this.tailOpacity = tail.material.uniforms.opacity;
   this.addTimeAttr(tail);
   this.item.add(tail);
 };
@@ -834,6 +867,8 @@ Medusae.prototype.addTo = function (scene) {
 
 Medusae.prototype.toggleDots = function () {
   var visible = this._dotsAreVisible = !this._dotsAreVisible;
+
+  this._meshOpacity = visible ? 0.1 : 1;
   this._dotsOpacity = visible ? 1 : 0;
 };
 
@@ -847,10 +882,18 @@ Medusae.prototype.initTweens = function () {
 };
 
 Medusae.prototype.updateTweens = function (delta) {
+  var meshOpacity = this.tween('mesh', this._meshOpacity || 1);
   var dotOpacity = this.tween('dots', this._dotsOpacity || 0);
+  var dotsAreVisible = dotOpacity > 0.001;
 
+  this.bulbOpacity.value = meshOpacity;
+  this.tailOpacity.value = meshOpacity;
+  this.linesInnerOpacity.value = dotOpacity * 0.25;
   this.dots.material.opacity = dotOpacity * 0.5;
-  this.dots.visible = dotOpacity > 0.001;
+
+  this.linesInner.visible = dotsAreVisible;
+  this.dots.visible = dotsAreVisible;
+
   this.needsRender = Math.abs(dotOpacity - this._dotsOpacity) > 0.001;
 };
 
