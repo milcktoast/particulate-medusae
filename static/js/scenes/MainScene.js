@@ -177,9 +177,6 @@ MainScene.prototype.initForces = function () {
     intensity : 0
   });
 
-  // TODO: Reduce need for initial relaxation loops
-  // improve initial geometry / constraint alignment
-  medusae.relax(25);
   medusae.system.addForce(gravityForce);
   medusae.system.addForce(nudgeForce);
 
