@@ -15,5 +15,6 @@ void main() {
   {{{chunks.map_particle_fragment}}}
   {{{chunks.color_fragment}}}
 
-  gl_FragColor = vec4(diffuseColor.rgb, illumination * opacity);
+  gl_FragColor = vec4(diffuseColor.rgb,
+    illumination * illumination * diffuseColor.a);
 }
