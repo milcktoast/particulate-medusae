@@ -1,9 +1,9 @@
 App.Dust = Dust;
 function Dust(opts) {
   this.pxRatio = opts.pxRatio || 1;
-  this.particleSize = 2 * this.pxRatio;
-  this.particleCount = 10000;
-  this.area = 100;
+  this.particleSize = 5 * this.pxRatio;
+  this.particleCount = 20000;
+  this.area = 350;
   this.createParticles();
   this.createMaterials();
   this.createItem();
@@ -27,17 +27,36 @@ Dust.prototype.createParticles = function () {
     verts[ix + 2] = Math.random() * area - areaHalf;
   }
 
-  var posAttr = new THREE.BufferAttribute();
-  posAttr.array = verts;
-  posAttr.itemSize = 3;
-  geom.addAttribute('position', posAttr);
+  geom.addAttribute('position',
+    new THREE.BufferAttribute(verts, 3));
+};
+
+Dust.prototype.createTexture = function () {
+  var canvas = document.createElement('canvas');
+  var texture = new THREE.Texture(canvas);
+  var ctx = canvas.getContext('2d');
+
+  var size = Math.pow(2, 6);
+  var center = size * 0.5;
+
+  canvas.width = canvas.height = size;
+  ctx.fillStyle = '#fff';
+
+  ctx.beginPath();
+  ctx.arc(center, center, size * 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  texture.needsUpdate = true;
+  return texture;
 };
 
 Dust.prototype.createMaterials = function () {
   var material = this.material = new App.DustMaterial({
     psColor : 0xffffff,
+    opacity : 0.8,
     size : this.particleSize,
-    scale : 100,
+    map : this.createTexture(),
+    scale : 150,
     area : this.area,
     transparent : true
   });

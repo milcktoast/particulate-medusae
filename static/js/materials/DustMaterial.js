@@ -15,6 +15,7 @@ DustMaterial.prototype.shader = {
   fragmentShader : 'dust-frag',
 
   uniforms : THREE.UniformsUtils.merge([
+    uniforms.common,
     uniforms.particle,
     {
       time : { type : 'f', value : 0 },
