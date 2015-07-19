@@ -27,7 +27,7 @@ function MainScene() {
   this.initStats();
   this.onWindowResize();
 
-  camera.position.set(200, 100, 0);
+  camera.position.set(300, 200, 0);
   camera.lookAt(scene.position);
 
   this.loop = App.Looper.create(this, 'update', 'preRender', 1 / 30 * 1000);
@@ -79,9 +79,9 @@ MainScene.prototype.initFxComposer = function () {
 // TODO: Tweak bloom fidelity
 MainScene.prototype.addPostFx = function () {
   var bloomStrength = 0.8;
-  var bloomKernel = 30;
+  var bloomKernel = 25;
   var bloomSigma = 8;
-  var bloomRes = 256;
+  var bloomRes = 512;
 
   var renderPass = new THREE.RenderPass(this.scene, this.camera);
   var bloomPass = new THREE.BloomPass(bloomStrength, bloomKernel, bloomSigma, bloomRes);
@@ -170,15 +170,18 @@ MainScene.prototype.onWindowResize = function () {
 
 MainScene.prototype.initForces = function () {
   var medusae = this.medusae;
-  var gravityForce = this.gravityForce = Particulate.DirectionalForce.create();
+  var gravityForce = Particulate.DirectionalForce.create([0, this.gravity, 0]);
   var nudgeRadius = 50;
-  var nudgeForce = this.nudgeForce = App.PointRepulsorForce.create([20, 5, 0], {
+  var nudgeForce = App.PointRepulsorForce.create([20, 5, 0], {
     radius : nudgeRadius,
     intensity : 0
   });
 
   medusae.system.addForce(gravityForce);
   medusae.system.addForce(nudgeForce);
+
+  this.gravityForce = gravityForce;
+  this.nudgeForce = nudgeForce;
 
   if (DEBUG_NUDGE) { this.initDebugNudge(nudgeRadius); }
 };
@@ -219,8 +222,8 @@ MainScene.prototype.initControls = function () {
   controls.zoomSpeed = 0.75;
   controls.panSpeed = 0.6;
 
-  controls.minDistance = 50;
-  controls.maxDistance = 300;
+  controls.minDistance = 300;
+  controls.maxDistance = 600;
 
   controls.noZoom = !ENABLE_ZOOM;
   controls.noPan = !ENABLE_PAN;
@@ -381,15 +384,15 @@ MainScene.prototype.initStats = function () {
 //
 
 MainScene.prototype.update = function (delta) {
-  var up = this.controlsUp;
-  var gravity = this.gravity;
-  var gravityForce = this.gravityForce;
+  // var up = this.controlsUp;
+  // var gravity = this.gravity;
+  // var gravityForce = this.gravityForce;
   var nudgeForce = this.nudgeForce;
 
-  gravityForce.set(
-    up.x * gravity * 0.2,
-    up.y * gravity,
-    up.z * gravity * 0.2);
+  // gravityForce.set(
+  //   up.x * gravity * 0.2,
+  //   up.y * gravity,
+  //   up.z * gravity * 0.2);
 
   nudgeForce.intensity *= 0.8;
 
