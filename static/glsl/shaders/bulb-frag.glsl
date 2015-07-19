@@ -21,5 +21,5 @@ void main() {
 
   saturation -= sin(uv.y * 5.0) * 0.5 + sin(uv.y * 2.5) * 1.5;
 
-  gl_FragColor = vec4(diffuse * saturation, opacity * saturation);
+  gl_FragColor = vec4(diffuse * opacity * saturation, opacity * saturation);
 }
