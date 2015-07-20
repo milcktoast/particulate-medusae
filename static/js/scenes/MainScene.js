@@ -292,7 +292,7 @@ MainScene.prototype.nudgeMedusae = (function () {
     var point = intersects[0].point;
     var sound = Math.random() > 0.5 ? 'bubbles1' : 'bubbles2';
 
-    offset.copy(point).normalize().multiplyScalar(20);
+    offset.copy(point).normalize().multiplyScalar(15);
     point.add(offset);
 
     nudge.intensity = 1;

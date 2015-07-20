@@ -233,10 +233,11 @@ Medusae.prototype.createRib = function (index, total) {
   // Attach bulb to spine
   var isTop = index === 0;
   var isBottom = index === total - 1;
-  var spine, spineCenter;
+  var spine, spineCenter, radiusSpine;
   if (isTop || isBottom) {
     spineCenter = index === 0 ? this.indexTop : this.indexBottom;
-    spine = DistanceConstraint.create([radius * 0.8, radius],
+    radiusSpine = index === 0 ? radius * 1.25 : radius;
+    spine = DistanceConstraint.create([radius * 0.8, radiusSpine],
       LINKS.radial(spineCenter, start, segments, []));
 
     this.queueConstraints(spine);
@@ -254,11 +255,12 @@ Medusae.prototype.createRib = function (index, total) {
   this.ribs.push({
     start : start,
     radius : radius,
+    radiusSpine : radiusSpine,
     yParam : yParam,
     yPos : yPos,
     outer : outerRib,
     inner : innerRib,
-    spine : spine
+    spine : spine,
   });
 };
 
@@ -271,8 +273,19 @@ Medusae.prototype.createSkin = function (r0, r1) {
   var skin = DistanceConstraint.create([dist * 0.5, dist],
     LINKS.rings(rib0.start, rib1.start, segments, []));
 
+  // FIXME
+  // var distCross = Vec3.distance(this.verts, rib0.start, rib1.start + 1);
+  // var skinCross0 = DistanceConstraint.create([distCross * 0.5, distCross],
+  //   LINKS.rings(rib0.start, rib1.start + 1, segments - 1, [rib0.start + segments - 1, rib1.start]));
+  // var skinCross1 = DistanceConstraint.create([distCross * 0.5, distCross],
+  //   LINKS.rings(rib0.start + 1, rib1.start, segments - 1, [rib0.start, rib1.start + segments - 1]));
+
   this.queueConstraints(skin);
+  // this.queuedConstraints(skinCross0, skinCross1);
+
   this.addLinks(skin.indices);
+  // this.addLinks(skinCross0.indices, this.innerLinks);
+  // this.addLinks(skinCross1.indices, this.innerLinks);
 
   FACES.rings(rib0.start, rib1.start, segments, this.bulbFaces);
 
@@ -288,26 +301,26 @@ Medusae.prototype.updateRibs = function (ribs, delta) {
   var radiusOffset = 15;
 
   var segments = this.totalSegments;
-  var rib, radius, radiusOuter, outerLen, innerLen;
+  var rib, radius, radiusOuter, radiusSpine, outerLen, innerLen;
 
   for (var i = 0, il = ribs.length; i < il; i ++) {
     rib = ribs[i];
     radius = rib.radius + rib.yParam * phase * radiusOffset;
     radiusOuter = (rib.radiusOuter || rib.radius) + rib.yParam * phase * radiusOffset;
-
-    outerLen = 2 * PI * radiusOuter / segments;
-    innerLen = 2 * PI * radius / 3;
+    radiusSpine = (rib.radiusSpine || rib.radius) + rib.yParam * phase * radiusOffset;
 
     if (rib.outer) {
+      outerLen = 2 * PI * radiusOuter / segments;
       rib.outer.setDistance(outerLen * 0.9, outerLen);
     }
 
     if (rib.inner) {
+      innerLen = 2 * PI * radius / 3;
       rib.inner.setDistance(innerLen * 0.8, innerLen);
     }
 
     if (rib.spine) {
-      rib.spine.setDistance(radius * 0.8, radius * 1.2);
+      rib.spine.setDistance(radius * 0.8, radiusSpine);
     }
   }
 };
@@ -742,7 +755,7 @@ Medusae.prototype.createMaterialsLines = function () {
       diffuse : 0xf99ebd,
       area : area,
       opacity : 0.5,
-      linewidth : this.lineWidth,
+      linewidth : this.lineWidth * 2,
       transparent : true,
       blending: THREE.AdditiveBlending,
       // depthTest : true,
@@ -794,8 +807,8 @@ Medusae.prototype.createMaterialsTentacles = function () {
   var tentacle = this.tentacleFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
-      area : 2000,
-      linewidth : this.lineWidth,
+      area : 1200,
+      linewidth : this.lineWidth * 2,
       transparent : true,
       blending: THREE.AdditiveBlending,
       opacity : 0.25,
