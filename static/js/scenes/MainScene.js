@@ -27,7 +27,8 @@ function MainScene() {
   this.initStats();
   this.onWindowResize();
 
-  camera.position.set(300, 200, 0);
+  var aspect = this.camera.aspect;
+  camera.position.set(600 / aspect, 300 / aspect, 0);
   camera.lookAt(scene.position);
 
   this.loop = App.Looper.create(this, 'update', 'preRender', 1 / 30 * 1000);
@@ -151,12 +152,16 @@ MainScene.prototype.onWindowResize = function () {
   var pxRatio = this.pxRatio;
   var postWidth = width * pxRatio;
   var postHeight = height * pxRatio;
+  var aspect = width / height;
 
   this.width = width;
   this.height = height;
 
-  this.camera.aspect = width / height;
+  this.camera.aspect = aspect;
   this.camera.updateProjectionMatrix();
+
+  this.controls.minDistance = 500 / aspect;
+  this.controls.maxDistance = 1200 / aspect;
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
@@ -221,9 +226,6 @@ MainScene.prototype.initControls = function () {
   controls.rotateSpeed = 0.75;
   controls.zoomSpeed = 0.75;
   controls.panSpeed = 0.6;
-
-  controls.minDistance = 300;
-  controls.maxDistance = 600;
 
   controls.noZoom = !ENABLE_ZOOM;
   controls.noPan = !ENABLE_PAN;
