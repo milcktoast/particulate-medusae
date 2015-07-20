@@ -822,8 +822,24 @@ Medusae.prototype.createMaterialsBulb = function () {
       diffuse : new THREE.Color(1.6, 1.0, 1.2)
     }));
 
+  var bulbFaint = new THREE.Mesh(geom,
+    new App.LerpMaterial({
+      color : 0xffffff,
+      opacity : 0.05,
+      blending : THREE.AdditiveBlending,
+      transparent : true,
+      depthTest : false,
+      depthWrite : false
+    }));
+
+  bulbFaint.scale.multiplyScalar(1.15);
+
   this.bulbOpacity = bulb.material.uniforms.opacity;
+
+  this.addTimeAttr(bulbFaint);
   this.addTimeAttr(bulb);
+
+  this.item.add(bulbFaint);
   this.item.add(bulb);
 };
 
