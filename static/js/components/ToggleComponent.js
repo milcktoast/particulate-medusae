@@ -7,6 +7,10 @@ function ToggleComponent(config) {
   this._toggleClassName = toggle.className;
   this._listeners = [];
 
+  if (config.key) {
+    this.keyDelegator.addBinding(config.key, this, 'toggleState');
+  }
+
   this.updateEl();
   toggle.addEventListener('click', this.toggleState.bind(this), false);
 }
@@ -43,3 +47,5 @@ ToggleComponent.prototype.updateEl = function () {
     this.toggle.className = this._toggleClassName;
   }
 };
+
+ToggleComponent.prototype.keyDelegator = App.KeyDelegator.create();
