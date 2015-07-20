@@ -1,9 +1,12 @@
+var DEBUG_TEXTURE = false;
+var mapLinear = THREE.Math.mapLinear;
+
 App.Dust = Dust;
 function Dust(opts) {
   this.pxRatio = opts.pxRatio || 1;
-  this.particleSize = 2 * this.pxRatio;
-  this.particleCount = 10000;
-  this.area = 100;
+  this.particleSize = 24 * this.pxRatio;
+  this.particleCount = 20000;
+  this.area = 300;
   this.createParticles();
   this.createMaterials();
   this.createItem();
@@ -27,32 +30,78 @@ Dust.prototype.createParticles = function () {
     verts[ix + 2] = Math.random() * area - areaHalf;
   }
 
-  var posAttr = new THREE.BufferAttribute();
-  posAttr.array = verts;
-  posAttr.itemSize = 3;
-  geom.addAttribute('position', posAttr);
+  geom.addAttribute('position',
+    new THREE.BufferAttribute(verts, 3));
+};
+
+Dust.prototype.createTexture = function () {
+  var canvas = document.createElement('canvas');
+  var texture = new THREE.Texture(canvas);
+  var ctx = canvas.getContext('2d');
+
+  var size = Math.pow(2, 6);
+  var sizeHalf = size * 0.5;
+  var rings = 2;
+  var t, radius, alpha;
+
+  canvas.width = canvas.height = size;
+  ctx.fillStyle = '#fff';
+
+  for (var i = 0; i < rings; i ++) {
+    t = i / (rings - 1);
+    radius = mapLinear(t * t, 0, 1, 4, sizeHalf);
+    alpha = mapLinear(t, 0, 1, 1, 0.05);
+
+    ctx.beginPath();
+    ctx.arc(sizeHalf, sizeHalf, radius, 0, Math.PI * 2);
+    ctx.globalAlpha = alpha;
+    ctx.fill();
+  }
+
+  texture.needsUpdate = true;
+
+  if (DEBUG_TEXTURE) {
+    document.body.appendChild(canvas);
+    canvas.style.position = 'absolute';
+  }
+
+  return texture;
 };
 
 Dust.prototype.createMaterials = function () {
-  var material = this.material = new App.DustMaterial({
+  var params = {
     psColor : 0xffffff,
+    opacity : 0.75,
     size : this.particleSize,
-    scale : 100,
+    map : this.createTexture(),
+    scale : 150,
     area : this.area,
-    transparent : true
-  });
+    blending: THREE.AdditiveBlending,
+    transparent : true,
+    depthWrite : false
+  };
 
-  this.timeAttr = material.uniforms.time;
+  this.materialFore = new App.DustMaterial(params);
+
+  // params.depthTest = false;
+  // params.opacity = 0.25;
+  // this.materialFaint = new App.DustMaterial(params);
+
+  // this.timeAttrFaint = this.materialFaint.uniforms.time;
+  this.timeAttrFore = this.materialFore.uniforms.time;
 };
 
 Dust.prototype.createItem = function () {
-  this.item = new THREE.PointCloud(this.geometry, this.material);
+  // this.itemFaint = new THREE.PointCloud(this.geometry, this.materialFaint);
+  this.itemFore = new THREE.PointCloud(this.geometry, this.materialFore);
 };
 
 Dust.prototype.addTo = function (scene) {
-  scene.add(this.item);
+  // scene.add(this.itemFaint);
+  scene.add(this.itemFore);
 };
 
 Dust.prototype.updateGraphics = function (delta) {
-  this.timeAttr.value += delta * 0.005;
+  // this.timeAttrFaint.value += delta * 0.005;
+  this.timeAttrFore.value += delta * 0.005;
 };
