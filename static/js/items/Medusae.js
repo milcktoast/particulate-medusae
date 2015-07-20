@@ -794,7 +794,7 @@ Medusae.prototype.createMaterialsTentacles = function () {
   var tentacle = this.tentacleFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
-      area : 800,
+      area : 2000,
       linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
