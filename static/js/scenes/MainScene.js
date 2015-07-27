@@ -160,7 +160,7 @@ MainScene.prototype.onWindowResize = function () {
   this.camera.aspect = aspect;
   this.camera.updateProjectionMatrix();
 
-  this.controls.minDistance = 500 / aspect;
+  this.controls.minDistance = 300 / aspect;
   this.controls.maxDistance = 1200 / aspect;
 
   this.renderer.setSize(width, height);
