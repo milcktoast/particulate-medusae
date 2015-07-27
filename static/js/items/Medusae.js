@@ -144,7 +144,6 @@ Medusae.prototype.createCore = function () {
   }
 
   this.queueConstraints(spineA, spineB, spineC, spineD, axis);
-
   FACES.radial(indexTop, topStart, segments, this.bulbFaces);
 };
 
@@ -240,7 +239,7 @@ Medusae.prototype.createRib = function (index, total) {
       LINKS.radial(spineCenter, start, segments, []));
 
     this.queueConstraints(spine);
-    if (index === 0) {
+    if (isTop) {
       this.addLinks(spine.indices);
     } else {
       this.addLinks(spine.indices, this.innerLinks);
@@ -725,21 +724,9 @@ Medusae.prototype.createMaterialsLines = function () {
   geom.addAttribute('positionPrev', this.positionPrev);
   geom.addAttribute('index', indices);
 
-  var faint = this.linesFaint = new THREE.Line(geom,
-    new App.TentacleMaterial({
-      color : 0xffffff,
-      area : area,
-      opacity : 0.25,
-      linewidth : this.lineWidth,
-      transparent : true,
-      blending: THREE.AdditiveBlending,
-      depthTest : false,
-      depthWrite : false
-    }), THREE.LinePieces);
-
   var fore = this.linesFore = new THREE.Line(geom,
     new App.TentacleMaterial({
-      diffuse : 0xf99ebd,
+      diffuse : 0xffdde9,
       area : area,
       opacity : 0.5,
       linewidth : this.lineWidth,
@@ -749,13 +736,8 @@ Medusae.prototype.createMaterialsLines = function () {
       // depthWrite : false
     }), THREE.LinePieces);
 
-  faint.scale.multiplyScalar(scale);
   fore.scale.multiplyScalar(scale);
-
-  this.addTimeAttr(faint);
   this.addTimeAttr(fore);
-
-  this.item.add(faint);
   this.item.add(fore);
 };
 
@@ -803,7 +785,6 @@ Medusae.prototype.createMaterialsTentacles = function () {
       depthWrite : false
     }), THREE.LinePieces);
 
-  // this.tentacleFore.scale.multiplyScalar(0.8);
   this.addTimeAttr(tentacle);
   this.item.add(tentacle);
 };
@@ -819,7 +800,10 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
-      diffuse : new THREE.Color(1.6, 1.0, 1.2)
+      diffuse : new THREE.Color(1.6, 1.0, 1.2),
+      opacity : 0.75,
+      transparent : true,
+      // depthTest : false
     }));
 
   var bulbFaint = new THREE.Mesh(geom,
@@ -854,7 +838,11 @@ Medusae.prototype.createMaterialsTail = function () {
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : new THREE.Color(1.6, 1.0, 1.2)
+      diffuse : new THREE.Color(1.6, 1.0, 1.2),
+      // side : THREE.DoubleSide,
+      opacity : 0.75,
+      transparent : true,
+      // depthTest : false
     }));
 
   // this.tailMesh.scale.multiplyScalar(1.1);
