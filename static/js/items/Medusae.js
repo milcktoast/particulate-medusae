@@ -25,7 +25,7 @@ var _push = Array.prototype.push;
 App.Medusae = Medusae;
 function Medusae(opts) {
   this.pxRatio = opts.pxRatio || 1;
-  this.lineWidth = 1; //this.pxRatio;
+  this.lineWidth = 1;
   this.animTime = 0;
 
   this.size = 40;
@@ -730,9 +730,6 @@ Medusae.prototype.createMaterialsLines = function () {
   var geom = new THREE.BufferGeometry();
   var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
 
-  var area = 600;
-  var scale = 1.1;
-
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
   geom.addAttribute('index', indices);
@@ -740,16 +737,17 @@ Medusae.prototype.createMaterialsLines = function () {
   var fore = this.linesFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0xffdde9,
-      area : area,
+      area : 1200,
       opacity : 0.5,
-      linewidth : this.lineWidth * 2,
+      linewidth : this.lineWidth,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      // depthTest : true,
+      // depthTest : false,
       // depthWrite : false
     }), THREE.LinePieces);
 
-  fore.scale.multiplyScalar(scale);
+  fore.scale.multiplyScalar(1.1);
+
   this.addTimeAttr(fore);
   this.item.add(fore);
 };
@@ -788,7 +786,7 @@ Medusae.prototype.createMaterialsTentacles = function () {
 
   var tentacle = this.tentacleFore = new THREE.Line(geom,
     new App.TentacleMaterial({
-      diffuse : 0xf99ebd,
+      diffuse : new THREE.Color(0.6, 0.45, 0.6),
       area : 1200,
       linewidth : this.lineWidth * 2,
       transparent : true,
@@ -813,16 +811,12 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
-      diffuse : new THREE.Color(1.6, 1.0, 1.2),
-      opacity : 0.75,
-      transparent : true,
-      // depthTest : false
+      transparent : true
     }));
 
   var bulbFaint = new THREE.Mesh(geom,
-    new App.LerpMaterial({
-      color : 0xffffff,
-      opacity : 0.05,
+    new App.GelMaterial({
+      diffuse : new THREE.Color(0.6, 0.5, 0.85),
       blending : THREE.AdditiveBlending,
       transparent : true,
       depthTest : false,
@@ -831,6 +825,7 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   bulbFaint.scale.multiplyScalar(1.15);
 
+  this.bulbFaintOpacity = bulbFaint.material.uniforms.opacity;
   this.bulbOpacity = bulb.material.uniforms.opacity;
 
   this.addTimeAttr(bulbFaint);
@@ -851,11 +846,10 @@ Medusae.prototype.createMaterialsTail = function () {
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : new THREE.Color(1.6, 1.0, 1.2),
-      // side : THREE.DoubleSide,
-      opacity : 0.75,
+      diffuse : new THREE.Color(1.2, 0.8, 1.0),
+      side : THREE.DoubleSide,
       transparent : true,
-      // depthTest : false
+      depthTest : false
     }));
 
   // this.tailMesh.scale.multiplyScalar(1.1);
@@ -890,7 +884,8 @@ Medusae.prototype.updateTweens = function (delta) {
   var dotsAreVisible = dotOpacity > 0.001;
 
   this.bulbOpacity.value = meshOpacity;
-  this.tailOpacity.value = meshOpacity;
+  this.bulbFaintOpacity.value = meshOpacity * 0.35;
+  this.tailOpacity.value = meshOpacity * 0.8;
   this.linesInnerOpacity.value = dotOpacity * 0.5;
   this.dots.material.opacity = dotOpacity * 0.25;
 
