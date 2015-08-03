@@ -18,6 +18,7 @@ BulbMaterial.prototype.shader = {
   uniforms : THREE.UniformsUtils.merge([
     uniforms.common,
     {
+      diffuseB : { type : 'c', value : null },
       time : { type : 'f', value : 0 }
     }
   ]),

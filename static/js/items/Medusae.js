@@ -792,7 +792,7 @@ Medusae.prototype.createMaterialsTentacles = function () {
       transparent : true,
       blending: THREE.AdditiveBlending,
       opacity : 0.25,
-      depthTest : true,
+      depthTest : false,
       depthWrite : false
     }), THREE.LinePieces);
 
@@ -811,12 +811,14 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
+      diffuse : new THREE.Color(1.2, 0.8, 1.0),
+      diffuseB : new THREE.Color(0.44, 0.37, 0.76),
       transparent : true
     }));
 
   var bulbFaint = new THREE.Mesh(geom,
     new App.GelMaterial({
-      diffuse : new THREE.Color(0.6, 0.5, 0.85),
+      diffuse : new THREE.Color(0.34, 0.37, 0.71),
       blending : THREE.AdditiveBlending,
       transparent : true,
       depthTest : false,
@@ -846,10 +848,9 @@ Medusae.prototype.createMaterialsTail = function () {
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : new THREE.Color(1.2, 0.8, 1.0),
-      side : THREE.DoubleSide,
-      transparent : true,
-      depthTest : false
+      diffuse : new THREE.Color(1.8, 1.2, 1.5),
+      diffuseB : new THREE.Color(0.4, 0.3, 0.45),
+      transparent : true
     }));
 
   // this.tailMesh.scale.multiplyScalar(1.1);
@@ -884,8 +885,8 @@ Medusae.prototype.updateTweens = function (delta) {
   var dotsAreVisible = dotOpacity > 0.001;
 
   this.bulbOpacity.value = meshOpacity;
-  this.bulbFaintOpacity.value = meshOpacity * 0.35;
-  this.tailOpacity.value = meshOpacity * 0.8;
+  this.bulbFaintOpacity.value = meshOpacity * 0.25;
+  this.tailOpacity.value = meshOpacity;
   this.linesInnerOpacity.value = dotOpacity * 0.5;
   this.dots.material.opacity = dotOpacity * 0.25;
 
