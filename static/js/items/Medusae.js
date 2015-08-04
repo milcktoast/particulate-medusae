@@ -511,7 +511,7 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
     LINKS.rings(rib0.start, rib1.start, segments, []));
 
   this.queueConstraints(skin);
-  this.addLinks(skin.indices);
+  // this.addLinks(skin.indices);
 
   FACES.rings(rib0.start, rib1.start, segments, this.tailFaces);
 };
@@ -738,16 +738,16 @@ Medusae.prototype.createMaterialsLines = function () {
     new App.TentacleMaterial({
       diffuse : 0xffdde9,
       area : 1200,
-      opacity : 0.5,
-      linewidth : this.lineWidth,
+      linewidth : this.lineWidth * 2,
       transparent : true,
       blending: THREE.AdditiveBlending,
-      // depthTest : false,
-      // depthWrite : false
+      depthTest : false,
+      depthWrite : false
     }), THREE.LinePieces);
 
   fore.scale.multiplyScalar(1.1);
 
+  this.linesForeOpacity = fore.material.uniforms.opacity;
   this.addTimeAttr(fore);
   this.item.add(fore);
 };
@@ -887,6 +887,7 @@ Medusae.prototype.updateTweens = function (delta) {
   this.bulbOpacity.value = meshOpacity;
   this.bulbFaintOpacity.value = meshOpacity * 0.25;
   this.tailOpacity.value = meshOpacity;
+  this.linesForeOpacity.value = meshOpacity * 0.35;
   this.linesInnerOpacity.value = dotOpacity * 0.5;
   this.dots.material.opacity = dotOpacity * 0.25;
 
