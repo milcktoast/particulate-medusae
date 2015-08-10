@@ -4,7 +4,7 @@ uniform float opacity;
 varying vec2 vUv;
 
 float scale = 20.0;
-float saturation = 1.5;
+float saturation = 2.0;
 
 void main() {
   vec2 uv = vUv;

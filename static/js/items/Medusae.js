@@ -38,14 +38,15 @@ function Medusae(opts) {
   this.ribRadius = 25;
 
   this.tentacleGroupStart = 0;
-  this.tentacleGroupOffset = 2;
+  this.tentacleGroupOffset = 3;
   this.tentacleGroupCount = 6;
   this.tentacleSegments = 100;
   this.tentacleSegmentLength = 1.5;
   this.tentacleWeightFactor = 1;
 
-  this.tailRibsCount = 10;
+  this.tailRibsCount = 15;
   this.tailRibRadiusFactor = 20;
+  this.tailLinkOffset = 2;
   // this.tailCount = 30;
   // this.tailSegments = 50;
   // this.tailSegmentSize = 1;
@@ -488,7 +489,9 @@ Medusae.prototype.createTailRib = function (index, total) {
   }
 
   this.queueConstraints(mainRib, innerRib);
-  // this.addLinks(mainRib.indices);
+  if (index > this.tailLinkOffset) {
+    this.addLinks(mainRib.indices);
+  }
 
   this.tailRibs.push({
     start : start,
@@ -848,8 +851,8 @@ Medusae.prototype.createMaterialsTail = function () {
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : new THREE.Color(1.8, 1.2, 1.5),
-      diffuseB : new THREE.Color(0.4, 0.3, 0.45),
+      diffuse : new THREE.Color(0.9, 0.6, 0.75),
+      diffuseB : new THREE.Color(0.2, 0.15, 0.25),
       transparent : true
     }));
 
@@ -886,7 +889,7 @@ Medusae.prototype.updateTweens = function (delta) {
 
   this.bulbOpacity.value = meshOpacity;
   this.bulbFaintOpacity.value = meshOpacity * 0.25;
-  this.tailOpacity.value = meshOpacity;
+  this.tailOpacity.value = meshOpacity * 0.75;
   this.linesForeOpacity.value = meshOpacity * 0.35;
   this.linesInnerOpacity.value = dotOpacity * 0.5;
   this.dots.material.opacity = dotOpacity * 0.25;
