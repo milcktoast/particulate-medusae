@@ -1,4 +1,5 @@
 var PMath = Particulate.Math;
+var Tweens = App.Tweens;
 
 var ENABLE_ZOOM = true;
 var ENABLE_PAN = false;
@@ -146,13 +147,17 @@ MainScene.prototype.togglePostFx = function (isEnabled) {
   this.needsRender = true;
 };
 
+// TODO: Improve calculation of zoom range
 MainScene.prototype.onWindowResize = function () {
   var width = window.innerWidth;
   var height = window.innerHeight;
   var pxRatio = this.pxRatio;
+
   var postWidth = width * pxRatio;
   var postHeight = height * pxRatio;
   var aspect = width / height;
+  var minDistance = 300 / aspect;
+  var maxDistance = 1200 / aspect;
 
   this.width = width;
   this.height = height;
@@ -160,8 +165,9 @@ MainScene.prototype.onWindowResize = function () {
   this.camera.aspect = aspect;
   this.camera.updateProjectionMatrix();
 
-  this.controls.minDistance = 300 / aspect;
-  this.controls.maxDistance = 1200 / aspect;
+  this.controls.minDistance = minDistance;
+  this.controls.maxDistance = maxDistance;
+  this.mapDistance = Tweens.mapRange(minDistance, maxDistance, 0, 1);
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
@@ -237,7 +243,6 @@ MainScene.prototype.initControls = function () {
   controls.addEventListener('change', this.onControlsChange.bind(this));
 
   this.controls = controls;
-  this.controlsUp = controls.object.up;
 };
 
 MainScene.prototype.onControlsChange = function () {
@@ -386,21 +391,19 @@ MainScene.prototype.initStats = function () {
 //
 
 MainScene.prototype.update = function (delta) {
-  // var up = this.controlsUp;
-  // var gravity = this.gravity;
-  // var gravityForce = this.gravityForce;
+  var medusae = this.medusae;
   var nudgeForce = this.nudgeForce;
 
-  // gravityForce.set(
-  //   up.x * gravity * 0.2,
-  //   up.y * gravity,
-  //   up.z * gravity * 0.2);
+  var distance = this.camera.position.length();
+  var distNorm = this.mapDistance(distance);
+  var lineWidth = Math.max(0.5, Math.round((1 - distNorm) * 2 * 1.5) / 2);
 
+  medusae.updateLineWidth(lineWidth);
   nudgeForce.intensity *= 0.8;
 
   if (this.shouldAnimate) {
     this.statsPhysics.start();
-    this.medusae.update(delta);
+    medusae.update(delta);
     this.statsPhysics.end();
     this.lensDirtPass.update(delta);
   }

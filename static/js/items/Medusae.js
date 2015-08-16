@@ -25,7 +25,6 @@ var _push = Array.prototype.push;
 App.Medusae = Medusae;
 function Medusae(opts) {
   this.pxRatio = opts.pxRatio || 1;
-  this.lineWidth = 1;
   this.animTime = 0;
 
   this.size = 40;
@@ -741,7 +740,6 @@ Medusae.prototype.createMaterialsLines = function () {
     new App.TentacleMaterial({
       diffuse : 0xffdde9,
       area : 1200,
-      linewidth : this.lineWidth * 2,
       transparent : true,
       blending: THREE.AdditiveBlending,
       depthTest : false,
@@ -767,7 +765,6 @@ Medusae.prototype.createMaterialsInnerLines = function () {
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
       area : 500,
-      linewidth : this.lineWidth,
       transparent : true,
       blending : THREE.AdditiveBlending,
       depthTest : false,
@@ -791,7 +788,6 @@ Medusae.prototype.createMaterialsTentacles = function () {
     new App.TentacleMaterial({
       diffuse : new THREE.Color(0.6, 0.45, 0.6),
       area : 1200,
-      linewidth : this.lineWidth * 2,
       transparent : true,
       blending: THREE.AdditiveBlending,
       opacity : 0.25,
@@ -898,6 +894,15 @@ Medusae.prototype.updateTweens = function (delta) {
   this.dots.visible = dotsAreVisible;
 
   this.needsRender = Math.abs(dotOpacity - this._dotsOpacity) > 0.001;
+};
+
+Medusae.prototype.updateLineWidth = function (lineWidth) {
+  var thin = Math.round(lineWidth);
+  var thick = Math.round(lineWidth * 2);
+
+  this.linesFore.material.linewidth = thin;
+  this.linesInner.material.linewidth = thin;
+  this.tentacleFore.material.linewidth = thick;
 };
 
 Medusae.prototype.update = function (delta) {
