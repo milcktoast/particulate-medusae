@@ -116,7 +116,7 @@ Medusae.prototype.createCore = function () {
   // var ribsCount = this.ribsCount;
   var size = this.size;
   // var radius = this.ribRadius;
-  var offsets = [size, 0, -size * 2, 0, -size * 0.5, -size];
+  var offsets = [size, 0, -size * 2, size * 1.5, -size * 0.5, -size];
 
   var topStart = this.topStart = offsets.length;
   var indexTop = this.indexTop = topStart - 3;
