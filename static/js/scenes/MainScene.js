@@ -355,8 +355,10 @@ MainScene.prototype.toggleAudio = function () {
 // Vis
 //
 
+// TODO: Improve naming
 MainScene.prototype.toggleDots = function () {
   if (!this.medusae) { return; }
+  this._renderStats = !this._renderStats;
   this.medusae.toggleDots();
 };
 
@@ -425,14 +427,16 @@ MainScene.prototype.preRender = function (delta, stepProgress) {
     this.statsPost.reset();
   }
 
-  if (this.loop.didUpdate) {
-    this.statsPhysics.update();
-  } else {
-    this.statsPhysics.update(0, true);
-  }
+  if (this._renderStats) {
+    if (this.loop.didUpdate) {
+      this.statsPhysics.update();
+    } else {
+      this.statsPhysics.update(0, true);
+    }
 
-  this.statsGraphics.update();
-  this.statsPost.update();
+    this.statsGraphics.update();
+    this.statsPost.update();
+  }
 };
 
 MainScene.prototype.render = function (delta, stepProgress) {
