@@ -34,7 +34,7 @@ function Medusae(opts) {
   this.totalSegments = this.segmentsCount * 3 * 3;
 
   this.ribsCount = 20;
-  this.ribRadius = 25;
+  this.ribRadius = 15;
 
   this.tentacleGroupStart = 0;
   this.tentacleGroupOffset = 3;
@@ -113,9 +113,8 @@ Medusae.prototype.createCore = function () {
   var verts = this.verts;
   var uvs = this.uvs;
   var segments = this.totalSegments;
-  // var ribsCount = this.ribsCount;
   var size = this.size;
-  // var radius = this.ribRadius;
+  var yOffset = this.yOffset;
   var offsets = [size, 0, -size * 2, size * 1.5, -size * 0.5, -size];
 
   var topStart = this.topStart = offsets.length;
@@ -129,7 +128,7 @@ Medusae.prototype.createCore = function () {
 
   var rangeTop = [0, size * 0.5];
   var rangeMid = [size * 0.5, size * 0.7];
-  var rangeTopBottom = [size * 1.5, size * 2];
+  var rangeTopBottom = [size, size * 2];
   var rangeBottom = [0, size * 0.5];
 
   var spineA = DistanceConstraint.create(rangeTop, [pinTop, indexTop]);
@@ -142,6 +141,10 @@ Medusae.prototype.createCore = function () {
     GEOM.point(0, offsets[i], 0, verts);
     uvs.push(0, 0);
   }
+
+  this.posTop = size + yOffset;
+  this.posMid = yOffset;
+  this.posBottom = -size + yOffset;
 
   this.queueConstraints(spineA, spineB, spineC, spineD, axis);
   FACES.radial(indexTop, topStart, segments, this.bulbFaces);
@@ -165,7 +168,7 @@ Medusae.prototype.createBulb = function () {
 };
 
 function ribRadius(t) {
-  return sin(PI - PI * 0.55 * t * 1.8) + log(t * 100 + 2) / 3 + 1;
+  return sin(PI - PI * 0.55 * t * 1.8) + log(t * 100 + 2) / 3;
 }
 
 function innerRibIndices(offset, start, segments, buffer) {
@@ -215,7 +218,7 @@ Medusae.prototype.createRib = function (index, total) {
 
   var start = index * segments + this.topStart;
   var radiusT = ribRadius(yParam);
-  var radius = radiusT * 10 + 0.5;
+  var radius = radiusT * this.ribRadius;
 
   GEOM.circle(segments, radius, yPos, verts);
   ribUvs(yParam, segments, uvs);
@@ -236,7 +239,7 @@ Medusae.prototype.createRib = function (index, total) {
   if (isTop || isBottom) {
     spineCenter = index === 0 ? this.indexTop : this.indexBottom;
     radiusSpine = index === 0 ? radius * 1.25 : radius;
-    spine = DistanceConstraint.create([radius * 0.8, radiusSpine],
+    spine = DistanceConstraint.create([radius * 0.5, radiusSpine],
       LINKS.radial(spineCenter, start, segments, []));
 
     this.queueConstraints(spine);
@@ -619,8 +622,6 @@ Medusae.prototype.createSystem = function () {
   var queuedConstraints = this.queuedConstraints;
   var queuedWeights = this.weights;
   var system = this.system = PTCL.ParticleSystem.create(this.verts, 2);
-  var size = this.size;
-  var yOffset = this.yOffset;
 
   for (var i = 0, il = queuedConstraints.length; i < il; i ++) {
     system.addConstraint(queuedConstraints[i]);
@@ -634,9 +635,9 @@ Medusae.prototype.createSystem = function () {
   system.setWeight(1, 0);
   system.setWeight(2, 0);
 
-  system.addPinConstraint(PointConstraint.create([0, size + yOffset, 0], 0));
-  system.addPinConstraint(PointConstraint.create([0, yOffset, 0], 1));
-  system.addPinConstraint(PointConstraint.create([0, -size + yOffset, 0], 2));
+  system.addPinConstraint(PointConstraint.create([0, this.posTop, 0], this.pinTop));
+  system.addPinConstraint(PointConstraint.create([0, this.posMid, 0], this.pinMid));
+  system.addPinConstraint(PointConstraint.create([0, this.posBottom, 0], this.pinBottom));
 };
 
 Medusae.prototype.relax = function (iterations) {
