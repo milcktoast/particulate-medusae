@@ -44,25 +44,35 @@ function updateSystemUI(scene) {
 //
 
 App.register('index', function index() {
+  var ToggleComponent = App.ToggleComponent;
+  var ModalComponent = App.ModalComponent;
   var scene = App.MainScene.create();
 
-  var dotsToggle = App.ToggleComponent.create({
+  var keysTop = [85, 73, 79, 80];
+
+  var dotsToggle = ToggleComponent.create({
     name : 'dots',
-    key : 73
+    key : keysTop[0]
   });
 
-  var audioToggle = App.ToggleComponent.create({
+  ToggleComponent.create({
+    name : 'colors',
+    menu : 'colors',
+    key : keysTop[1]
+  });
+
+  var audioToggle = ToggleComponent.create({
     name : 'audio',
-    key : 79
+    key : keysTop[2]
   });
 
-  var postFxToggle = App.ToggleComponent.create({
+  var postFxToggle = ToggleComponent.create({
     name : 'postfx',
-    key : 80,
+    key : keysTop[3],
     isActive : scene.usePostFx
   });
 
-  App.ModalComponent.create({
+  ModalComponent.create({
     name : 'info'
   });
 

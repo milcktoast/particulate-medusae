@@ -44,9 +44,8 @@ GraphComponent.prototype.createElement = function () {
   var value = this._valueEl = document.createTextNode('');
   var canvas = this.canvas;
 
-  el.className = 'stats-item';
+  el.className = 'graph';
   labelContainer.className = 'label';
-  canvas.className = 'graph';
 
   el.appendChild(canvas);
   el.appendChild(labelContainer);

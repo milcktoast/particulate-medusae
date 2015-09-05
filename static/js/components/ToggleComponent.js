@@ -1,7 +1,15 @@
 App.ToggleComponent = ToggleComponent;
 function ToggleComponent(config) {
   var name = config.name;
+  var menu = config.menu;
   var toggle = this.toggle = document.getElementById('toggle-' + name);
+
+  if (menu) {
+    this.menu = document.getElementById('menu-' + menu);
+    this._menuClassName = this.menu.className;
+    this._menuInner = this.menu.getElementsByClassName('inner')[0];
+    toggle.className += ' has-menu';
+  }
 
   this.isActive = config.isActive != null ? config.isActive : false;
   this._toggleClassName = toggle.className;
@@ -11,7 +19,7 @@ function ToggleComponent(config) {
     this.keyDelegator.addBinding(config.key, this, 'toggleState');
   }
 
-  this.updateEl();
+  this.syncState();
   toggle.addEventListener('click', this.toggleState.bind(this), false);
 }
 
@@ -36,15 +44,31 @@ ToggleComponent.prototype.triggerListeners = function () {
 
 ToggleComponent.prototype.toggleState = function (event) {
   this.isActive = !this.isActive;
-  this.updateEl();
+  this.syncState();
   this.triggerListeners();
 };
 
-ToggleComponent.prototype.updateEl = function () {
+ToggleComponent.prototype.syncState = function () {
+  this.updateElClass(this.toggle, this._toggleClassName);
+  this.updateElClass(this.menu, this._menuClassName);
+  this.updateElHeight(this.menu, this._menuInner);
+};
+
+ToggleComponent.prototype.updateElClass = function (element, className) {
+  if (!element) { return; }
   if (this.isActive) {
-    this.toggle.className += ' active';
+    element.className += ' active';
   } else {
-    this.toggle.className = this._toggleClassName;
+    element.className = className;
+  }
+};
+
+ToggleComponent.prototype.updateElHeight = function (element, inner) {
+  if (!element) { return; }
+  if (this.isActive) {
+    element.style.height = inner.offsetHeight + 'px';
+  } else {
+    element.style.height = '';
   }
 };
 

@@ -12,6 +12,13 @@
   }
 }
 
+#container-controls {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  bottom: 10px;
+}
+
 #container-graphs {
   position: absolute;
   right: 0;
