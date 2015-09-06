@@ -1,3 +1,5 @@
+$c-active: #E30060;
+
 @mixin controls-button {
   position: relative;
   display: block;
@@ -57,11 +59,11 @@
   }
 
   &.active:before {
-    background: #e30060;
-    border-color: #e30060;
+    background: $c-active;
+    border-color: $c-active;
   }
 
-  &:hover:before { border-color: #e30060; }
+  &:hover:before { border-color: $c-active; }
   &.active:hover:before { border-color: #fff; }
 }
 

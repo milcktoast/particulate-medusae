@@ -799,7 +799,7 @@ Medusae.prototype.createMaterialsTentacles = function () {
 
   var tentacle = this.tentacleFore = new THREE.Line(geom,
     new App.TentacleMaterial({
-      diffuse : new THREE.Color(0.6, 0.45, 0.6),
+      diffuse : 0x997299,
       area : 1200,
       transparent : true,
       blending : THREE.AdditiveBlending,
@@ -824,14 +824,14 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
-      diffuse : new THREE.Color(1.0, 0.66, 1.83),
-      diffuseB : new THREE.Color(0.44, 0.37, 0.76),
+      diffuse : 0xFFA9D2,
+      diffuseB : 0x705EC1,
       transparent : true
     }));
 
   var bulbFaint = new THREE.Mesh(geom,
     new App.GelMaterial({
-      diffuse : new THREE.Color(0.34, 0.37, 0.71),
+      diffuse : 0x415AB5,
       blending : THREE.AdditiveBlending,
       transparent : true,
       depthTest : false,
@@ -865,8 +865,8 @@ Medusae.prototype.createMaterialsTail = function () {
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : new THREE.Color(0.9, 0.6, 0.75),
-      diffuseB : new THREE.Color(0.2, 0.15, 0.25),
+      diffuse : 0xF3BAD7,
+      diffuseB : 0x33263F,
       transparent : true
     }));
 
