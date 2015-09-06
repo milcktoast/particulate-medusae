@@ -46,6 +46,7 @@ function updateSystemUI(scene) {
 App.register('index', function index() {
   var ToggleComponent = App.ToggleComponent;
   var ModalComponent = App.ModalComponent;
+  var ColorComponent = App.ColorComponent;
   var scene = App.MainScene.create();
 
   var keysTop = [85, 73, 79, 80];
@@ -55,7 +56,7 @@ App.register('index', function index() {
     key : keysTop[0]
   });
 
-  ToggleComponent.create({
+  var colorsToggle = ToggleComponent.create({
     name : 'colors',
     menu : 'colors',
     key : keysTop[1]
@@ -81,6 +82,16 @@ App.register('index', function index() {
   scene.initAudio();
   scene.appendRenderer();
   scene.loop.start();
+
+
+  scene.medusae.colors.forEach(function (color) {
+    var controller = ColorComponent.create({
+      label : color.label,
+      color : color.uniform.value
+    });
+
+    colorsToggle.menuInner.appendChild(controller.element);
+  });
 
   updateSystemUI(scene);
 

@@ -673,18 +673,29 @@ Medusae.prototype.createSceneItem = function () {
   this.positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
   this.uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
 
+  this.colors = [];
   this.timeAttrs = [];
   this.createMaterialsDots();
   this.createMaterialsLines();
-  this.createMaterialsInnerLines();
-  this.createMaterialsTentacles();
   this.createMaterialsBulb();
   this.createMaterialsTail();
+  this.createMaterialsTentacles();
+  this.createMaterialsInnerLines();
 
   this.positionAttr = this.linesFore.geometry.attributes.position;
   this.positionPrevAttr = this.linesFore.geometry.attributes.positionPrev;
 
   this.item.position.setY(20);
+};
+
+Medusae.prototype.addColor = function (label, material, path) {
+  path = path || 'diffuse';
+  var uniform = material.uniforms[path];
+
+  this.colors.push({
+    label : label,
+    uniform : uniform
+  });
 };
 
 Medusae.prototype.createTextureDots = function () {
@@ -748,9 +759,9 @@ Medusae.prototype.createMaterialsLines = function () {
     }), THREE.LinePieces);
 
   fore.scale.multiplyScalar(1.1);
-
   this.linesForeOpacity = fore.material.uniforms.opacity;
   this.addTimeAttr(fore);
+  this.addColor('Hood Contour', fore.material);
   this.item.add(fore);
 };
 
@@ -774,6 +785,7 @@ Medusae.prototype.createMaterialsInnerLines = function () {
 
   this.linesInnerOpacity = inner.material.uniforms.opacity;
   this.addTimeAttr(inner);
+  // this.addColor('System Debug', inner.material);
   this.item.add(inner);
 };
 
@@ -790,13 +802,14 @@ Medusae.prototype.createMaterialsTentacles = function () {
       diffuse : new THREE.Color(0.6, 0.45, 0.6),
       area : 1200,
       transparent : true,
-      blending: THREE.AdditiveBlending,
+      blending : THREE.AdditiveBlending,
       opacity : 0.25,
       depthTest : false,
       depthWrite : false
     }), THREE.LinePieces);
 
   this.addTimeAttr(tentacle);
+  this.addColor('Tentacles', tentacle.material);
   this.item.add(tentacle);
 };
 
@@ -811,7 +824,7 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
-      diffuse : new THREE.Color(1.2, 0.8, 1.0),
+      diffuse : new THREE.Color(1.0, 0.66, 1.83),
       diffuseB : new THREE.Color(0.44, 0.37, 0.76),
       transparent : true
     }));
@@ -832,6 +845,10 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   this.addTimeAttr(bulbFaint);
   this.addTimeAttr(bulb);
+
+  this.addColor('Hood Primary', bulb.material);
+  this.addColor('Hood Secondary', bulb.material, 'diffuseB');
+  this.addColor('Hood Specular', bulbFaint.material);
 
   this.item.add(bulbFaint);
   this.item.add(bulb);
@@ -856,6 +873,8 @@ Medusae.prototype.createMaterialsTail = function () {
   // this.tailMesh.scale.multiplyScalar(1.1);
   this.tailOpacity = tail.material.uniforms.opacity;
   this.addTimeAttr(tail);
+  this.addColor('Belly Primary', tail.material);
+  this.addColor('Belly Secondary', tail.material, 'diffuseB');
   this.item.add(tail);
 };
 
