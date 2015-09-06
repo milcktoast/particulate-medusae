@@ -73,6 +73,12 @@ App.register('index', function index() {
     isActive : scene.usePostFx
   });
 
+  var simToggle = ToggleComponent.create({
+    name : 'sim',
+    key : 32,
+    isActive : scene.shouldAnimate
+  });
+
   ModalComponent.create({
     name : 'info'
   });
@@ -99,6 +105,7 @@ App.register('index', function index() {
   postFxToggle.addListener('toggle', scene, 'togglePostFx');
   dotsToggle.addListener('toggle', scene, 'toggleDots');
   dotsToggle.addListener('toggle', App, 'toggleStats');
+  simToggle.addListener('toggle', scene, 'toggleAnimate');
 
   setTimeout(function () {
     audioToggle.toggleState();

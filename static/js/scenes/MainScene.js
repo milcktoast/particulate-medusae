@@ -38,7 +38,6 @@ function MainScene() {
   el.addEventListener('mousemove', this.onMouseMove.bind(this), false);
   el.addEventListener('mouseup', this.onMouseUp.bind(this), false);
 
-  document.addEventListener('keyup', this.onDocumentKey.bind(this), false);
   window.addEventListener('resize', this.onWindowResize.bind(this), false);
 }
 
@@ -253,14 +252,8 @@ MainScene.prototype.onControlsChange = function () {
   this.needsRender = true;
 };
 
-MainScene.prototype.onDocumentKey = function (event) {
-  switch (event.which) {
-  case 32:
-    // this.loop.toggle();
-    this.shouldAnimate = !this.shouldAnimate;
-    event.preventDefault();
-    break;
-  }
+MainScene.prototype.toggleAnimate = function (event) {
+  this.shouldAnimate = !this.shouldAnimate;
 };
 
 // ..................................................
