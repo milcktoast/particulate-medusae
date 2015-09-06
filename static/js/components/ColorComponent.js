@@ -16,17 +16,18 @@ function ColorComponent(opts) {
   preview.className = 'preview';
   label.className = 'label';
 
+  input.setAttribute('type', 'color');
   element.appendChild(preview);
   element.appendChild(label);
   element.appendChild(input);
 
-  input.setAttribute('type', 'color');
   input.addEventListener('change', this.syncState.bind(this), false);
   input.addEventListener('focus', this.focus.bind(this), false);
   input.addEventListener('blur', this.blur.bind(this), false);
 }
 
 ColorComponent.create = App.ctor(ColorComponent);
+App.Dispatcher.extend(ColorComponent.prototype);
 
 ColorComponent.prototype.setLabel = function (label) {
   this._labelEl.textContent = label;
@@ -49,6 +50,6 @@ ColorComponent.prototype.blur = function (event) {
 ColorComponent.prototype.syncState = function (event) {
   var value = this._input.value;
   this._previewEl.style.background = value;
-  // debugger;
   this.color.setStyle(value);
+  this.triggerListeners('change', value);
 };

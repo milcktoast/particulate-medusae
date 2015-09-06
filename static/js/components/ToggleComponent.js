@@ -1,52 +1,43 @@
 App.ToggleComponent = ToggleComponent;
 function ToggleComponent(config) {
   var name = config.name;
-  var menu = config.menu;
-  var key = config.key;
   var toggle = this.toggle = document.getElementById('toggle-' + name);
 
-  if (menu) {
-    this.menu = document.getElementById('menu-' + menu);
-    this.menuInner = this.menu.getElementsByClassName('inner')[0];
-    this._menuClassName = this.menu.className;
-    toggle.className += ' has-menu';
-  }
-
-  if (key) {
-    this.keyDelegator.addBinding(key, this, 'toggleState');
-  }
+  this.setupKey(config.key);
+  this.setupMenu(config.menu);
 
   this.isActive = config.isActive != null ? config.isActive : false;
   this._toggleClassName = toggle.className;
-  this._listeners = [];
-
   this.syncState();
+
   toggle.addEventListener('click', this.toggleState.bind(this), false);
 }
 
 ToggleComponent.create = App.ctor(ToggleComponent);
+App.Dispatcher.extend(ToggleComponent.prototype);
 
-ToggleComponent.prototype.addListener = function (context, fn) {
-  this._listeners.push({
-    context : context,
-    fn : fn
-  });
+ToggleComponent.prototype.setupKey = function (key) {
+  if (!key) { return; }
+  this.keyDelegator.addBinding(key, this, 'toggleState');
 };
 
-ToggleComponent.prototype.triggerListeners = function () {
-  var listeners = this._listeners;
-  var listener;
+ToggleComponent.prototype.setupMenu = function (name) {
+  if (!name) { return; }
 
-  for (var i = 0, il = listeners.length; i < il; i ++) {
-    listener = listeners[i];
-    listener.context[listener.fn].call(listener.context, this.isActive);
-  }
+  var menu = this.menu = document.getElementById('menu-' + name);
+  var inner = this.menuInner = document.createElement('div');
+
+  inner.className = 'inner';
+  menu.appendChild(inner);
+
+  this._menuClassName = menu.className;
+  this.toggle.className += ' has-menu';
 };
 
 ToggleComponent.prototype.toggleState = function (event) {
   this.isActive = !this.isActive;
   this.syncState();
-  this.triggerListeners();
+  this.triggerListeners('toggle', this.isActive);
 };
 
 ToggleComponent.prototype.syncState = function () {

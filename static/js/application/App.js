@@ -83,22 +83,22 @@ App.register('index', function index() {
   scene.appendRenderer();
   scene.loop.start();
 
-
   scene.medusae.colors.forEach(function (color) {
     var controller = ColorComponent.create({
       label : color.label,
       color : color.uniform.value
     });
 
+    controller.addListener('change', scene, 'makeDirty');
     colorsToggle.menuInner.appendChild(controller.element);
   });
 
   updateSystemUI(scene);
 
-  audioToggle.addListener(scene, 'toggleAudio');
-  postFxToggle.addListener(scene, 'togglePostFx');
-  dotsToggle.addListener(scene, 'toggleDots');
-  dotsToggle.addListener(App, 'toggleStats');
+  audioToggle.addListener('toggle', scene, 'toggleAudio');
+  postFxToggle.addListener('toggle', scene, 'togglePostFx');
+  dotsToggle.addListener('toggle', scene, 'toggleDots');
+  dotsToggle.addListener('toggle', App, 'toggleStats');
 
   setTimeout(function () {
     audioToggle.toggleState();

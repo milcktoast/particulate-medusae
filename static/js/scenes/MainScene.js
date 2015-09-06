@@ -142,6 +142,10 @@ MainScene.prototype.initItems = function () {
   dust.addTo(this.scene);
 };
 
+MainScene.prototype.makeDirty = function () {
+  this.needsRender = true;
+};
+
 MainScene.prototype.togglePostFx = function (isEnabled) {
   this.usePostFx = isEnabled;
   this.needsRender = true;
