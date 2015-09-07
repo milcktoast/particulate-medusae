@@ -52,9 +52,14 @@ MainScene.prototype.initRenderer = function () {
     antialias : false
   });
 
-  renderer.setClearColor(0x111111, 1);
+  this.updateClearColor();
   renderer.setPixelRatio(this.pxRatio);
   renderer.autoClear = false;
+};
+
+MainScene.prototype.updateClearColor = function () {
+  var color = this.usePostFx ? 0x111111 : 0x1c1c1c;
+  this.renderer.setClearColor(color, 1);
 };
 
 MainScene.prototype.appendRenderer = function () {
@@ -147,6 +152,7 @@ MainScene.prototype.makeDirty = function () {
 
 MainScene.prototype.togglePostFx = function (isEnabled) {
   this.usePostFx = isEnabled;
+  this.updateClearColor();
   this.needsRender = true;
 };
 
@@ -450,6 +456,7 @@ MainScene.prototype.render = function (delta, stepProgress) {
     this.statsPost.end();
   } else {
     this.statsPost.reset();
+    this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
   }
 
