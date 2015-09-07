@@ -2,23 +2,21 @@ require('./ShaderMaterial');
 var ShaderMaterial = App.ShaderMaterial;
 var uniforms = THREE.UniformsLib;
 
-App.TailMaterial = TailMaterial;
-function TailMaterial(parameters) {
+App.GelMaterial = GelMaterial;
+function GelMaterial(parameters) {
   parameters = parameters || {};
-  parameters.map = true;
   ShaderMaterial.call(this, parameters);
 }
 
-TailMaterial.prototype = Object.create(ShaderMaterial.prototype);
+GelMaterial.prototype = Object.create(ShaderMaterial.prototype);
 
-TailMaterial.prototype.shader = {
-  vertexShader : 'lerp-vert',
-  fragmentShader : 'tail-frag',
+GelMaterial.prototype.shader = {
+  vertexShader : 'gel-vert',
+  fragmentShader : 'gel-frag',
 
   uniforms : THREE.UniformsUtils.merge([
     uniforms.common,
     {
-      diffuseB : { type : 'c', value : null },
       time : { type : 'f', value : 0 }
     }
   ]),

@@ -1,5 +1,22 @@
 var Tweens = App.Tweens = {};
 
+Tweens.mapRange = function (a0, a1, b0, b1) {
+  if (arguments.length === 2) {
+    b1 = a1[1];
+    b0 = a1[0];
+    a1 = a0[1];
+    a0 = a0[0];
+  }
+
+  var rangeAInv = 1 / (a1 - a0);
+  var rangeB = b1 - b0;
+
+  return function (x) {
+    var t = (x - a0) * rangeAInv;
+    return b0 + t * rangeB;
+  };
+};
+
 // Tween to target by difference factor
 Tweens.factorTween = function (context, defaultFactor) {
   return function (name, target, instanceFactor) {

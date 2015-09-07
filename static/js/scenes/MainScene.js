@@ -1,4 +1,5 @@
 var PMath = Particulate.Math;
+var Tweens = App.Tweens;
 
 var ENABLE_ZOOM = true;
 var ENABLE_PAN = false;
@@ -37,7 +38,6 @@ function MainScene() {
   el.addEventListener('mousemove', this.onMouseMove.bind(this), false);
   el.addEventListener('mouseup', this.onMouseUp.bind(this), false);
 
-  document.addEventListener('keyup', this.onDocumentKey.bind(this), false);
   window.addEventListener('resize', this.onWindowResize.bind(this), false);
 }
 
@@ -52,9 +52,14 @@ MainScene.prototype.initRenderer = function () {
     antialias : false
   });
 
-  renderer.setClearColor(0x111111, 1);
+  this.updateClearColor();
   renderer.setPixelRatio(this.pxRatio);
   renderer.autoClear = false;
+};
+
+MainScene.prototype.updateClearColor = function () {
+  var color = this.usePostFx ? 0x111111 : 0x1c1c1c;
+  this.renderer.setClearColor(color, 1);
 };
 
 MainScene.prototype.appendRenderer = function () {
@@ -141,18 +146,27 @@ MainScene.prototype.initItems = function () {
   dust.addTo(this.scene);
 };
 
-MainScene.prototype.togglePostFx = function (isEnabled) {
-  this.usePostFx = isEnabled;
+MainScene.prototype.makeDirty = function () {
   this.needsRender = true;
 };
 
+MainScene.prototype.togglePostFx = function (isEnabled) {
+  this.usePostFx = isEnabled;
+  this.updateClearColor();
+  this.needsRender = true;
+};
+
+// TODO: Improve calculation of zoom range
 MainScene.prototype.onWindowResize = function () {
   var width = window.innerWidth;
   var height = window.innerHeight;
   var pxRatio = this.pxRatio;
+
   var postWidth = width * pxRatio;
   var postHeight = height * pxRatio;
   var aspect = width / height;
+  var minDistance = 300 / aspect;
+  var maxDistance = 1200 / aspect;
 
   this.width = width;
   this.height = height;
@@ -160,8 +174,9 @@ MainScene.prototype.onWindowResize = function () {
   this.camera.aspect = aspect;
   this.camera.updateProjectionMatrix();
 
-  this.controls.minDistance = 500 / aspect;
-  this.controls.maxDistance = 1200 / aspect;
+  this.controls.minDistance = minDistance;
+  this.controls.maxDistance = maxDistance;
+  this.mapDistance = Tweens.mapRange(minDistance, maxDistance, 0, 1);
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
@@ -237,21 +252,14 @@ MainScene.prototype.initControls = function () {
   controls.addEventListener('change', this.onControlsChange.bind(this));
 
   this.controls = controls;
-  this.controlsUp = controls.object.up;
 };
 
 MainScene.prototype.onControlsChange = function () {
   this.needsRender = true;
 };
 
-MainScene.prototype.onDocumentKey = function (event) {
-  switch (event.which) {
-  case 32:
-    // this.loop.toggle();
-    this.shouldAnimate = !this.shouldAnimate;
-    event.preventDefault();
-    break;
-  }
+MainScene.prototype.toggleAnimate = function (event) {
+  this.shouldAnimate = !this.shouldAnimate;
 };
 
 // ..................................................
@@ -350,8 +358,10 @@ MainScene.prototype.toggleAudio = function () {
 // Vis
 //
 
+// TODO: Improve naming
 MainScene.prototype.toggleDots = function () {
   if (!this.medusae) { return; }
+  this._renderStats = !this._renderStats;
   this.medusae.toggleDots();
 };
 
@@ -386,21 +396,19 @@ MainScene.prototype.initStats = function () {
 //
 
 MainScene.prototype.update = function (delta) {
-  // var up = this.controlsUp;
-  // var gravity = this.gravity;
-  // var gravityForce = this.gravityForce;
+  var medusae = this.medusae;
   var nudgeForce = this.nudgeForce;
 
-  // gravityForce.set(
-  //   up.x * gravity * 0.2,
-  //   up.y * gravity,
-  //   up.z * gravity * 0.2);
+  var distance = this.camera.position.length();
+  var distNorm = this.mapDistance(distance);
+  var lineWidth = Math.max(0.5, Math.round((1 - distNorm) * 2 * 1.5) / 2);
 
+  medusae.updateLineWidth(lineWidth);
   nudgeForce.intensity *= 0.8;
 
   if (this.shouldAnimate) {
     this.statsPhysics.start();
-    this.medusae.update(delta);
+    medusae.update(delta);
     this.statsPhysics.end();
     this.lensDirtPass.update(delta);
   }
@@ -422,14 +430,16 @@ MainScene.prototype.preRender = function (delta, stepProgress) {
     this.statsPost.reset();
   }
 
-  if (this.loop.didUpdate) {
-    this.statsPhysics.update();
-  } else {
-    this.statsPhysics.update(0, true);
-  }
+  if (this._renderStats) {
+    if (this.loop.didUpdate) {
+      this.statsPhysics.update();
+    } else {
+      this.statsPhysics.update(0, true);
+    }
 
-  this.statsGraphics.update();
-  this.statsPost.update();
+    this.statsGraphics.update();
+    this.statsPost.update();
+  }
 };
 
 MainScene.prototype.render = function (delta, stepProgress) {
@@ -446,6 +456,7 @@ MainScene.prototype.render = function (delta, stepProgress) {
     this.statsPost.end();
   } else {
     this.statsPost.reset();
+    this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
   }
 

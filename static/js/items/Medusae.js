@@ -25,7 +25,6 @@ var _push = Array.prototype.push;
 App.Medusae = Medusae;
 function Medusae(opts) {
   this.pxRatio = opts.pxRatio || 1;
-  this.lineWidth = 1; //this.pxRatio;
   this.animTime = 0;
 
   this.size = 40;
@@ -35,17 +34,18 @@ function Medusae(opts) {
   this.totalSegments = this.segmentsCount * 3 * 3;
 
   this.ribsCount = 20;
-  this.ribRadius = 25;
+  this.ribRadius = 15;
 
   this.tentacleGroupStart = 0;
-  this.tentacleGroupOffset = 2;
+  this.tentacleGroupOffset = 3;
   this.tentacleGroupCount = 6;
   this.tentacleSegments = 100;
   this.tentacleSegmentLength = 1.5;
   this.tentacleWeightFactor = 1;
 
-  this.tailRibsCount = 10;
+  this.tailRibsCount = 15;
   this.tailRibRadiusFactor = 20;
+  this.tailLinkOffset = 2;
   // this.tailCount = 30;
   // this.tailSegments = 50;
   // this.tailSegmentSize = 1;
@@ -113,10 +113,9 @@ Medusae.prototype.createCore = function () {
   var verts = this.verts;
   var uvs = this.uvs;
   var segments = this.totalSegments;
-  // var ribsCount = this.ribsCount;
   var size = this.size;
-  // var radius = this.ribRadius;
-  var offsets = [size, 0, -size * 2, 0, -size * 0.5, -size];
+  var yOffset = this.yOffset;
+  var offsets = [size, 0, -size * 2, size * 1.5, -size * 0.5, -size];
 
   var topStart = this.topStart = offsets.length;
   var indexTop = this.indexTop = topStart - 3;
@@ -129,7 +128,7 @@ Medusae.prototype.createCore = function () {
 
   var rangeTop = [0, size * 0.5];
   var rangeMid = [size * 0.5, size * 0.7];
-  var rangeTopBottom = [size * 1.5, size * 2];
+  var rangeTopBottom = [size, size * 2];
   var rangeBottom = [0, size * 0.5];
 
   var spineA = DistanceConstraint.create(rangeTop, [pinTop, indexTop]);
@@ -143,8 +142,11 @@ Medusae.prototype.createCore = function () {
     uvs.push(0, 0);
   }
 
-  this.queueConstraints(spineA, spineB, spineC, spineD, axis);
+  this.posTop = size + yOffset;
+  this.posMid = yOffset;
+  this.posBottom = -size + yOffset;
 
+  this.queueConstraints(spineA, spineB, spineC, spineD, axis);
   FACES.radial(indexTop, topStart, segments, this.bulbFaces);
 };
 
@@ -166,7 +168,7 @@ Medusae.prototype.createBulb = function () {
 };
 
 function ribRadius(t) {
-  return sin(PI - PI * 0.55 * t * 1.8) + log(t * 100 + 2) / 3 + 1;
+  return sin(PI - PI * 0.55 * t * 1.8) + log(t * 100 + 2) / 3;
 }
 
 function innerRibIndices(offset, start, segments, buffer) {
@@ -216,7 +218,7 @@ Medusae.prototype.createRib = function (index, total) {
 
   var start = index * segments + this.topStart;
   var radiusT = ribRadius(yParam);
-  var radius = radiusT * 10 + 0.5;
+  var radius = radiusT * this.ribRadius;
 
   GEOM.circle(segments, radius, yPos, verts);
   ribUvs(yParam, segments, uvs);
@@ -237,11 +239,11 @@ Medusae.prototype.createRib = function (index, total) {
   if (isTop || isBottom) {
     spineCenter = index === 0 ? this.indexTop : this.indexBottom;
     radiusSpine = index === 0 ? radius * 1.25 : radius;
-    spine = DistanceConstraint.create([radius * 0.8, radiusSpine],
+    spine = DistanceConstraint.create([radius * 0.5, radiusSpine],
       LINKS.radial(spineCenter, start, segments, []));
 
     this.queueConstraints(spine);
-    if (index === 0) {
+    if (isTop) {
       this.addLinks(spine.indices);
     } else {
       this.addLinks(spine.indices, this.innerLinks);
@@ -489,7 +491,9 @@ Medusae.prototype.createTailRib = function (index, total) {
   }
 
   this.queueConstraints(mainRib, innerRib);
-  // this.addLinks(mainRib.indices);
+  if (index > this.tailLinkOffset) {
+    this.addLinks(mainRib.indices);
+  }
 
   this.tailRibs.push({
     start : start,
@@ -512,7 +516,7 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
     LINKS.rings(rib0.start, rib1.start, segments, []));
 
   this.queueConstraints(skin);
-  this.addLinks(skin.indices);
+  // this.addLinks(skin.indices);
 
   FACES.rings(rib0.start, rib1.start, segments, this.tailFaces);
 };
@@ -618,8 +622,6 @@ Medusae.prototype.createSystem = function () {
   var queuedConstraints = this.queuedConstraints;
   var queuedWeights = this.weights;
   var system = this.system = PTCL.ParticleSystem.create(this.verts, 2);
-  var size = this.size;
-  var yOffset = this.yOffset;
 
   for (var i = 0, il = queuedConstraints.length; i < il; i ++) {
     system.addConstraint(queuedConstraints[i]);
@@ -633,9 +635,9 @@ Medusae.prototype.createSystem = function () {
   system.setWeight(1, 0);
   system.setWeight(2, 0);
 
-  system.addPinConstraint(PointConstraint.create([0, size + yOffset, 0], 0));
-  system.addPinConstraint(PointConstraint.create([0, yOffset, 0], 1));
-  system.addPinConstraint(PointConstraint.create([0, -size + yOffset, 0], 2));
+  system.addPinConstraint(PointConstraint.create([0, this.posTop, 0], this.pinTop));
+  system.addPinConstraint(PointConstraint.create([0, this.posMid, 0], this.pinMid));
+  system.addPinConstraint(PointConstraint.create([0, this.posBottom, 0], this.pinBottom));
 };
 
 Medusae.prototype.relax = function (iterations) {
@@ -671,18 +673,29 @@ Medusae.prototype.createSceneItem = function () {
   this.positionPrev = new THREE.BufferAttribute(this.system.positionsPrev, 3);
   this.uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
 
+  this.colors = [];
   this.timeAttrs = [];
   this.createMaterialsDots();
   this.createMaterialsLines();
-  this.createMaterialsInnerLines();
-  this.createMaterialsTentacles();
   this.createMaterialsBulb();
   this.createMaterialsTail();
+  this.createMaterialsTentacles();
+  this.createMaterialsInnerLines();
 
   this.positionAttr = this.linesFore.geometry.attributes.position;
   this.positionPrevAttr = this.linesFore.geometry.attributes.positionPrev;
 
   this.item.position.setY(20);
+};
+
+Medusae.prototype.addColor = function (label, material, path) {
+  path = path || 'diffuse';
+  var uniform = material.uniforms[path];
+
+  this.colors.push({
+    label : label,
+    uniform : uniform
+  });
 };
 
 Medusae.prototype.createTextureDots = function () {
@@ -731,44 +744,24 @@ Medusae.prototype.createMaterialsLines = function () {
   var geom = new THREE.BufferGeometry();
   var indices = new THREE.BufferAttribute(new Uint16Array(this.links), 1);
 
-  var area = 600;
-  var scale = 1.1;
-
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
   geom.addAttribute('index', indices);
 
-  var faint = this.linesFaint = new THREE.Line(geom,
+  var fore = this.linesFore = new THREE.Line(geom,
     new App.TentacleMaterial({
-      color : 0xffffff,
-      area : area,
-      opacity : 0.25,
-      linewidth : this.lineWidth,
+      diffuse : 0xffdde9,
+      area : 1200,
       transparent : true,
       blending: THREE.AdditiveBlending,
       depthTest : false,
       depthWrite : false
     }), THREE.LinePieces);
 
-  var fore = this.linesFore = new THREE.Line(geom,
-    new App.TentacleMaterial({
-      diffuse : 0xf99ebd,
-      area : area,
-      opacity : 0.5,
-      linewidth : this.lineWidth * 2,
-      transparent : true,
-      blending: THREE.AdditiveBlending,
-      // depthTest : true,
-      // depthWrite : false
-    }), THREE.LinePieces);
-
-  faint.scale.multiplyScalar(scale);
-  fore.scale.multiplyScalar(scale);
-
-  this.addTimeAttr(faint);
+  fore.scale.multiplyScalar(1.1);
+  this.linesForeOpacity = fore.material.uniforms.opacity;
   this.addTimeAttr(fore);
-
-  this.item.add(faint);
+  this.addColor('Hood Contour', fore.material);
   this.item.add(fore);
 };
 
@@ -784,7 +777,6 @@ Medusae.prototype.createMaterialsInnerLines = function () {
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
       area : 500,
-      linewidth : this.lineWidth,
       transparent : true,
       blending : THREE.AdditiveBlending,
       depthTest : false,
@@ -793,6 +785,7 @@ Medusae.prototype.createMaterialsInnerLines = function () {
 
   this.linesInnerOpacity = inner.material.uniforms.opacity;
   this.addTimeAttr(inner);
+  // this.addColor('System Debug', inner.material);
   this.item.add(inner);
 };
 
@@ -806,18 +799,17 @@ Medusae.prototype.createMaterialsTentacles = function () {
 
   var tentacle = this.tentacleFore = new THREE.Line(geom,
     new App.TentacleMaterial({
-      diffuse : 0xf99ebd,
+      diffuse : 0x997299,
       area : 1200,
-      linewidth : this.lineWidth * 2,
       transparent : true,
-      blending: THREE.AdditiveBlending,
+      blending : THREE.AdditiveBlending,
       opacity : 0.25,
-      depthTest : true,
+      depthTest : false,
       depthWrite : false
     }), THREE.LinePieces);
 
-  // this.tentacleFore.scale.multiplyScalar(0.8);
   this.addTimeAttr(tentacle);
+  this.addColor('Tentacles', tentacle.material);
   this.item.add(tentacle);
 };
 
@@ -832,13 +824,14 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
-      diffuse : new THREE.Color(1.6, 1.0, 1.2)
+      diffuse : 0xFFA9D2,
+      diffuseB : 0x705EC1,
+      transparent : true
     }));
 
   var bulbFaint = new THREE.Mesh(geom,
-    new App.LerpMaterial({
-      color : 0xffffff,
-      opacity : 0.05,
+    new App.GelMaterial({
+      diffuse : 0x415AB5,
       blending : THREE.AdditiveBlending,
       transparent : true,
       depthTest : false,
@@ -847,10 +840,15 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   bulbFaint.scale.multiplyScalar(1.15);
 
+  this.bulbFaintOpacity = bulbFaint.material.uniforms.opacity;
   this.bulbOpacity = bulb.material.uniforms.opacity;
 
   this.addTimeAttr(bulbFaint);
   this.addTimeAttr(bulb);
+
+  this.addColor('Hood Primary', bulb.material);
+  this.addColor('Hood Secondary', bulb.material, 'diffuseB');
+  this.addColor('Hood Specular', bulbFaint.material);
 
   this.item.add(bulbFaint);
   this.item.add(bulb);
@@ -867,12 +865,16 @@ Medusae.prototype.createMaterialsTail = function () {
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : new THREE.Color(1.6, 1.0, 1.2)
+      diffuse : 0xF3BAD7,
+      diffuseB : 0x33263F,
+      transparent : true
     }));
 
   // this.tailMesh.scale.multiplyScalar(1.1);
   this.tailOpacity = tail.material.uniforms.opacity;
   this.addTimeAttr(tail);
+  this.addColor('Belly Primary', tail.material);
+  this.addColor('Belly Secondary', tail.material, 'diffuseB');
   this.item.add(tail);
 };
 
@@ -902,7 +904,9 @@ Medusae.prototype.updateTweens = function (delta) {
   var dotsAreVisible = dotOpacity > 0.001;
 
   this.bulbOpacity.value = meshOpacity;
-  this.tailOpacity.value = meshOpacity;
+  this.bulbFaintOpacity.value = meshOpacity * 0.25;
+  this.tailOpacity.value = meshOpacity * 0.75;
+  this.linesForeOpacity.value = meshOpacity * 0.35;
   this.linesInnerOpacity.value = dotOpacity * 0.5;
   this.dots.material.opacity = dotOpacity * 0.25;
 
@@ -910,6 +914,15 @@ Medusae.prototype.updateTweens = function (delta) {
   this.dots.visible = dotsAreVisible;
 
   this.needsRender = Math.abs(dotOpacity - this._dotsOpacity) > 0.001;
+};
+
+Medusae.prototype.updateLineWidth = function (lineWidth) {
+  var thin = Math.round(lineWidth);
+  var thick = Math.round(lineWidth * 2);
+
+  this.linesFore.material.linewidth = thin;
+  this.linesInner.material.linewidth = thin;
+  this.tentacleFore.material.linewidth = thick;
 };
 
 Medusae.prototype.update = function (delta) {

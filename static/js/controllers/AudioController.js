@@ -50,13 +50,16 @@ AudioController.prototype.createSound = function (name, params) {
 };
 
 AudioController.prototype.getSound = function (name) {
-  return this.sounds[name] || this.createSound(name);
+  return this.sounds[name];
 };
 
 AudioController.prototype.playSound = function (name, volume) {
   if (!this._isEnabled) { return; }
   var sound = this.getSound(name);
-  if (!sound) { return; }
+  if (!sound) {
+    this.createSound(name, { volume : volume });
+    return;
+  }
 
   if (volume != null) {
     this._volume[name] = this._volumeTarget[name] = volume;

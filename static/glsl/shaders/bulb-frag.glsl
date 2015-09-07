@@ -1,4 +1,5 @@
 uniform vec3 diffuse;
+uniform vec3 diffuseB;
 uniform float opacity;
 varying vec2 vUv;
 
@@ -19,7 +20,9 @@ void main() {
   saturation -= sin((uv.y - 1.5) * sin(uv.y + cos(uv.x - 1.0)       * 2.0) * 8.0 * scale) * 0.15;
   saturation -= sin((uv.y - 1.5) * sin(uv.y + cos(1.0 - uv.x - 1.0) * 2.0) * 8.0 * scale) * 0.15;
 
-  saturation -= sin(uv.y * 5.0) * 0.5 + sin(uv.y * 2.5) * 1.5;
+  saturation -= sin(uv.y * 5.0) * 0.15 + sin(uv.y * 2.5) * 1.25;
 
-  gl_FragColor = vec4(diffuse * opacity * saturation, opacity * saturation);
+  gl_FragColor = vec4(
+    mix(diffuseB, diffuse, saturation) * opacity,
+    clamp(saturation, 0.2, 1.0) * opacity);
 }

@@ -44,8 +44,6 @@ Links.radial2 = function (indexCenter, index, howMany, buffer) {
   return buffer;
 };
 
-Links.radial2(0, 1, 3, []);
-
 Links.loop3 = function (index, howMany, buffer) {
   for (var i = 0; i < howMany - 2; i ++) {
     buffer.push(index + i, index + i + 1, index + i + 2);
