@@ -4,8 +4,8 @@ var mapLinear = THREE.Math.mapLinear;
 App.Dust = Dust;
 function Dust(opts) {
   this.pxRatio = opts.pxRatio || 1;
-  this.particleSize = 24 * this.pxRatio;
-  this.particleCount = 20000;
+  this.particleSize = 32 * this.pxRatio;
+  this.particleCount = 8000;
   this.area = 300;
   this.createParticles();
   this.createMaterials();
@@ -71,7 +71,7 @@ Dust.prototype.createTexture = function () {
 Dust.prototype.createMaterials = function () {
   var params = {
     psColor : 0xffffff,
-    opacity : 0.75,
+    opacity : 0.95,
     size : this.particleSize,
     map : this.createTexture(),
     scale : 150,
