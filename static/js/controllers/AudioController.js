@@ -30,10 +30,16 @@ AudioController.prototype.setVolume = function (volume) {
   this._volume = volume;
 };
 
+AudioController.prototype.setDistance = function (dist) {
+  this._dist = dist;
+};
+
 var ZERO = 0.001;
 AudioController.prototype.update = function () {
   var tweenFactor = this._volume > 0 ? 0.005 : 0.1;
   var volume = this.tween('volume', this._volume, tweenFactor);
+
+  volume *= (1 - this._dist);
 
   if (volume !== this._volume) {
     Howler.volume(volume);

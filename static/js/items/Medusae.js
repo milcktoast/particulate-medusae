@@ -61,6 +61,7 @@ function Medusae(opts) {
 }
 
 Medusae.create = App.ctor(Medusae);
+App.Dispatcher.extend(Medusae.prototype);
 
 Medusae.tempBuffers = [
   'queuedConstraints',
@@ -297,9 +298,7 @@ Medusae.prototype.createSkin = function (r0, r1) {
   });
 };
 
-Medusae.prototype.updateRibs = function (ribs, delta) {
-  var time = this.animTime;
-  var phase = (sin(time * 3) + 1) * 0.5;
+Medusae.prototype.updateRibs = function (ribs, phase) {
   var radiusOffset = 15;
 
   var segments = this.totalSegments;
@@ -925,10 +924,28 @@ Medusae.prototype.updateLineWidth = function (lineWidth) {
   this.tentacleFore.material.linewidth = thick;
 };
 
+Medusae.prototype.PHASE_ZERO = 0.001;
+Medusae.prototype.PHASE_OFFSET = 0.225;
+
+Medusae.prototype.timePhase = function (time) {
+  return (sin(time * Math.PI - Math.PI * 0.5) + 1) * 0.5;
+};
+
 Medusae.prototype.update = function (delta) {
-  this.animTime += delta * 0.001;
-  this.updateRibs(this.ribs, delta);
-  this.updateRibs(this.tailRibs, delta);
+  var time = this.animTime += delta * 0.001;
+  var phase = this.timePhase(time);
+  var phaseOffset = this.timePhase(time - this.PHASE_OFFSET);
+
+  if (1 - phaseOffset < this.PHASE_ZERO) {
+    this.triggerListeners('phase:top');
+  }
+
+  if (phaseOffset < this.PHASE_ZERO) {
+    this.triggerListeners('phase:bottom');
+  }
+
+  this.updateRibs(this.ribs, phase);
+  this.updateRibs(this.tailRibs, phase);
   this.system.tick(delta * 0.001);
 
   this.positionAttr.needsUpdate = true;

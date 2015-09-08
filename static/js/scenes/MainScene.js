@@ -179,6 +179,7 @@ MainScene.prototype.onWindowResize = function () {
   this.controls.minDistance = minDistance;
   this.controls.maxDistance = maxDistance;
   this.mapDistance = Tweens.mapRange(minDistance, maxDistance, 0, 1);
+  this.mapSoundDistance = Tweens.mapRange(minDistance, maxDistance * 1.3, 0, 1);
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
@@ -340,19 +341,30 @@ MainScene.prototype.initAudio = function () {
 
   this.sounds = {};
   this.createBackgroundSound();
+  this.createWaveSounds();
   this.createBubbleSounds();
 
   audio.addListener('mute', this, 'muteSounds');
   audio.addListener('unmute', this, 'unmuteSounds');
 
-  this.sounds.bg.on('load', function () {
-    this.triggerListeners('load:audio');
-  }.bind(this));
+  this.medusae.addListener('phase:top', this, 'audioPhaseTop');
+
+  this.sounds.bg.on('end', this.createBackgroundSound.bind(this));
+  this.sounds.bg.on('load', this.triggerListeners.bind(this, 'load:audio', null));
 };
 
 MainScene.prototype.createBackgroundSound = function () {
-  this.sounds.bg = this.audio.createSound('bg-loop', { loop : true });
+  this.sounds.bg = this.audio.createSound('bg-loop', { loop : false });
   this.sounds.bg.play();
+};
+
+MainScene.prototype.createWaveSounds = function () {
+  var audio = this.audio;
+  var waves = this.sounds.waves = [];
+
+  for (var i = 0; i < 5; i ++) {
+    waves.push(audio.createSound('buzz-wave-2'));
+  }
 };
 
 MainScene.prototype.createBubbleSounds = function () {
@@ -390,6 +402,18 @@ MainScene.prototype.toggleAudio = function () {
   } else {
     this.beginAudio();
   }
+};
+
+MainScene.prototype.audioPhaseTop = function () {
+  var waves = this.sounds.waves;
+  var index = this.waveIndex;
+
+  if (!index || index > waves.length - 1) {
+    index = this.waveIndex = 0;
+  }
+
+  waves[index].volume(0.08).play();
+  this.waveIndex ++;
 };
 
 // ..................................................
@@ -439,6 +463,7 @@ MainScene.prototype.update = function (delta) {
 
   var distance = this.camera.position.length();
   var distNorm = this.mapDistance(distance);
+  var distSound = this.mapSoundDistance(distance);
   var lineWidth = Math.max(0.5, Math.round((1 - distNorm) * 2 * 1.5) / 2);
 
   medusae.updateLineWidth(lineWidth);
@@ -451,6 +476,7 @@ MainScene.prototype.update = function (delta) {
     this.lensDirtPass.update(delta);
   }
 
+  this.audio.setDistance(distSound);
   this.audio.update(delta);
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
