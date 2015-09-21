@@ -4,17 +4,16 @@ var Tweens = App.Tweens;
 App.AudioController = AudioController;
 function AudioController(config) {
   this.baseUrl = config.baseUrl;
-
-  this._loops = [];
-  this._tweens = { volume : 0 };
-  this._volume = 0;
+  this.volume = 0;
+  this.distance = 0;
+  this.tween = Tweens.factorTween({ volume : 0 } , 0.05);
 
   Howler.volume(0);
-  this.tween = Tweens.factorTween(this._tweens, 0.05);
 }
 
 AudioController.create = App.ctor(AudioController);
 App.Dispatcher.extend(AudioController.prototype);
+AudioController.prototype.VOLUME_ZERO = 0.001;
 
 AudioController.prototype.createSound = function (path, params) {
   params = params || {};
@@ -26,34 +25,25 @@ AudioController.prototype.createSound = function (path, params) {
   return new Howl(params);
 };
 
-AudioController.prototype.setVolume = function (volume) {
-  this._volume = volume;
-};
-
-AudioController.prototype.setDistance = function (dist) {
-  this._dist = dist;
-};
-
-var ZERO = 0.001;
 AudioController.prototype.update = function () {
-  var tweenFactor = this._volume > 0 ? 0.005 : 0.1;
-  var volume = this.tween('volume', this._volume, tweenFactor);
+  var tweenFactor = this.volume > 0 ? 0.005 : 0.1;
+  var volume = this.tween('volume', this.volume, tweenFactor);
 
-  volume *= (1 - this._dist);
+  volume *= (1 - this.distance);
 
-  if (volume !== this._volume) {
+  if (volume !== this.volume) {
     Howler.volume(volume);
   }
 
-  if (this._isMuted && volume > ZERO) {
+  if (this.isMuted && volume > this.VOLUME_ZERO) {
     Howler.unmute();
     this.triggerListeners('unmute');
-    this._isMuted = false;
+    this.isMuted = false;
   }
 
-  if (!this._isMuted && volume <= ZERO) {
+  if (!this.isMuted && volume <= this.VOLUME_ZERO) {
     Howler.mute();
     this.triggerListeners('mute');
-    this._isMuted = true;
+    this.isMuted = true;
   }
 };

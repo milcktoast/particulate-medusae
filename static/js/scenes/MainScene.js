@@ -344,18 +344,24 @@ MainScene.prototype.initAudio = function () {
   this.createWaveSounds();
   this.createBubbleSounds();
 
-  audio.addListener('mute', this, 'muteSounds');
-  audio.addListener('unmute', this, 'unmuteSounds');
-
-  this.medusae.addListener('phase:top', this, 'audioPhaseTop');
-
-  this.sounds.bg.on('end', this.createBackgroundSound.bind(this));
-  this.sounds.bg.on('load', this.triggerListeners.bind(this, 'load:audio', null));
+  this.sounds.bg.on('load', function () {
+    audio.addListener('mute', this, 'muteSounds');
+    audio.addListener('unmute', this, 'unmuteSounds');
+    this.medusae.addListener('phase:top', this, 'audioPhaseTop');
+    this.triggerListeners('load:audio');
+  }.bind(this));
 };
 
 MainScene.prototype.createBackgroundSound = function () {
-  this.sounds.bg = this.audio.createSound('bg-loop', { loop : false });
-  this.sounds.bg.play();
+  var bg = this.sounds.bg = this.audio.createSound('bg-loop');
+
+  bg.__pos = 0;
+  bg.__duration = Infinity;
+
+  bg.on('load', function () {
+    bg.__duration = Math.floor(bg._duration) * 1000;
+    bg.play();
+  }.bind(this));
 };
 
 MainScene.prototype.createWaveSounds = function () {
@@ -379,25 +385,25 @@ MainScene.prototype.createBubbleSounds = function () {
 };
 
 MainScene.prototype.muteSounds = function () {
-  this.sounds.bg.stop();
+  this.sounds.bg.pause();
 };
 
 MainScene.prototype.unmuteSounds = function () {
-  this.createBackgroundSound(); // FIXME
+  this.sounds.bg.play();
 };
 
 MainScene.prototype.beginAudio = function () {
-  this.audio.setVolume(0.8);
-  this._audioIsPlaying = true;
+  this.audio.volume = 0.8;
+  this.audioIsPlaying = true;
 };
 
 MainScene.prototype.pauseAudio = function () {
-  this.audio.setVolume(0);
-  this._audioIsPlaying = false;
+  this.audio.volume = 0;
+  this.audioIsPlaying = false;
 };
 
 MainScene.prototype.toggleAudio = function () {
-  if (this._audioIsPlaying) {
+  if (this.audioIsPlaying) {
     this.pauseAudio();
   } else {
     this.beginAudio();
@@ -476,10 +482,26 @@ MainScene.prototype.update = function (delta) {
     this.lensDirtPass.update(delta);
   }
 
-  this.audio.setDistance(distSound);
+  if (!this.audio.isMuted) {
+    this.updateSounds(delta);
+  }
+
+  this.audio.distance = distSound;
   this.audio.update(delta);
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
+};
+
+MainScene.prototype.updateSounds = function (delta) {
+  var sounds = this.sounds;
+  var bg = sounds.bg;
+
+  bg.__pos += delta;
+
+  if (bg.__pos > bg.__duration) {
+    bg.pos(0);
+    bg.__pos = 0;
+  }
 };
 
 MainScene.prototype.preRender = function (delta, stepProgress) {
