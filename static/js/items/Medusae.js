@@ -46,11 +46,12 @@ function Medusae(opts) {
   this.tailRibsCount = 15;
   this.tailRibRadiusFactor = 20;
   this.tailLinkOffset = 2;
-  // this.tailCount = 30;
-  // this.tailSegments = 50;
-  // this.tailSegmentSize = 1;
-  // this.tailRadius = 9;
-  // this.tailWeightFactor = 0.25;
+
+  this.tailArmCount = 6;
+  this.tailArmSegments = 100;
+  this.tailArmSegmentSize = 1;
+  this.tailArmRadius = 12;
+  this.tailArmWeightFactor = 1.5;
 
   this.createTempBuffers();
   this.createGeometry();
@@ -115,17 +116,16 @@ Medusae.prototype.createCore = function () {
   var uvs = this.uvs;
   var segments = this.totalSegments;
   var size = this.size;
-  var yOffset = this.yOffset;
-  var offsets = [size, 0, -size * 2, size * 1.5, -size * 0.5, -size];
-
-  var topStart = this.topStart = offsets.length;
-  var indexTop = this.indexTop = topStart - 3;
-  var indexMid = this.indexMid = topStart - 2;
-  var indexBottom = this.indexBottom = topStart - 1;
 
   var pinTop = this.pinTop = 0;
   var pinMid = this.pinMid = 1;
   var pinBottom = this.pinBottom = 2;
+  /*var pinTail = */this.pinTail = 3;
+
+  var indexTop = this.indexTop = 4;
+  var indexMid = this.indexMid = 5;
+  var indexBottom = this.indexBottom = 6;
+  var topStart = this.topStart = 7;
 
   var rangeTop = [0, size * 0.5];
   var rangeMid = [size * 0.5, size * 0.7];
@@ -138,14 +138,21 @@ Medusae.prototype.createCore = function () {
   var spineD = DistanceConstraint.create(rangeTopBottom, [indexTop, indexBottom]);
   var axis = AxisConstraint.create(pinTop, pinMid, [indexTop, indexMid, indexBottom]);
 
+  var yOffset = this.yOffset;
+  var posTop = this.posTop = yOffset + size;
+  var posMid = this.posMid = yOffset;
+  var posBottom = this.posBottom = yOffset - size;
+  var posTail = this.posTail = yOffset - this.tailArmSegments * this.tailArmSegmentSize;
+
+  var offsets = [
+    posTop, posMid, posBottom, posTail, // Pin offsets
+    size * 1.5, -size * 0.5, -size // Floating pin offsets
+  ];
+
   for (var i = 0, il = offsets.length; i < il; i ++) {
     GEOM.point(0, offsets[i], 0, verts);
     uvs.push(0, 0);
   }
-
-  this.posTop = size + yOffset;
-  this.posMid = yOffset;
-  this.posBottom = -size + yOffset;
 
   this.queueConstraints(spineA, spineB, spineC, spineD, axis);
   FACES.radial(indexTop, topStart, segments, this.bulbFaces);
@@ -424,7 +431,7 @@ Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
 
 Medusae.prototype.createTail = function () {
   var ribsCount = this.tailRibsCount;
-  // var finsCount = this.tailCount;
+  var armsCount = this.tailArmCount;
 
   this.tailRibs = [];
 
@@ -433,9 +440,9 @@ Medusae.prototype.createTail = function () {
     this.createTailSkin(i - 1, i);
   }
 
-  // for (i = 0, il = finsCount; i < il; i ++) {
-  //   this.createTailFin(i, finsCount);
-  // }
+  for (i = 0, il = armsCount; i < il; i ++) {
+    this.createTailArm(i, armsCount);
+  }
 };
 
 function tailRibRadius(t) {
@@ -520,12 +527,12 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
   FACES.rings(rib0.start, rib1.start, segments, this.tailFaces);
 };
 
-Medusae.prototype.createTailFin = function (index, total) {
+Medusae.prototype.createTailArm = function (index, total) {
   var size = this.size;
-  var segments = this.tailSegments;
-  var innerSize = this.tailSegmentSize;
-  var outerSize = innerSize * 1.8;
-  var linkSizeScale = this.tailRadius;
+  var segments = this.tailArmSegments;
+  var innerSize = this.tailArmSegmentSize;
+  var outerSize = innerSize * 2.4;
+  var linkSizeScale = this.tailArmRadius;
   var bottomPinMax = 20;
   var startOffset = size;
 
@@ -579,15 +586,15 @@ Medusae.prototype.createTailFin = function (index, total) {
   var inner = DistanceConstraint.create([innerSize * 0.25, innerSize], innerIndices);
   var outer = DistanceConstraint.create([outerSize * 0.25, outerSize], outerIndices);
   var brace = DistanceConstraint.create([linkSize * 0.5, Infinity], braceIndices);
-  var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, this.pinBottom);
+  var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, this.pinTail);
 
   this.queueConstraints(inner, outer, brace, pin);
   this.queueConstraints(linkConstraints);
 
-  this.queueWeights(innerStart, segments * 2, index / total * this.tailWeightFactor);
+  this.queueWeights(innerStart, segments * 2, (1 - index / total) * this.tailArmWeightFactor);
 
   this.addLinks(outerIndices);
-  // this.addLinks(linkIndices);
+  this.addLinks(linkIndices);
 };
 
 // ..................................................
@@ -630,13 +637,15 @@ Medusae.prototype.createSystem = function () {
     system.weights[i] = queuedWeights[i];
   }
 
-  system.setWeight(0, 0);
-  system.setWeight(1, 0);
-  system.setWeight(2, 0);
+  system.setWeight(this.pinTop, 0);
+  system.setWeight(this.pinMid, 0);
+  system.setWeight(this.pinBottom, 0);
+  system.setWeight(this.pinTail, 0);
 
   system.addPinConstraint(PointConstraint.create([0, this.posTop, 0], this.pinTop));
   system.addPinConstraint(PointConstraint.create([0, this.posMid, 0], this.pinMid));
   system.addPinConstraint(PointConstraint.create([0, this.posBottom, 0], this.pinBottom));
+  system.addPinConstraint(PointConstraint.create([0, this.posTail, 0], this.pinTail));
 };
 
 Medusae.prototype.relax = function (iterations) {
