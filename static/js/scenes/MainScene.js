@@ -178,6 +178,8 @@ MainScene.prototype.onWindowResize = function () {
 
   this.controls.minDistance = minDistance;
   this.controls.maxDistance = maxDistance;
+  this.controls.handleResize();
+
   this.mapDistance = Tweens.mapRange(minDistance, maxDistance, 0, 1);
   this.mapSoundDistance = Tweens.mapRange(minDistance, maxDistance * 1.3, 0, 1);
 
