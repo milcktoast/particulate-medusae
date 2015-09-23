@@ -12,11 +12,12 @@ var AxisConstraint = PTCL.AxisConstraint;
 var sin = Math.sin;
 var cos = Math.cos;
 // var tan = Math.tan;
+var round = Math.round;
 var log = Math.log;
 var floor = Math.floor;
 var PI = Math.PI;
 
-var _push = Array.prototype.push;
+var push = Array.prototype.push;
 
 // ..................................................
 // Medusae
@@ -50,7 +51,6 @@ function Medusae(opts) {
   this.tailArmCount = 6;
   this.tailArmSegments = 100;
   this.tailArmSegmentSize = 1;
-  this.tailArmRadius = 12;
   this.tailArmWeightFactor = 1.5;
 
   this.createTempBuffers();
@@ -333,6 +333,14 @@ Medusae.prototype.updateRibs = function (ribs, phase) {
   }
 };
 
+Medusae.prototype.ribAt = function (index) {
+  var ribs = this.ribs;
+  var tailRibs = this.tailRibs;
+
+  return tailRibs[tailRibs.length - index - 1] ||
+    ribs[ribs.length - index + tailRibs.length - 1];
+};
+
 // ..................................................
 // Tentacles
 //
@@ -346,7 +354,8 @@ Medusae.prototype.createTentacles = function () {
 };
 
 Medusae.prototype.createTentacleGroup = function (index, total) {
-  var rib = this.tentacleRib(index);
+  var ribIndex = this.tentacleGroupStart + this.tentacleGroupOffset * index;
+  var rib = this.ribAt(ribIndex);
   var ratio = index / total;
   var segments = this.tentacleSegments;
   var count = segments * ratio * 0.25 + segments * 0.75;
@@ -359,15 +368,6 @@ Medusae.prototype.createTentacleGroup = function (index, total) {
       this.attachTentacles(index, rib);
     }
   }
-};
-
-Medusae.prototype.tentacleRib = function (groupIndex) {
-  var ribs = this.ribs;
-  var tailRibs = this.tailRibs;
-  var groupOffset = this.tentacleGroupStart + this.tentacleGroupOffset * groupIndex;
-
-  return tailRibs[tailRibs.length - groupOffset - 1] ||
-    ribs[ribs.length - groupOffset + tailRibs.length - 1];
 };
 
 function tentacleUvs(howMany, buffer) {
@@ -528,30 +528,41 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
 };
 
 Medusae.prototype.createTailArm = function (index, total) {
-  var size = this.size;
+  var tParam = index / total;
+  var verts = this.verts;
+  var uvs = this.uvs;
+  var startOffset = this.posMid;
+
+  var ribInner = this.ribAt(2);
+  var ribOuter = this.ribAt(8);
+  var ribSegments = this.totalSegments;
+  var ribIndex = round(ribSegments * tParam);
+
+  var innerPin = ribInner.start + ribIndex;
+  var outerPin = ribOuter.start + ribIndex;
+  var scale = Vec3.distance(verts, innerPin, outerPin);
+
   var segments = this.tailArmSegments;
   var innerSize = this.tailArmSegmentSize;
   var outerSize = innerSize * 2.4;
-  var linkSizeScale = this.tailArmRadius;
   var bottomPinMax = 20;
-  var startOffset = size;
 
-  var verts = this.verts;
-  var uvs = this.uvs;
   var innerStart = verts.length / 3;
   var innerEnd = innerStart + segments - 1;
   var outerStart = innerStart + segments;
-  var innerIndices = LINKS.line(innerStart, segments, [this.indexMid, innerStart]);
-  var outerIndices = LINKS.line(outerStart, segments, []);
+  // var outerEnd = outerStart + segments - 1;
+
+  var innerIndices = LINKS.line(innerStart, segments, [innerPin, innerStart]);
+  var outerIndices = LINKS.line(outerStart, segments, [outerPin, outerStart]);
 
   var linkConstraints = [];
   var linkIndices = [];
   var braceIndices = [];
 
-  var outerAngle = Math.PI * 2 * index / total;
+  var outerAngle = Math.PI * 2 * tParam;
   var outerX, outerY, outerZ;
   var innerIndex, outerIndex;
-  var linkSize;
+  var linkSize, t;
 
   for (var i = 0; i < segments; i ++) {
     GEOM.point(0, startOffset - i * innerSize, 0, verts);
@@ -559,13 +570,15 @@ Medusae.prototype.createTailArm = function (index, total) {
   }
 
   for (i = 0; i < segments; i ++) {
+    t = i / (segments - 1);
     innerIndex = innerStart + i;
     outerIndex = outerStart + i;
 
-    linkSize = sin(i / (segments - 1) * PI * 0.8) * linkSizeScale;
+    // linkSize = sin(t + PI * 0.5) * scale;
+    linkSize = (sin(t * 10 + PI * 0.5) * 0.25 + 0.75) * sin(t * 1.25 + PI * 0.5) * scale;
     outerX = cos(outerAngle) * linkSize;
     outerZ = sin(outerAngle) * linkSize;
-    outerY = startOffset - i * outerSize;
+    outerY = startOffset - i * innerSize;
 
     GEOM.point(outerX, outerY, outerZ, verts);
     uvs.push(1, i / (segments - 1));
@@ -593,6 +606,7 @@ Medusae.prototype.createTailArm = function (index, total) {
 
   this.queueWeights(innerStart, segments * 2, (1 - index / total) * this.tailArmWeightFactor);
 
+  this.addLinks(innerIndices);
   this.addLinks(outerIndices);
   this.addLinks(linkIndices);
 };
@@ -602,7 +616,7 @@ Medusae.prototype.createTailArm = function (index, total) {
 //
 
 Medusae.prototype.queueConstraints = function (constraints) {
-  _push.apply(this.queuedConstraints, constraints.length ? constraints : arguments);
+  push.apply(this.queuedConstraints, constraints.length ? constraints : arguments);
 };
 
 Medusae.prototype.queueWeights = function (start, howMany, weight) {
@@ -663,7 +677,7 @@ Medusae.prototype.relax = function (iterations) {
 function pushToBuffer(attr) {
   return function (items, buffer) {
     buffer = buffer || this[attr];
-    _push.apply(buffer, items);
+    push.apply(buffer, items);
   };
 }
 
