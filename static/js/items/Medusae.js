@@ -16,6 +16,7 @@ var round = Math.round;
 var log = Math.log;
 var floor = Math.floor;
 var PI = Math.PI;
+var PI_HALF = PI * 0.5;
 
 var push = Array.prototype.push;
 
@@ -51,7 +52,7 @@ function Medusae(opts) {
   this.tailArmCount = 6;
   this.tailArmSegments = 100;
   this.tailArmSegmentSize = 1;
-  this.tailArmWeightFactor = 1.5;
+  this.tailArmWeightFactor = 0.8;
 
   this.createTempBuffers();
   this.createGeometry();
@@ -102,6 +103,7 @@ Medusae.prototype.createGeometry = function () {
   this.createCore();
   this.createBulb();
   this.createTail();
+  this.createMouth();
   this.createTentacles();
 };
 
@@ -426,22 +428,17 @@ Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
 };
 
 // ..................................................
-// Tail / mouth
+// Tail
 //
 
 Medusae.prototype.createTail = function () {
   var ribsCount = this.tailRibsCount;
-  var armsCount = this.tailArmCount;
 
   this.tailRibs = [];
 
   for (var i = 0, il = ribsCount; i < il; i ++) {
     this.createTailRib(i, ribsCount);
     this.createTailSkin(i - 1, i);
-  }
-
-  for (i = 0, il = armsCount; i < il; i ++) {
-    this.createTailArm(i, armsCount);
   }
 };
 
@@ -527,16 +524,36 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
   FACES.rings(rib0.start, rib1.start, segments, this.tailFaces);
 };
 
-Medusae.prototype.createTailArm = function (index, total) {
+// ..................................................
+// Mouth
+//
+
+Medusae.prototype.createMouth = function () {
+  var segments = this.totalSegments;
+
+  this.createMouthArmGroup(1, 3, round(segments / 12), 3);
+  this.createMouthArmGroup(2, 8, 0, 6);
+};
+
+Medusae.prototype.createMouthArmGroup = function (r0, r1, offset, count) {
+  var ribOffset = offset || 0;
+  var armsCount = count || this.tailArmCount;
+
+  for (var i = 0, il = armsCount; i < il; i ++) {
+    this.createMouthArm(r0, r1, ribOffset, i, armsCount);
+  }
+};
+
+Medusae.prototype.createMouthArm = function (r0, r1, rOffset, index, total) {
   var tParam = index / total;
   var verts = this.verts;
   var uvs = this.uvs;
   var startOffset = this.posMid;
 
-  var ribInner = this.ribAt(2);
-  var ribOuter = this.ribAt(8);
+  var ribInner = this.ribAt(r0);
+  var ribOuter = this.ribAt(r1);
   var ribSegments = this.totalSegments;
-  var ribIndex = round(ribSegments * tParam);
+  var ribIndex = (round(ribSegments * tParam) + rOffset) % ribSegments;
 
   var innerPin = ribInner.start + ribIndex;
   var outerPin = ribOuter.start + ribIndex;
@@ -574,8 +591,12 @@ Medusae.prototype.createTailArm = function (index, total) {
     innerIndex = innerStart + i;
     outerIndex = outerStart + i;
 
-    // linkSize = sin(t + PI * 0.5) * scale;
-    linkSize = (sin(t * 10 + PI * 0.5) * 0.25 + 0.75) * sin(t * 1.25 + PI * 0.5) * scale;
+    linkSize = scale *
+      (sin(PI_HALF + 10 * t) * 0.25 + 0.75) *
+      (sin(PI_HALF + 20 * t) * 0.25 + 0.75) *
+      (sin(PI_HALF + 26 * t) * 0.15 + 0.85) *
+      (sin(PI_HALF + PI * 0.45 * t));
+
     outerX = cos(outerAngle) * linkSize;
     outerZ = sin(outerAngle) * linkSize;
     outerY = startOffset - i * innerSize;
