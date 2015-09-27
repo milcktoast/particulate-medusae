@@ -19,6 +19,7 @@ TailMaterial.prototype.shader = {
     uniforms.common,
     {
       diffuseB : { type : 'c', value : null },
+      scale : { type : 'f', value : 1 },
       time : { type : 'f', value : 0 }
     }
   ]),

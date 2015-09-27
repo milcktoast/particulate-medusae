@@ -1,9 +1,9 @@
 uniform vec3 diffuse;
 uniform vec3 diffuseB;
 uniform float opacity;
+uniform float scale;
 varying vec2 vUv;
 
-float scale = 20.0;
 float saturation = 2.0;
 
 void main() {
