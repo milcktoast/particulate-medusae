@@ -49,8 +49,8 @@ function Medusae(opts) {
   this.tailRibRadiusFactor = 20;
   this.tailLinkOffset = 2;
 
-  this.tailArmSegments = 100;
-  this.tailArmSegmentSize = 1;
+  this.tailArmSegments = 120;
+  this.tailArmSegmentLength = 1;
   this.tailArmWeightFactor = 0.8;
 
   this.createTempBuffers();
@@ -144,7 +144,7 @@ Medusae.prototype.createCore = function () {
   var posTop = this.posTop = yOffset + size;
   var posMid = this.posMid = yOffset;
   var posBottom = this.posBottom = yOffset - size;
-  var posTail = this.posTail = yOffset - this.tailArmSegments * this.tailArmSegmentSize;
+  var posTail = this.posTail = yOffset - this.tailArmSegments * this.tailArmSegmentLength;
 
   var offsets = [
     posTop, posMid, posBottom, posTail, // Pin offsets
@@ -529,13 +529,9 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
 //
 
 Medusae.prototype.createMouth = function () {
-  var segments = this.totalSegments;
-  var s12 = round(segments / 12);
-  var s6 = round(segments / 6);
-
-  this.createMouthArmGroup(2, 4, s12, s12);
-  this.createMouthArmGroup(1, 8, s6);
-  this.createMouthArmGroup(7, 9, s6);
+  // this.createMouthArmGroup(1, 3, s12, s12);
+  this.createMouthArmGroup(1, 9, 6);
+  this.createMouthArmGroup(6, 10, 3, 3);
 };
 
 Medusae.prototype.createMouthArmGroup = function (r0, r1, count, offset) {
@@ -560,7 +556,7 @@ Medusae.prototype.createMouthArm = function (r0, r1, index, total, offset) {
   var scale = Vec3.distance(verts, innerPin, outerPin);
 
   var segments = this.tailArmSegments;
-  var innerSize = this.tailArmSegmentSize;
+  var innerSize = this.tailArmSegmentLength;
   var outerSize = innerSize * 2.4;
   var bottomPinMax = 20;
 
@@ -574,8 +570,8 @@ Medusae.prototype.createMouthArm = function (r0, r1, index, total, offset) {
 
   var linkConstraints = [];
   var braceIndices = [];
+  var linkIndices = [];
 
-  var uvScale = 0.8;
   var outerAngle = Math.PI * 2 * tParam;
   var outerX, outerY, outerZ;
   var innerIndex, outerIndex;
@@ -583,7 +579,7 @@ Medusae.prototype.createMouthArm = function (r0, r1, index, total, offset) {
 
   for (var i = 0; i < segments; i ++) {
     GEOM.point(0, startOffset - i * innerSize, 0, verts);
-    uvs.push(0, i / (segments - 1) * uvScale);
+    uvs.push(i / (segments - 1), 0);
   }
 
   for (i = 0; i < segments; i ++) {
@@ -602,13 +598,17 @@ Medusae.prototype.createMouthArm = function (r0, r1, index, total, offset) {
     outerY = startOffset - i * innerSize;
 
     GEOM.point(outerX, outerY, outerZ, verts);
-    uvs.push(1, i / (segments - 1) * uvScale);
+    uvs.push(i / (segments - 1), 1);
 
     linkConstraints.push(DistanceConstraint.create(
       linkSize, innerIndex, outerIndex));
 
     if (i > 10) {
       braceIndices.push(innerIndex - 10, outerIndex);
+    }
+
+    if (i > 1) {
+      linkIndices.push(innerIndex - 1, outerIndex);
     }
 
     if (i > 1) {
@@ -628,6 +628,7 @@ Medusae.prototype.createMouthArm = function (r0, r1, index, total, offset) {
 
   this.addLinks(innerIndices, this.tentLinks);
   this.addLinks(outerIndices, this.tentLinks);
+  this.addLinks(linkIndices, this.tentLinks);
 };
 
 // ..................................................
@@ -842,7 +843,7 @@ Medusae.prototype.createMaterialsTentacles = function () {
   var tentacle = this.tentacleFore = new THREE.Line(geom,
     new App.TentacleMaterial({
       diffuse : 0x997299,
-      area : 1200,
+      area : 2400,
       transparent : true,
       blending : THREE.AdditiveBlending,
       opacity : 0.25,
@@ -932,9 +933,9 @@ Medusae.prototype.createMaterialsMouth = function () {
 
   var mouth = this.mouthMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : 0xFDBDFD,
-      diffuseB : 0x2942AB,
-      scale : 150,
+      diffuse : 0xFC9DDE,
+      diffuseB : 0x463DB5,
+      scale : 5,
       // blending : THREE.AdditiveBlending,
       side : THREE.DoubleSide,
       transparent : true
@@ -975,7 +976,7 @@ Medusae.prototype.updateTweens = function (delta) {
   this.bulbOpacity.value = meshOpacity;
   this.bulbFaintOpacity.value = meshOpacity * 0.25;
   this.tailOpacity.value = meshOpacity * 0.75;
-  this.mouthOpacity.value = meshOpacity * 0.55;
+  this.mouthOpacity.value = meshOpacity * 0.65;
   this.linesForeOpacity.value = meshOpacity * 0.35;
   this.linesInnerOpacity.value = dotOpacity * 0.5;
   this.dots.material.opacity = dotOpacity * 0.25;
