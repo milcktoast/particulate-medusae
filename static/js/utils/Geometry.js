@@ -5,17 +5,16 @@ Geometry.point = function (x, y, z, buffer) {
   return buffer;
 };
 
-Geometry.circle = function (segments, radius, yOffset, buffer) {
+Geometry.circle = function (segments, radius, y, buffer) {
   var step = Math.PI * 2 / segments;
   var angle = 0;
+  var x, z;
 
   for (var i = 0; i < segments; i ++) {
-    buffer.push(
-      Math.cos(angle) * radius,
-      yOffset,
-      Math.sin(angle) * radius
-    );
+    x = Math.cos(angle) * radius;
+    z = Math.sin(angle) * radius;
 
+    buffer.push(x, y, z);
     angle += step;
   }
   return buffer;
