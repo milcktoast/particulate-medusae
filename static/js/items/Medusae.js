@@ -874,7 +874,7 @@ Medusae.prototype.createMaterialsBulb = function () {
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
       diffuse : 0xFFA9D2,
-      diffuseB : 0x705EC1,
+      diffuseB : 0x70256C,
       transparent : true
     }));
 

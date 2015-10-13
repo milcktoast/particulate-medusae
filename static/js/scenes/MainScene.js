@@ -60,7 +60,7 @@ MainScene.prototype.initRenderer = function () {
 };
 
 MainScene.prototype.updateClearColor = function () {
-  var color = this.usePostFx ? 0x111111 : 0x1c1c1c;
+  var color = this.usePostFx ? 0x0A060E : 0x100A17;
   this.renderer.setClearColor(color, 1);
 };
 
