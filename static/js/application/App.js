@@ -107,9 +107,9 @@ App.register('index', function index() {
   dotsToggle.addListener('toggle', App, 'toggleStats');
   simToggle.addListener('toggle', scene, 'toggleAnimate');
 
-  setTimeout(function () {
+  scene.addListener('load:audio', function () {
     audioToggle.toggleState();
-  }, 2000);
+  });
 });
 
 App.register('tests', function tests() {

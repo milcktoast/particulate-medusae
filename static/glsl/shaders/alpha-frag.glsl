@@ -8,13 +8,17 @@ varying float vAlpha;
 {{{chunks.uv2_pars_fragment}}}
 {{{chunks.map_pars_fragment}}}
 {{{chunks.alphamap_pars_fragment}}}
+{{{chunks.aomap_pars_fragment}}}
+{{{chunks.envmap_pars_fragment}}}
+{{{chunks.fog_pars_fragment}}}
 {{{chunks.shadowmap_pars_fragment}}}
 {{{chunks.specularmap_pars_fragment}}}
+{{{chunks.logdepthbuf_pars_fragment}}}
 
 void main() {
-  // outgoing light does not have an alpha, the surface does
   vec3 outgoingLight = vec3(0.0);
   vec4 diffuseColor = vec4(diffuse, opacity * vAlpha);
+  vec3 totalAmbientLight = vec3(1.0); // hardwired
 
   {{{chunks.logdepthbuf_fragment}}}
   {{{chunks.map_fragment}}}
@@ -22,10 +26,15 @@ void main() {
   {{{chunks.alphamap_fragment}}}
   {{{chunks.alphatest_fragment}}}
   {{{chunks.specularmap_fragment}}}
+  {{{chunks.aomap_fragment}}}
 
   // simple shader
-  outgoingLight = diffuseColor.rgb;
+  outgoingLight = diffuseColor.rgb * totalAmbientLight;
 
-  // TODO: this should be pre-multiplied to allow for bright highlights on very transparent objects
+  {{{chunks.envmap_fragment}}}
+  {{{chunks.shadowmap_fragment}}}
+  {{{chunks.linear_to_gamma_fragment}}}
+  {{{chunks.fog_fragment}}}
+
   gl_FragColor = vec4(outgoingLight, diffuseColor.a);
 }

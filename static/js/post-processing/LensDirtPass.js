@@ -133,9 +133,9 @@ LensDirtPass.prototype.createQuadGeom = function (count, cells) {
   var geom = new THREE.BufferGeometry();
 
   geom.addAttribute('position', this._quadGeomPosition(count));
-  geom.addAttribute('index', this._quadGeomIndex(count));
   geom.addAttribute('uv', this._quadGeomUv(count, cells));
   geom.addAttribute('alpha', this._quadGeomAlpha(count));
+  geom.setIndex(this._quadGeomIndex(count));
 
   return geom;
 };

@@ -12,11 +12,13 @@ var AxisConstraint = PTCL.AxisConstraint;
 var sin = Math.sin;
 var cos = Math.cos;
 // var tan = Math.tan;
+var round = Math.round;
 var log = Math.log;
 var floor = Math.floor;
 var PI = Math.PI;
+var PI_HALF = PI * 0.5;
 
-var _push = Array.prototype.push;
+var push = Array.prototype.push;
 
 // ..................................................
 // Medusae
@@ -36,21 +38,20 @@ function Medusae(opts) {
   this.ribsCount = 20;
   this.ribRadius = 15;
 
-  this.tentacleGroupStart = 0;
-  this.tentacleGroupOffset = 3;
-  this.tentacleGroupCount = 6;
-  this.tentacleSegments = 100;
+  this.tentacleGroupStart = 6;
+  this.tentacleGroupOffset = 4;
+  this.tentacleGroupCount = 3;
+  this.tentacleSegments = 120;
   this.tentacleSegmentLength = 1.5;
   this.tentacleWeightFactor = 1;
 
   this.tailRibsCount = 15;
   this.tailRibRadiusFactor = 20;
   this.tailLinkOffset = 2;
-  // this.tailCount = 30;
-  // this.tailSegments = 50;
-  // this.tailSegmentSize = 1;
-  // this.tailRadius = 9;
-  // this.tailWeightFactor = 0.25;
+
+  this.tailArmSegments = 100;
+  this.tailArmSegmentLength = 1;
+  this.tailArmWeight = 0.5;
 
   this.createTempBuffers();
   this.createGeometry();
@@ -61,6 +62,7 @@ function Medusae(opts) {
 }
 
 Medusae.create = App.ctor(Medusae);
+App.Dispatcher.extend(Medusae.prototype);
 
 Medusae.tempBuffers = [
   'queuedConstraints',
@@ -69,6 +71,7 @@ Medusae.tempBuffers = [
   'weights',
   'bulbFaces',
   'tailFaces',
+  'mouthFaces',
   'uvs',
   'tentacles',
   'tentLinks',
@@ -100,6 +103,7 @@ Medusae.prototype.createGeometry = function () {
   this.createCore();
   this.createBulb();
   this.createTail();
+  this.createMouth();
   this.createTentacles();
 };
 
@@ -114,17 +118,16 @@ Medusae.prototype.createCore = function () {
   var uvs = this.uvs;
   var segments = this.totalSegments;
   var size = this.size;
-  var yOffset = this.yOffset;
-  var offsets = [size, 0, -size * 2, size * 1.5, -size * 0.5, -size];
-
-  var topStart = this.topStart = offsets.length;
-  var indexTop = this.indexTop = topStart - 3;
-  var indexMid = this.indexMid = topStart - 2;
-  var indexBottom = this.indexBottom = topStart - 1;
 
   var pinTop = this.pinTop = 0;
   var pinMid = this.pinMid = 1;
   var pinBottom = this.pinBottom = 2;
+  /*var pinTail = */this.pinTail = 3;
+
+  var indexTop = this.indexTop = 4;
+  var indexMid = this.indexMid = 5;
+  var indexBottom = this.indexBottom = 6;
+  var topStart = this.topStart = 7;
 
   var rangeTop = [0, size * 0.5];
   var rangeMid = [size * 0.5, size * 0.7];
@@ -137,14 +140,21 @@ Medusae.prototype.createCore = function () {
   var spineD = DistanceConstraint.create(rangeTopBottom, [indexTop, indexBottom]);
   var axis = AxisConstraint.create(pinTop, pinMid, [indexTop, indexMid, indexBottom]);
 
+  var yOffset = this.yOffset;
+  var posTop = this.posTop = yOffset + size;
+  var posMid = this.posMid = yOffset;
+  var posBottom = this.posBottom = yOffset - size;
+  var posTail = this.posTail = yOffset - this.tailArmSegments * this.tailArmSegmentLength;
+
+  var offsets = [
+    posTop, posMid, posBottom, posTail, // Pin offsets
+    size * 1.5, -size * 0.5, -size // Floating pin offsets
+  ];
+
   for (var i = 0, il = offsets.length; i < il; i ++) {
     GEOM.point(0, offsets[i], 0, verts);
     uvs.push(0, 0);
   }
-
-  this.posTop = size + yOffset;
-  this.posMid = yOffset;
-  this.posBottom = -size + yOffset;
 
   this.queueConstraints(spineA, spineB, spineC, spineD, axis);
   FACES.radial(indexTop, topStart, segments, this.bulbFaces);
@@ -297,9 +307,7 @@ Medusae.prototype.createSkin = function (r0, r1) {
   });
 };
 
-Medusae.prototype.updateRibs = function (ribs, delta) {
-  var time = this.animTime;
-  var phase = (sin(time * 3) + 1) * 0.5;
+Medusae.prototype.updateRibs = function (ribs, phase) {
   var radiusOffset = 15;
 
   var segments = this.totalSegments;
@@ -327,6 +335,14 @@ Medusae.prototype.updateRibs = function (ribs, delta) {
   }
 };
 
+Medusae.prototype.ribAt = function (index) {
+  var ribs = this.ribs;
+  var tailRibs = this.tailRibs;
+
+  return tailRibs[tailRibs.length - index - 1] ||
+    ribs[ribs.length - index + tailRibs.length - 1];
+};
+
 // ..................................................
 // Tentacles
 //
@@ -340,8 +356,9 @@ Medusae.prototype.createTentacles = function () {
 };
 
 Medusae.prototype.createTentacleGroup = function (index, total) {
-  var rib = this.tentacleRib(index);
-  var ratio = index / total;
+  var ribIndex = this.tentacleGroupStart + this.tentacleGroupOffset * index;
+  var rib = this.ribAt(ribIndex);
+  var ratio = 1 - index / total;
   var segments = this.tentacleSegments;
   var count = segments * ratio * 0.25 + segments * 0.75;
 
@@ -353,15 +370,6 @@ Medusae.prototype.createTentacleGroup = function (index, total) {
       this.attachTentacles(index, rib);
     }
   }
-};
-
-Medusae.prototype.tentacleRib = function (groupIndex) {
-  var ribs = this.ribs;
-  var tailRibs = this.tailRibs;
-  var groupOffset = this.tentacleGroupStart + this.tentacleGroupOffset * groupIndex;
-
-  return tailRibs[tailRibs.length - groupOffset - 1] ||
-    ribs[ribs.length - groupOffset + tailRibs.length - 1];
 };
 
 function tentacleUvs(howMany, buffer) {
@@ -420,12 +428,11 @@ Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
 };
 
 // ..................................................
-// Tail / mouth
+// Tail
 //
 
 Medusae.prototype.createTail = function () {
   var ribsCount = this.tailRibsCount;
-  // var finsCount = this.tailCount;
 
   this.tailRibs = [];
 
@@ -433,10 +440,6 @@ Medusae.prototype.createTail = function () {
     this.createTailRib(i, ribsCount);
     this.createTailSkin(i - 1, i);
   }
-
-  // for (i = 0, il = finsCount; i < il; i ++) {
-  //   this.createTailFin(i, finsCount);
-  // }
 };
 
 function tailRibRadius(t) {
@@ -521,50 +524,89 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
   FACES.rings(rib0.start, rib1.start, segments, this.tailFaces);
 };
 
-Medusae.prototype.createTailFin = function (index, total) {
-  var size = this.size;
-  var segments = this.tailSegments;
-  var innerSize = this.tailSegmentSize;
-  var outerSize = innerSize * 1.8;
-  var linkSizeScale = this.tailRadius;
-  var bottomPinMax = 20;
-  var startOffset = size;
+// ..................................................
+// Mouth
+//
 
+Medusae.prototype.createMouth = function () {
+  // this.createMouthArmGroup(1, 3, s12, s12);
+  this.createMouthArmGroup(1.0, 0, 4, 3);
+  this.createMouthArmGroup(0.8, 1, 8, 3, 3);
+  this.createMouthArmGroup(0.5, 7, 9, 6);
+};
+
+Medusae.prototype.createMouthArmGroup = function (vScale, r0, r1, count, offset) {
+  for (var i = 0, il = count; i < il; i ++) {
+    this.createMouthArm(vScale, r0, r1, i, count, offset);
+  }
+};
+
+Medusae.prototype.createMouthArm = function (vScale, r0, r1, index, total, offset) {
+  var tParam = index / total;
   var verts = this.verts;
   var uvs = this.uvs;
+  var startOffset = this.posMid;
+
+  var ribInner = this.ribAt(r0);
+  var ribOuter = this.ribAt(r1);
+  var ribSegments = this.totalSegments;
+  var ribIndex = (round(ribSegments * tParam) + (offset || 0)) % ribSegments;
+
+  var innerPin = ribInner.start + ribIndex;
+  var outerPin = ribOuter.start + ribIndex;
+  var scale = Vec3.distance(verts, innerPin, outerPin);
+
+  var maxSegments = this.tailArmSegments;
+  var segments = round(vScale * maxSegments);
+  var innerSize = this.tailArmSegmentLength;
+  var outerSize = innerSize * 2.4;
+  var bottomPinMax = 20 + (maxSegments - segments) * this.tailArmSegmentLength;
+
   var innerStart = verts.length / 3;
   var innerEnd = innerStart + segments - 1;
   var outerStart = innerStart + segments;
-  var innerIndices = LINKS.line(innerStart, segments, [this.indexMid, innerStart]);
-  var outerIndices = LINKS.line(outerStart, segments, []);
+  // var outerEnd = outerStart + segments - 1;
+
+  var innerIndices = LINKS.line(innerStart, segments, [innerPin, innerStart]);
+  var outerIndices = LINKS.line(outerStart, segments, [outerPin, outerStart]);
 
   var linkConstraints = [];
-  var linkIndices = [];
   var braceIndices = [];
+  var linkIndices = [];
 
-  var outerAngle = Math.PI * 2 * index / total;
+  var outerAngle = Math.PI * 2 * tParam;
+  var baseX = cos(outerAngle);
+  var baseZ = sin(outerAngle);
+
   var outerX, outerY, outerZ;
   var innerIndex, outerIndex;
-  var linkSize;
+  var linkSize, t;
 
   for (var i = 0; i < segments; i ++) {
+    t = i / (segments - 1);
+
     GEOM.point(0, startOffset - i * innerSize, 0, verts);
-    uvs.push(0, i / (segments - 1));
+    uvs.push(t, 0);
   }
 
   for (i = 0; i < segments; i ++) {
+    t = i / (segments - 1);
     innerIndex = innerStart + i;
     outerIndex = outerStart + i;
 
-    linkSize = sin(i / (segments - 1) * PI * 0.8) * linkSizeScale;
-    outerX = cos(outerAngle) * linkSize;
-    outerZ = sin(outerAngle) * linkSize;
-    outerY = startOffset - i * outerSize;
+    linkSize = scale *
+      (sin(PI_HALF + 10 * t) * 0.25 + 0.75) *
+      (sin(PI_HALF + 20 * t) * 0.25 + 0.75) *
+      (sin(PI_HALF + 26 * t) * 0.15 + 0.85) *
+      (sin(PI_HALF + PI * 0.45 * t));
+
+    outerX = baseX * linkSize;
+    outerZ = baseZ * linkSize;
+    outerY = startOffset - i * innerSize;
 
     GEOM.point(outerX, outerY, outerZ, verts);
-    uvs.push(1, i / (segments - 1));
+    uvs.push(t, 1);
 
-    linkIndices.push(innerIndex, outerIndex);
     linkConstraints.push(DistanceConstraint.create(
       linkSize, innerIndex, outerIndex));
 
@@ -573,22 +615,27 @@ Medusae.prototype.createTailFin = function (index, total) {
     }
 
     if (i > 1) {
-      FACES.quad(innerIndex - 1, outerIndex - 1, outerIndex, innerIndex, this.tailFaces);
+      linkIndices.push(innerIndex - 1, outerIndex);
+    }
+
+    if (i > 1) {
+      FACES.quadDoubleSide(innerIndex - 1, outerIndex - 1, outerIndex, innerIndex, this.mouthFaces);
     }
   }
 
   var inner = DistanceConstraint.create([innerSize * 0.25, innerSize], innerIndices);
   var outer = DistanceConstraint.create([outerSize * 0.25, outerSize], outerIndices);
   var brace = DistanceConstraint.create([linkSize * 0.5, Infinity], braceIndices);
-  var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, this.pinBottom);
+  var pin = DistanceConstraint.create([0, bottomPinMax], innerEnd, this.pinTail);
 
   this.queueConstraints(inner, outer, brace, pin);
   this.queueConstraints(linkConstraints);
 
-  this.queueWeights(innerStart, segments * 2, index / total * this.tailWeightFactor);
+  this.queueWeights(innerStart, segments * 2, this.tailArmWeight);
 
+  this.addLinks(innerIndices);
   this.addLinks(outerIndices);
-  // this.addLinks(linkIndices);
+  this.addLinks(linkIndices);
 };
 
 // ..................................................
@@ -596,7 +643,7 @@ Medusae.prototype.createTailFin = function (index, total) {
 //
 
 Medusae.prototype.queueConstraints = function (constraints) {
-  _push.apply(this.queuedConstraints, constraints.length ? constraints : arguments);
+  push.apply(this.queuedConstraints, constraints.length ? constraints : arguments);
 };
 
 Medusae.prototype.queueWeights = function (start, howMany, weight) {
@@ -631,13 +678,15 @@ Medusae.prototype.createSystem = function () {
     system.weights[i] = queuedWeights[i];
   }
 
-  system.setWeight(0, 0);
-  system.setWeight(1, 0);
-  system.setWeight(2, 0);
+  system.setWeight(this.pinTop, 0);
+  system.setWeight(this.pinMid, 0);
+  system.setWeight(this.pinBottom, 0);
+  system.setWeight(this.pinTail, 0);
 
   system.addPinConstraint(PointConstraint.create([0, this.posTop, 0], this.pinTop));
   system.addPinConstraint(PointConstraint.create([0, this.posMid, 0], this.pinMid));
   system.addPinConstraint(PointConstraint.create([0, this.posBottom, 0], this.pinBottom));
+  system.addPinConstraint(PointConstraint.create([0, this.posTail, 0], this.pinTail));
 };
 
 Medusae.prototype.relax = function (iterations) {
@@ -655,7 +704,7 @@ Medusae.prototype.relax = function (iterations) {
 function pushToBuffer(attr) {
   return function (items, buffer) {
     buffer = buffer || this[attr];
-    _push.apply(buffer, items);
+    push.apply(buffer, items);
   };
 }
 
@@ -679,6 +728,7 @@ Medusae.prototype.createSceneItem = function () {
   this.createMaterialsLines();
   this.createMaterialsBulb();
   this.createMaterialsTail();
+  this.createMaterialsMouth();
   this.createMaterialsTentacles();
   this.createMaterialsInnerLines();
 
@@ -728,8 +778,8 @@ Medusae.prototype.createMaterialsDots = function () {
 
   geom.addAttribute('position', this.position);
 
-  var dots = this.dots = new THREE.PointCloud(geom,
-    new THREE.PointCloudMaterial({
+  var dots = this.dots = new THREE.Points(geom,
+    new THREE.PointsMaterial({
       size : this.pxRatio * 2,
       map : this.createTextureDots(),
       transparent : true,
@@ -746,9 +796,9 @@ Medusae.prototype.createMaterialsLines = function () {
 
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
-  var fore = this.linesFore = new THREE.Line(geom,
+  var fore = this.linesFore = new THREE.LineSegments(geom,
     new App.TentacleMaterial({
       diffuse : 0xffdde9,
       area : 1200,
@@ -756,9 +806,8 @@ Medusae.prototype.createMaterialsLines = function () {
       blending: THREE.AdditiveBlending,
       depthTest : false,
       depthWrite : false
-    }), THREE.LinePieces);
+    }));
 
-  fore.scale.multiplyScalar(1.1);
   this.linesForeOpacity = fore.material.uniforms.opacity;
   this.addTimeAttr(fore);
   this.addColor('Hood Contour', fore.material);
@@ -771,9 +820,9 @@ Medusae.prototype.createMaterialsInnerLines = function () {
 
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
-  var inner = this.linesInner = new THREE.Line(geom,
+  var inner = this.linesInner = new THREE.LineSegments(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
       area : 500,
@@ -781,7 +830,7 @@ Medusae.prototype.createMaterialsInnerLines = function () {
       blending : THREE.AdditiveBlending,
       depthTest : false,
       depthWrite : false
-    }), THREE.LinePieces);
+    }));
 
   this.linesInnerOpacity = inner.material.uniforms.opacity;
   this.addTimeAttr(inner);
@@ -795,18 +844,18 @@ Medusae.prototype.createMaterialsTentacles = function () {
 
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
-  var tentacle = this.tentacleFore = new THREE.Line(geom,
+  var tentacle = this.tentacleFore = new THREE.LineSegments(geom,
     new App.TentacleMaterial({
       diffuse : 0x997299,
-      area : 1200,
+      area : 2000,
       transparent : true,
       blending : THREE.AdditiveBlending,
       opacity : 0.25,
       depthTest : false,
       depthWrite : false
-    }), THREE.LinePieces);
+    }));
 
   this.addTimeAttr(tentacle);
   this.addColor('Tentacles', tentacle.material);
@@ -820,12 +869,12 @@ Medusae.prototype.createMaterialsBulb = function () {
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
   geom.addAttribute('uv', this.uvs);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
       diffuse : 0xFFA9D2,
-      diffuseB : 0x705EC1,
+      diffuseB : 0x70256C,
       transparent : true
     }));
 
@@ -838,7 +887,8 @@ Medusae.prototype.createMaterialsBulb = function () {
       depthWrite : false
     }));
 
-  bulbFaint.scale.multiplyScalar(1.15);
+  bulb.scale.multiplyScalar(0.95);
+  bulbFaint.scale.multiplyScalar(1.05);
 
   this.bulbFaintOpacity = bulbFaint.material.uniforms.opacity;
   this.bulbOpacity = bulb.material.uniforms.opacity;
@@ -861,21 +911,47 @@ Medusae.prototype.createMaterialsTail = function () {
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
   geom.addAttribute('uv', this.uvs);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
-      diffuse : 0xF3BAD7,
-      diffuseB : 0x33263F,
+      diffuse : 0xE4BBEE,
+      diffuseB : 0x241138,
+      scale : 20,
       transparent : true
     }));
 
-  // this.tailMesh.scale.multiplyScalar(1.1);
+  this.tailMesh.scale.multiplyScalar(0.95);
   this.tailOpacity = tail.material.uniforms.opacity;
   this.addTimeAttr(tail);
   this.addColor('Belly Primary', tail.material);
   this.addColor('Belly Secondary', tail.material, 'diffuseB');
   this.item.add(tail);
+};
+
+Medusae.prototype.createMaterialsMouth = function () {
+  var geom = new THREE.BufferGeometry();
+  var indices = new THREE.BufferAttribute(new Uint16Array(this.mouthFaces), 1);
+
+  geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
+  geom.addAttribute('uv', this.uvs);
+  geom.setIndex(indices);
+
+  var mouth = this.mouthMesh = new THREE.Mesh(geom,
+    new App.TailMaterial({
+      diffuse : 0xEFA6F0,
+      diffuseB : 0x463DB5,
+      scale : 5,
+      // blending : THREE.AdditiveBlending,
+      transparent : true
+    }));
+
+  this.mouthOpacity = mouth.material.uniforms.opacity;
+  this.addTimeAttr(mouth);
+  this.addColor('Mouth Primary', mouth.material);
+  this.addColor('Mouth Secondary', mouth.material, 'diffuseB');
+  this.item.add(mouth);
 };
 
 Medusae.prototype.addTo = function (scene) {
@@ -906,6 +982,7 @@ Medusae.prototype.updateTweens = function (delta) {
   this.bulbOpacity.value = meshOpacity;
   this.bulbFaintOpacity.value = meshOpacity * 0.25;
   this.tailOpacity.value = meshOpacity * 0.75;
+  this.mouthOpacity.value = meshOpacity * 0.65;
   this.linesForeOpacity.value = meshOpacity * 0.35;
   this.linesInnerOpacity.value = dotOpacity * 0.5;
   this.dots.material.opacity = dotOpacity * 0.25;
@@ -917,18 +994,36 @@ Medusae.prototype.updateTweens = function (delta) {
 };
 
 Medusae.prototype.updateLineWidth = function (lineWidth) {
-  var thin = Math.round(lineWidth);
-  var thick = Math.round(lineWidth * 2);
+  var thin = round(lineWidth);
+  var thick = round(lineWidth * 2);
 
   this.linesFore.material.linewidth = thin;
   this.linesInner.material.linewidth = thin;
   this.tentacleFore.material.linewidth = thick;
 };
 
+Medusae.prototype.PHASE_ZERO = 0.001;
+Medusae.prototype.PHASE_OFFSET = 0.225;
+
+Medusae.prototype.timePhase = function (time) {
+  return (sin(time * Math.PI - Math.PI * 0.5) + 1) * 0.5;
+};
+
 Medusae.prototype.update = function (delta) {
-  this.animTime += delta * 0.001;
-  this.updateRibs(this.ribs, delta);
-  this.updateRibs(this.tailRibs, delta);
+  var time = this.animTime += delta * 0.001;
+  var phase = this.timePhase(time);
+  var phaseOffset = this.timePhase(time - this.PHASE_OFFSET);
+
+  if (1 - phaseOffset < this.PHASE_ZERO) {
+    this.triggerListeners('phase:top');
+  }
+
+  if (phaseOffset < this.PHASE_ZERO) {
+    this.triggerListeners('phase:bottom');
+  }
+
+  this.updateRibs(this.ribs, phase);
+  this.updateRibs(this.tailRibs, phase);
   this.system.tick(delta * 0.001);
 
   this.positionAttr.needsUpdate = true;

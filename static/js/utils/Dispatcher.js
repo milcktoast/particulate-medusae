@@ -19,10 +19,20 @@ function addListener(type, context, fn) {
  function triggerListeners(type, event) {
   var listeners = this._listeners && this._listeners[type];
   if (!listeners) { return; }
-  var listener;
+  var listener, context, fn;
 
   for (var i = 0, il = listeners.length; i < il; i ++) {
     listener = listeners[i];
-    listener.context[listener.fn].call(listener.context, event);
+    context = listener.context;
+    fn = listener.fn;
+
+    if (typeof context === 'function') {
+      fn = context;
+      context = null;
+    } else if (typeof fn === 'string') {
+      fn = context[fn];
+    }
+
+    fn.call(context, event);
   }
 }

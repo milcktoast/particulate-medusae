@@ -14,6 +14,7 @@ function MainScene() {
 
   this.mouse = new THREE.Vector2();
   this.raycaster = new THREE.Raycaster();
+  this.nudgeIndex = 0;
 
   this.pxRatio = PMath.clamp(1.5, 2, window.devicePixelRatio);
   this.gravity = -2;
@@ -42,6 +43,7 @@ function MainScene() {
 }
 
 MainScene.create = App.ctor(MainScene);
+App.Dispatcher.extend(MainScene.prototype);
 
 // ..................................................
 // Graphics
@@ -58,7 +60,7 @@ MainScene.prototype.initRenderer = function () {
 };
 
 MainScene.prototype.updateClearColor = function () {
-  var color = this.usePostFx ? 0x111111 : 0x1c1c1c;
+  var color = this.usePostFx ? 0x0A060E : 0x100A17;
   this.renderer.setClearColor(color, 1);
 };
 
@@ -176,7 +178,10 @@ MainScene.prototype.onWindowResize = function () {
 
   this.controls.minDistance = minDistance;
   this.controls.maxDistance = maxDistance;
+  this.controls.handleResize();
+
   this.mapDistance = Tweens.mapRange(minDistance, maxDistance, 0, 1);
+  this.mapSoundDistance = Tweens.mapRange(minDistance, maxDistance * 1.3, 0, 1);
 
   this.renderer.setSize(width, height);
   this.composer.setSize(postWidth, postHeight);
@@ -289,8 +294,20 @@ MainScene.prototype.nudgeMedusae = (function () {
   var offset = new THREE.Vector3();
 
   return function () {
+    var lastNudge = this.lastNudge;
+    var timeDiff = Date.now() - lastNudge;
+    if (timeDiff < 250) { return; }
+    if (timeDiff > 800) {
+      this.nudgeIndex = 0;
+    }
+
+    var bubbles = this.sounds.bubbles;
+    var nudgeIndex = this.nudgeIndex;
+    if (nudgeIndex > bubbles.length - 1) { return; }
+
     var raycaster = this.raycaster;
     var mouse = this.mouse;
+    var sound = bubbles[nudgeIndex];
 
     raycaster.setFromCamera(mouse, this.camera);
 
@@ -298,16 +315,20 @@ MainScene.prototype.nudgeMedusae = (function () {
     if (!intersects.length) { return; }
     var nudge = this.nudgeForce;
     var point = intersects[0].point;
-    var sound = Math.random() > 0.5 ? 'bubbles1' : 'bubbles2';
+    var spots = nudgeIndex * 5;
+    var intensity = (nudgeIndex + 1) / (bubbles.length) + 0.5;
 
     offset.copy(point).normalize().multiplyScalar(15);
     point.add(offset);
 
-    nudge.intensity = 1;
+    nudge.intensity = intensity;
     nudge.set(point.x, point.y, point.z);
 
-    this.audio.playSound(sound, 0.15);
-    this.lensDirtPass.setGroup(10, mouse.x, mouse.y, 0.8);
+    sound.volume(0.15).play();
+    this.lensDirtPass.setGroup(spots, mouse.x, mouse.y, 0.8);
+
+    this.lastNudge = Date.now();
+    this.nudgeIndex ++;
   };
 }());
 
@@ -317,41 +338,90 @@ MainScene.prototype.nudgeMedusae = (function () {
 
 MainScene.prototype.initAudio = function () {
   var audio = this.audio = App.AudioController.create({
-    baseUrl : App.STATIC_URL + 'audio/',
-    volume : 0.8
+    baseUrl : App.STATIC_URL + 'audio/'
   });
 
-  audio.addSound('bg-loop', 'bgLoop');
-  audio.addSound('bubbles-1', 'bubbles1');
-  audio.addSound('bubbles-2', 'bubbles2');
+  this.sounds = {};
+  this.createBackgroundSound();
+  this.createWaveSounds();
+  this.createBubbleSounds();
 
-  audio.createSound('bgLoop', {
-    loop : true,
-    volume : 0
-  });
+  this.sounds.bg.on('load', function () {
+    audio.addListener('mute', this, 'muteSounds');
+    audio.addListener('unmute', this, 'unmuteSounds');
+    this.medusae.addListener('phase:top', this, 'audioPhaseTop');
+    this.triggerListeners('load:audio');
+  }.bind(this));
+};
+
+MainScene.prototype.createBackgroundSound = function () {
+  var bg = this.sounds.bg = this.audio.createSound('bg-loop');
+
+  bg.__pos = 0;
+  bg.__duration = Infinity;
+
+  bg.on('load', function () {
+    bg.__duration = Math.floor(bg._duration) * 1000;
+    bg.play();
+  }.bind(this));
+};
+
+MainScene.prototype.createWaveSounds = function () {
+  var audio = this.audio;
+  var waves = this.sounds.waves = [];
+
+  for (var i = 0; i < 5; i ++) {
+    waves.push(audio.createSound('buzz-wave-2'));
+  }
+};
+
+MainScene.prototype.createBubbleSounds = function () {
+  var audio = this.audio;
+  var bubbles = this.sounds.bubbles = [];
+
+  for (var i = 0; i < 2; i ++) {
+    bubbles.push(audio.createSound('bubbles-2'));
+  }
+
+  bubbles.push(audio.createSound('bubbles-1'));
+};
+
+MainScene.prototype.muteSounds = function () {
+  this.sounds.bg.pause();
+};
+
+MainScene.prototype.unmuteSounds = function () {
+  this.sounds.bg.play();
 };
 
 MainScene.prototype.beginAudio = function () {
-  var audio = this.audio;
-
-  audio.playSound('bgLoop');
-  audio.setVolume('bgLoop', 1);
-  this._audioIsPlaying = true;
+  this.audio.volume = 0.8;
+  this.audioIsPlaying = true;
 };
 
 MainScene.prototype.pauseAudio = function () {
-  var audio = this.audio;
-
-  audio.setVolume('bgLoop', 0);
-  this._audioIsPlaying = false;
+  this.audio.volume = 0;
+  this.audioIsPlaying = false;
 };
 
 MainScene.prototype.toggleAudio = function () {
-  if (this._audioIsPlaying) {
+  if (this.audioIsPlaying) {
     this.pauseAudio();
   } else {
     this.beginAudio();
   }
+};
+
+MainScene.prototype.audioPhaseTop = function () {
+  var waves = this.sounds.waves;
+  var index = this.waveIndex;
+
+  if (!index || index > waves.length - 1) {
+    index = this.waveIndex = 0;
+  }
+
+  waves[index].volume(0.08).play();
+  this.waveIndex ++;
 };
 
 // ..................................................
@@ -401,6 +471,7 @@ MainScene.prototype.update = function (delta) {
 
   var distance = this.camera.position.length();
   var distNorm = this.mapDistance(distance);
+  var distSound = this.mapSoundDistance(distance);
   var lineWidth = Math.max(0.5, Math.round((1 - distNorm) * 2 * 1.5) / 2);
 
   medusae.updateLineWidth(lineWidth);
@@ -413,9 +484,26 @@ MainScene.prototype.update = function (delta) {
     this.lensDirtPass.update(delta);
   }
 
+  if (!this.audio.isMuted) {
+    this.updateSounds(delta);
+  }
+
+  this.audio.distance = distSound;
   this.audio.update(delta);
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
+};
+
+MainScene.prototype.updateSounds = function (delta) {
+  var sounds = this.sounds;
+  var bg = sounds.bg;
+
+  bg.__pos += delta;
+
+  if (bg.__pos > bg.__duration) {
+    bg.pos(0);
+    bg.__pos = 0;
+  }
 };
 
 MainScene.prototype.preRender = function (delta, stepProgress) {

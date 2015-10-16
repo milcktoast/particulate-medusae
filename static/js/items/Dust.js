@@ -78,6 +78,7 @@ Dust.prototype.createMaterials = function () {
     area : this.area,
     blending: THREE.AdditiveBlending,
     transparent : true,
+    depthTest : false,
     depthWrite : false
   };
 
@@ -93,7 +94,7 @@ Dust.prototype.createMaterials = function () {
 
 Dust.prototype.createItem = function () {
   // this.itemFaint = new THREE.PointCloud(this.geometry, this.materialFaint);
-  this.itemFore = new THREE.PointCloud(this.geometry, this.materialFore);
+  this.itemFore = new THREE.Points(this.geometry, this.materialFore);
 };
 
 Dust.prototype.addTo = function (scene) {

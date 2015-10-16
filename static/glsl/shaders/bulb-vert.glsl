@@ -1,5 +1,6 @@
 {{{chunks.common}}}
 {{{chunks.lerp_pos_pars_vertex}}}
+
 {{{chunks.uv_pars_vertex}}}
 {{{chunks.uv2_pars_vertex}}}
 {{{chunks.envmap_pars_vertex}}}
@@ -9,12 +10,9 @@
 {{{chunks.shadowmap_pars_vertex}}}
 {{{chunks.logdepthbuf_pars_vertex}}}
 
-attribute float alpha;
-varying float vAlpha;
+varying vec3 vNormal;
 
 void main() {
-  vAlpha = alpha;
-
   {{{chunks.uv_vertex}}}
   {{{chunks.uv2_vertex}}}
   {{{chunks.color_vertex}}}
@@ -36,4 +34,6 @@ void main() {
   {{{chunks.worldpos_vertex}}}
   {{{chunks.envmap_vertex}}}
   {{{chunks.shadowmap_vertex}}}
+
+  vNormal = normalize(position);
 }
