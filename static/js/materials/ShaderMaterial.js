@@ -10,12 +10,10 @@ function ShaderMaterial(parameters) {
   if (!this.shader) { return; }
 
   this.uniforms = THREE.UniformsUtils.clone(this.shader.uniforms);
-  this.attributes = THREE.UniformsUtils.clone(this.shader.attributes);
   this.setUniformParameters(parameters);
 
   THREE.ShaderMaterial.call(this, {
     uniforms : this.uniforms,
-    attributes : this.attributes,
     fragmentShader : compileShader(this.shader.fragmentShader),
     vertexShader : compileShader(this.shader.vertexShader)
   });

@@ -16,9 +16,5 @@ AlphaMaterial.prototype.shader = {
 
   uniforms : THREE.UniformsUtils.merge([
     uniforms.common
-  ]),
-
-  attributes : {
-    alpha : { type : 'f', value : null }
-  }
+  ])
 };

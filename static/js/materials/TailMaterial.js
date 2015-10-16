@@ -22,9 +22,5 @@ TailMaterial.prototype.shader = {
       scale : { type : 'f', value : 1 },
       time : { type : 'f', value : 0 }
     }
-  ]),
-
-  attributes : {
-    positionPrev : { type : 'v3', value : null }
-  }
+  ])
 };

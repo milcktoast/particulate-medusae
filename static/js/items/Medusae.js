@@ -778,8 +778,8 @@ Medusae.prototype.createMaterialsDots = function () {
 
   geom.addAttribute('position', this.position);
 
-  var dots = this.dots = new THREE.PointCloud(geom,
-    new THREE.PointCloudMaterial({
+  var dots = this.dots = new THREE.Points(geom,
+    new THREE.PointsMaterial({
       size : this.pxRatio * 2,
       map : this.createTextureDots(),
       transparent : true,
@@ -796,9 +796,9 @@ Medusae.prototype.createMaterialsLines = function () {
 
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
-  var fore = this.linesFore = new THREE.Line(geom,
+  var fore = this.linesFore = new THREE.LineSegments(geom,
     new App.TentacleMaterial({
       diffuse : 0xffdde9,
       area : 1200,
@@ -806,7 +806,7 @@ Medusae.prototype.createMaterialsLines = function () {
       blending: THREE.AdditiveBlending,
       depthTest : false,
       depthWrite : false
-    }), THREE.LinePieces);
+    }));
 
   this.linesForeOpacity = fore.material.uniforms.opacity;
   this.addTimeAttr(fore);
@@ -820,9 +820,9 @@ Medusae.prototype.createMaterialsInnerLines = function () {
 
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
-  var inner = this.linesInner = new THREE.Line(geom,
+  var inner = this.linesInner = new THREE.LineSegments(geom,
     new App.TentacleMaterial({
       diffuse : 0xf99ebd,
       area : 500,
@@ -830,7 +830,7 @@ Medusae.prototype.createMaterialsInnerLines = function () {
       blending : THREE.AdditiveBlending,
       depthTest : false,
       depthWrite : false
-    }), THREE.LinePieces);
+    }));
 
   this.linesInnerOpacity = inner.material.uniforms.opacity;
   this.addTimeAttr(inner);
@@ -844,18 +844,18 @@ Medusae.prototype.createMaterialsTentacles = function () {
 
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
-  var tentacle = this.tentacleFore = new THREE.Line(geom,
+  var tentacle = this.tentacleFore = new THREE.LineSegments(geom,
     new App.TentacleMaterial({
       diffuse : 0x997299,
-      area : 1200,
+      area : 2000,
       transparent : true,
       blending : THREE.AdditiveBlending,
       opacity : 0.25,
       depthTest : false,
       depthWrite : false
-    }), THREE.LinePieces);
+    }));
 
   this.addTimeAttr(tentacle);
   this.addColor('Tentacles', tentacle.material);
@@ -869,7 +869,7 @@ Medusae.prototype.createMaterialsBulb = function () {
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
   geom.addAttribute('uv', this.uvs);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
   var bulb = this.bulbMesh = new THREE.Mesh(geom,
     new App.BulbMaterial({
@@ -911,7 +911,7 @@ Medusae.prototype.createMaterialsTail = function () {
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
   geom.addAttribute('uv', this.uvs);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
   var tail = this.tailMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
@@ -936,7 +936,7 @@ Medusae.prototype.createMaterialsMouth = function () {
   geom.addAttribute('position', this.position);
   geom.addAttribute('positionPrev', this.positionPrev);
   geom.addAttribute('uv', this.uvs);
-  geom.addAttribute('index', indices);
+  geom.setIndex(indices);
 
   var mouth = this.mouthMesh = new THREE.Mesh(geom,
     new App.TailMaterial({

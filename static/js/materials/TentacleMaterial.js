@@ -20,9 +20,5 @@ TentacleMaterial.prototype.shader = {
       time : { type : 'f', value : 0 },
       area : { type : 'f', value : 1 }
     }
-  ]),
-
-  attributes : {
-    positionPrev : { type : 'v3', value : null }
-  }
+  ])
 };

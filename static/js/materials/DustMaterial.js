@@ -16,7 +16,7 @@ DustMaterial.prototype.shader = {
 
   uniforms : THREE.UniformsUtils.merge([
     uniforms.common,
-    uniforms.particle,
+    uniforms.points,
     {
       time : { type : 'f', value : 0 },
       area : { type : 'f', value : 1 }

@@ -21,9 +21,5 @@ BulbMaterial.prototype.shader = {
       diffuseB : { type : 'c', value : null },
       time : { type : 'f', value : 0 }
     }
-  ]),
-
-  attributes : {
-    positionPrev : { type : 'v3', value : null }
-  }
+  ])
 };
