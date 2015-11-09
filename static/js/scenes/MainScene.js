@@ -301,13 +301,13 @@ MainScene.prototype.nudgeMedusae = (function () {
       this.nudgeIndex = 0;
     }
 
-    var bubbles = this.sounds.bubbles;
+    var bubbleSequence = this.bubbleSequence;
     var nudgeIndex = this.nudgeIndex;
-    if (nudgeIndex > bubbles.length - 1) { return; }
+    if (nudgeIndex > bubbleSequence.length - 1) { return; }
 
     var raycaster = this.raycaster;
     var mouse = this.mouse;
-    var sound = bubbles[nudgeIndex];
+    var sound = this.sounds[bubbleSequence[nudgeIndex]];
 
     raycaster.setFromCamera(mouse, this.camera);
 
@@ -316,7 +316,7 @@ MainScene.prototype.nudgeMedusae = (function () {
     var nudge = this.nudgeForce;
     var point = intersects[0].point;
     var spots = nudgeIndex * 5;
-    var intensity = (nudgeIndex + 1) / (bubbles.length) + 0.5;
+    var intensity = (nudgeIndex + 1) / (bubbleSequence.length) + 0.5;
 
     offset.copy(point).normalize().multiplyScalar(15);
     point.add(offset);
@@ -324,7 +324,7 @@ MainScene.prototype.nudgeMedusae = (function () {
     nudge.intensity = intensity;
     nudge.set(point.x, point.y, point.z);
 
-    sound.volume(0.15).play();
+    this.playSound(sound);
     this.lensDirtPass.setGroup(spots, mouse.x, mouse.y, 0.8);
 
     this.lastNudge = Date.now();
@@ -336,63 +336,57 @@ MainScene.prototype.nudgeMedusae = (function () {
 // Audio
 //
 
+MainScene.prototype.sounds = {
+  bg : {
+    path : 'bg-loop',
+    volume : 0.8,
+    loop : true
+  },
+  wave : {
+    path : 'buzz-wave-2',
+    volume : 0.08
+  },
+  bubblesLow : {
+    path : 'bubbles-2',
+    volume : 0.15
+  },
+  bubblesHigh : {
+    path : 'bubbles-1',
+    volume : 0.15
+  }
+};
+
+MainScene.prototype.bubbleSequence = [
+  'bubblesLow',
+  'bubblesLow',
+  'bubblesHigh'
+];
+
 MainScene.prototype.initAudio = function () {
+  var sounds = this.sounds;
   var audio = this.audio = App.AudioController.create({
     baseUrl : App.STATIC_URL + 'audio/'
   });
 
-  this.sounds = {};
-  this.createBackgroundSound();
-  this.createWaveSounds();
-  this.createBubbleSounds();
-
-  this.sounds.bg.on('load', function () {
+  audio.playSound(sounds.bg).then(function (sound) {
     audio.addListener('mute', this, 'muteSounds');
     audio.addListener('unmute', this, 'unmuteSounds');
-    this.medusae.addListener('phase:top', this, 'audioPhaseTop');
     this.triggerListeners('load:audio');
   }.bind(this));
+
+  audio.loadSound(sounds.wave).then(function () {
+    this.medusae.addListener('phase:top', this, 'audioPhaseTop');
+  }.bind(this))
 };
 
-MainScene.prototype.createBackgroundSound = function () {
-  var bg = this.sounds.bg = this.audio.createSound('bg-loop');
+MainScene.prototype.playSound = function (params) {
+  if (!this.audioIsPlaying) { return; }
+  this.audio.playSound(params);
+}
 
-  bg.__pos = 0;
-  bg.__duration = Infinity;
-
-  bg.on('load', function () {
-    bg.__duration = Math.floor(bg._duration) * 1000;
-    bg.play();
-  }.bind(this));
-};
-
-MainScene.prototype.createWaveSounds = function () {
-  var audio = this.audio;
-  var waves = this.sounds.waves = [];
-
-  for (var i = 0; i < 5; i ++) {
-    waves.push(audio.createSound('buzz-wave-2'));
-  }
-};
-
-MainScene.prototype.createBubbleSounds = function () {
-  var audio = this.audio;
-  var bubbles = this.sounds.bubbles = [];
-
-  for (var i = 0; i < 2; i ++) {
-    bubbles.push(audio.createSound('bubbles-2'));
-  }
-
-  bubbles.push(audio.createSound('bubbles-1'));
-};
-
-MainScene.prototype.muteSounds = function () {
-  this.sounds.bg.pause();
-};
-
-MainScene.prototype.unmuteSounds = function () {
-  this.sounds.bg.play();
-};
+// TODO: Stop / restart playback
+MainScene.prototype.muteSounds = function () {};
+MainScene.prototype.unmuteSounds = function () {};
 
 MainScene.prototype.beginAudio = function () {
   this.audio.volume = 0.8;
@@ -413,15 +407,7 @@ MainScene.prototype.toggleAudio = function () {
 };
 
 MainScene.prototype.audioPhaseTop = function () {
-  var waves = this.sounds.waves;
-  var index = this.waveIndex;
-
-  if (!index || index > waves.length - 1) {
-    index = this.waveIndex = 0;
-  }
-
-  waves[index].volume(0.08).play();
-  this.waveIndex ++;
+  this.playSound(this.sounds.wave);
 };
 
 // ..................................................
@@ -484,26 +470,10 @@ MainScene.prototype.update = function (delta) {
     this.lensDirtPass.update(delta);
   }
 
-  if (!this.audio.isMuted) {
-    this.updateSounds(delta);
-  }
-
   this.audio.distance = distSound;
   this.audio.update(delta);
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
-};
-
-MainScene.prototype.updateSounds = function (delta) {
-  var sounds = this.sounds;
-  var bg = sounds.bg;
-
-  bg.__pos += delta;
-
-  if (bg.__pos > bg.__duration) {
-    bg.pos(0);
-    bg.__pos = 0;
-  }
 };
 
 MainScene.prototype.preRender = function (delta, stepProgress) {

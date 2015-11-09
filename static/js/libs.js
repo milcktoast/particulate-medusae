@@ -1,7 +1,6 @@
 require('lib/handlebars/handlebars.runtime');
 require('lib/particulate/dist/particulate');
 require('lib/noise/perlin');
-require('lib/howler.js/howler');
 
 require('lib-extras/three/controls/TrackballControls');
 require('lib-extras/three/geometries/PlaneBufferGeometry');
