@@ -1,3 +1,4 @@
+/*global AudioContext, Promise*/
 var Tweens = App.Tweens;
 
 App.AudioController = AudioController;
@@ -18,6 +19,14 @@ function AudioController(params) {
 AudioController.create = App.ctor(AudioController);
 App.Dispatcher.extend(AudioController.prototype);
 AudioController.prototype.VOLUME_ZERO = 0.001;
+
+AudioController.CODECS = (function () {
+  var audio = new Audio();
+  return {
+    mp3 : !!audio.canPlayType('audio/mpeg;').replace(/^no$/, ''),
+    ogg : !!audio.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '')
+  };
+}());
 
 AudioController.prototype._findOrLoadBuffer = function (path) {
   var cached = this._bufferCache[path];
@@ -101,7 +110,7 @@ AudioController.prototype.createSound = function (buffer, params) {
   return sound;
 };
 
-AudioController.prototype.loadSound = function (params) {
+AudioController.prototype.loadBuffer = function (params) {
   var path = params.path;
   return this._findOrLoadBuffer(path);
 };

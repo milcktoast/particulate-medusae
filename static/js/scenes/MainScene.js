@@ -343,15 +343,15 @@ MainScene.prototype.sounds = {
     loop : true
   },
   wave : {
-    path : 'buzz-wave-2',
-    volume : 0.08
+    path : 'buzz-wave-4',
+    volume : 0.35
   },
   bubblesLow : {
-    path : 'bubbles-2',
+    path : 'bubbles-1',
     volume : 0.15
   },
   bubblesHigh : {
-    path : 'bubbles-1',
+    path : 'bubbles-2',
     volume : 0.15
   }
 };
@@ -368,28 +368,30 @@ MainScene.prototype.initAudio = function () {
     baseUrl : App.STATIC_URL + 'audio/'
   });
 
-  audio.playSound(sounds.bg).then(function (sound) {
+  audio.loadBuffer(sounds.bg).then(function () {
+    audio.playSound(sounds.bg);
     audio.addListener('mute', this, 'muteSounds');
     audio.addListener('unmute', this, 'unmuteSounds');
     this.triggerListeners('load:audio');
-  }.bind(this));
-
-  audio.loadSound(sounds.wave).then(function () {
+    return audio.loadBuffer(sounds.wave);
+  }.bind(this)).then(function () {
     this.medusae.addListener('phase:top', this, 'audioPhaseTop');
-  }.bind(this))
+    audio.loadBuffer(sounds.bubblesLow);
+    audio.loadBuffer(sounds.bubblesHigh);
+  }.bind(this));
 };
 
 MainScene.prototype.playSound = function (params) {
   if (!this.audioIsPlaying) { return; }
   this.audio.playSound(params);
-}
+};
 
 // TODO: Stop / restart playback
 MainScene.prototype.muteSounds = function () {};
 MainScene.prototype.unmuteSounds = function () {};
 
 MainScene.prototype.beginAudio = function () {
-  this.audio.volume = 0.8;
+  this.audio.volume = 0.95;
   this.audioIsPlaying = true;
 };
 

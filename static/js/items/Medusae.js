@@ -1003,7 +1003,7 @@ Medusae.prototype.updateLineWidth = function (lineWidth) {
 };
 
 Medusae.prototype.PHASE_ZERO = 0.001;
-Medusae.prototype.PHASE_OFFSET = 0.225;
+Medusae.prototype.PHASE_OFFSET = 0.485;
 
 Medusae.prototype.timePhase = function (time) {
   return (sin(time * Math.PI - Math.PI * 0.5) + 1) * 0.5;
