@@ -265,6 +265,11 @@ MainScene.prototype.onControlsChange = function () {
 
 MainScene.prototype.toggleAnimate = function (event) {
   this.shouldAnimate = !this.shouldAnimate;
+  if (this.shouldAnimate) {
+    this.audio.resume();
+  } else {
+    this.audio.pause();
+  }
 };
 
 // ..................................................
@@ -390,21 +395,21 @@ MainScene.prototype.playSound = function (params) {
 MainScene.prototype.muteSounds = function () {};
 MainScene.prototype.unmuteSounds = function () {};
 
-MainScene.prototype.beginAudio = function () {
+MainScene.prototype.startAudio = function () {
   this.audio.volume = 0.95;
   this.audioIsPlaying = true;
 };
 
-MainScene.prototype.pauseAudio = function () {
+MainScene.prototype.stopAudio = function () {
   this.audio.volume = 0;
   this.audioIsPlaying = false;
 };
 
 MainScene.prototype.toggleAudio = function () {
   if (this.audioIsPlaying) {
-    this.pauseAudio();
+    this.stopAudio();
   } else {
-    this.beginAudio();
+    this.startAudio();
   }
 };
 
