@@ -1,11 +1,11 @@
-/*global AudioContext, Promise*/
+/*global Promise*/
 var Tweens = App.Tweens;
 
 App.AudioController = AudioController;
 function AudioController(params) {
   params = params || {};
 
-  this.ctx = new AudioContext();
+  this.ctx = this.createAudioContext();
   this.baseUrl = params.baseUrl;
   this.volume = 0;
   this.distance = 0;
@@ -29,6 +29,11 @@ AudioController.prototype.AUDIO_TYPES = [
     type : 'audio/mpeg;'
   }
 ];
+
+AudioController.prototype.createAudioContext = function () {
+  var AudioContext = window.AudioContext || window.webkitAudioContext;
+  return new AudioContext();
+};
 
 AudioController.prototype.getAudioType = function () {
   if (this._audioType) { return this._audioType; }
