@@ -386,13 +386,15 @@ MainScene.prototype.initAudio = function () {
     audio.playSound(sounds.bg);
     audio.addListener('mute', this, 'muteSounds');
     audio.addListener('unmute', this, 'unmuteSounds');
-    this.triggerListeners('load:audio');
-    return audio.loadBuffer(sounds.wave);
-  }.bind(this)).then(function () {
-    this.medusae.addListener('phase:top', this, 'audioPhaseTop');
-    audio.loadBuffer(sounds.bubblesLow);
-    audio.loadBuffer(sounds.bubblesHigh);
+    setTimeout(this.triggerListeners.bind(this, 'load:audio'), 0);
   }.bind(this));
+
+  audio.loadBuffer(sounds.wave).then(function () {
+    this.medusae.addListener('phase:top', this, 'audioPhaseTop');
+  }.bind(this));
+
+  audio.loadBuffer(sounds.bubblesLow);
+  audio.loadBuffer(sounds.bubblesHigh);
 };
 
 MainScene.prototype.playSound = function (params) {

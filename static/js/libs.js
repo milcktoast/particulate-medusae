@@ -1,3 +1,4 @@
+require('lib/native-promise-only/lib/npo.src');
 require('lib/handlebars/handlebars.runtime');
 require('lib/particulate/dist/particulate');
 require('lib/noise/perlin');
