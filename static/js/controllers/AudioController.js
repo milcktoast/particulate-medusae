@@ -67,13 +67,14 @@ AudioController.prototype._loadBuffer = function (path) {
   return request;
 };
 
-AudioController.prototype._addActiveSound = function (sound) {
-  sound.sourceNode.onended = this._removeActiveSound.bind(this, sound);
-  return this._activeSounds.push(sound);
+AudioController.prototype._addActiveSound = function (sound, sounds) {
+  sounds = sounds || this._activeSounds;
+  sound.sourceNode.onended = this._removeActiveSound.bind(this, sound, sounds);
+  return sounds.push(sound);
 };
 
-AudioController.prototype._removeActiveSound = function (sound) {
-  var sounds = this._activeSounds;
+AudioController.prototype._removeActiveSound = function (sound, sounds) {
+  sounds = sounds || this._activeSounds;
   var index = sounds.indexOf(sound);
 
   if (index !== -1) {
@@ -119,6 +120,8 @@ AudioController.prototype.createSound = function (buffer, params) {
   var ctx = this.ctx;
   var sourceNode = ctx.createBufferSource();
   var gainNode = ctx.createGain();
+  var filterNode = ctx.createBiquadFilter();
+
   var globalVolume = this.volume;
   var volume = params.volume != null ? params.volume : 1;
   var offsetTime = params.offsetTime;
@@ -129,15 +132,19 @@ AudioController.prototype.createSound = function (buffer, params) {
     startTime : ctx.currentTime,
     offsetTime : offsetTime,
     sourceNode : sourceNode,
-    gainNode : gainNode
+    gainNode : gainNode,
+    filterNode : filterNode
   };
 
+  filterNode.type = 'lowpass';
+  filterNode.frequency.value = 320;
   sourceNode.buffer = buffer;
   sourceNode.loop = !!params.loop;
   gainNode.gain.value = globalVolume * volume;
 
   sourceNode.connect(gainNode);
-  gainNode.connect(ctx.destination);
+  gainNode.connect(filterNode);
+  filterNode.connect(ctx.destination);
 
   if (offsetTime != null) {
     sourceNode.start(0, offsetTime);
@@ -157,7 +164,7 @@ AudioController.prototype.createSoundSlice = function (duration, sound) {
   sound.offsetTime = offsetTime;
 
   return this.createSound(bufferSlice, {
-    volume : sound.volume,
+    volume : sound.volume * 0.8,
     offsetTime : 0,
     loop : true
   });
@@ -169,6 +176,7 @@ AudioController.prototype.playSound = function (params) {
   return this._findOrLoadBuffer(path).then(function (buffer) {
     var sound = this.createSound(buffer, {
       volume : params.volume,
+      loop : params.loop,
       offsetTime : 0
     });
 
@@ -184,9 +192,9 @@ AudioController.prototype.updateVolume = function (volume) {
 };
 
 AudioController.prototype.pause = function () {
-  var sounds = this._activeSounds;
+  var sounds = this._activeSounds.slice();
   var soundSlices = sounds.map(
-    this.createSoundSlice.bind(this, 0.5));
+    this.createSoundSlice.bind(this, 0.25));
 
   sounds.forEach(function (sound) {
     sound.sourceNode.stop();
@@ -198,23 +206,27 @@ AudioController.prototype.pause = function () {
 };
 
 AudioController.prototype.resume = function () {
-  var sounds = this._activeSounds;
+  var prevSounds = this._activeSounds;
   var pausedSounds = this._pausedSounds;
   if (!pausedSounds) { return; }
+  var activeSounds = [];
 
-  var soundCopies = pausedSounds.map(function (sound) {
-    return this.createSound(sound.buffer, {
+  pausedSounds.forEach(function (sound) {
+    var newSound = this.createSound(sound.buffer, {
       offsetTime : sound.offsetTime,
-      volume : sound.volume
+      volume : sound.volume,
+      loop : sound.sourceNode.loop
     });
+
+    this._addActiveSound(newSound, activeSounds);
   }.bind(this));
 
-  sounds.forEach(function (sound) {
+  prevSounds.forEach(function (sound) {
     sound.sourceNode.stop();
   });
 
   this._pausedSounds = null;
-  this._activeSounds = soundCopies;
+  this._activeSounds = activeSounds;
   this.updateVolume(this.volume);
 };
 
