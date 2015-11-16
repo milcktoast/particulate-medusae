@@ -264,12 +264,21 @@ MainScene.prototype.onControlsChange = function () {
 };
 
 MainScene.prototype.toggleAnimate = function (event) {
-  this.shouldAnimate = !this.shouldAnimate;
-  if (this.shouldAnimate) {
-    this.audio.resume();
+  var audio = this.audio;
+  var audioIsPlaying = this.audioIsPlaying;
+  var shouldAnimate = !this.shouldAnimate;
+
+  if (shouldAnimate) {
+    audio.resume();
   } else {
-    this.audio.pause();
+    audio.pause();
   }
+
+  if (audioIsPlaying) {
+    audio.volume = shouldAnimate ? 1 : 0.7;
+  }
+
+  this.shouldAnimate = shouldAnimate;
 };
 
 // ..................................................
@@ -396,7 +405,7 @@ MainScene.prototype.muteSounds = function () {};
 MainScene.prototype.unmuteSounds = function () {};
 
 MainScene.prototype.startAudio = function () {
-  this.audio.volume = 0.95;
+  this.audio.volume = 1;
   this.audioIsPlaying = true;
 };
 

@@ -9,7 +9,7 @@ function AudioController(params) {
   this.baseUrl = params.baseUrl;
   this.volume = 0;
   this.distance = 0;
-  this.tween = Tweens.factorTween({ volume : 0 } , 0.05);
+  this.tween = Tweens.factorTween({ volume : 0 }, 0.1);
 
   this._bufferCache = {};
   this._activeRequests = {};
@@ -214,7 +214,7 @@ AudioController.prototype.updateVolume = function (volume) {
 AudioController.prototype.pause = function () {
   var sounds = this._activeSounds.slice();
   var soundSlices = sounds.map(
-    this.createSoundSlice.bind(this, 0.25));
+    this.createSoundSlice.bind(this, 0.5));
 
   sounds.forEach(function (sound) {
     sound.sourceNode.stop();
@@ -251,10 +251,7 @@ AudioController.prototype.resume = function () {
 };
 
 AudioController.prototype.update = function () {
-  var tweenFactor = this.volume > 0 ? 0.005 : 0.1;
-  var volume = this.tween('volume', this.volume, tweenFactor);
-
-  volume *= (1 - this.distance);
+  var volume = this.tween('volume', this.volume) * (1 - this.distance);
 
   if (volume !== this.volume) {
     this.updateVolume(volume);
