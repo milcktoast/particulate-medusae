@@ -20,13 +20,27 @@ AudioController.create = App.ctor(AudioController);
 App.Dispatcher.extend(AudioController.prototype);
 AudioController.prototype.VOLUME_ZERO = 0.001;
 
-AudioController.CODECS = (function () {
+AudioController.prototype.AUDIO_TYPES = [
+  {
+    ext : 'ogg',
+    type : 'audio/ogg; codecs=vorbis'
+  }, {
+    ext : 'mp3',
+    type : 'audio/mpeg;'
+  }
+];
+
+AudioController.prototype.getAudioType = function () {
+  if (this._audioType) { return this._audioType; }
+
   var audio = new Audio();
-  return {
-    mp3 : !!audio.canPlayType('audio/mpeg;').replace(/^no$/, ''),
-    ogg : !!audio.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, '')
-  };
-}());
+  var type = this.AUDIO_TYPES.find(function (codec) {
+    return !!audio.canPlayType(codec.type).replace(/^no$/, '');
+  });
+
+  this._audioType = type;
+  return type;
+};
 
 AudioController.prototype._findOrLoadBuffer = function (path) {
   var cached = this._bufferCache[path];
@@ -46,7 +60,8 @@ AudioController.prototype._loadBuffer = function (path) {
 
   var cache = this._bufferCache;
   var ctx = this.ctx;
-  var fullUrl = this.baseUrl + path + '.mp3';
+  var audioType = this.getAudioType();
+  var fullUrl = this.baseUrl + path + '.' + audioType.ext;
   var xhr = new XMLHttpRequest();
 
   xhr.open('GET', fullUrl, true);
