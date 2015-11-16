@@ -1014,12 +1014,14 @@ Medusae.prototype.update = function (delta) {
   var phase = this.timePhase(time);
   var phaseOffset = this.timePhase(time - this.PHASE_OFFSET);
 
-  if (1 - phaseOffset < this.PHASE_ZERO) {
+  if (!this._didPhaseTop && 1 - phaseOffset < this.PHASE_ZERO) {
     this.triggerListeners('phase:top');
+    this._didPhaseTop = true;
   }
 
   if (phaseOffset < this.PHASE_ZERO) {
     this.triggerListeners('phase:bottom');
+    this._didPhaseTop = false;
   }
 
   this.updateRibs(this.ribs, phase);
