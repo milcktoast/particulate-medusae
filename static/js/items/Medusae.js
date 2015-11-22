@@ -43,7 +43,7 @@ function Medusae(opts) {
   this.tentacleGroupCount = 3;
   this.tentacleSegments = 120;
   this.tentacleSegmentLength = 1.5;
-  this.tentacleWeightFactor = 1;
+  this.tentacleWeightFactor = 1.25;
 
   this.tailRibsCount = 15;
   this.tailRibRadiusFactor = 20;
@@ -390,7 +390,7 @@ Medusae.prototype.createTentacleSegment = function (groupIndex, index, total, ri
 
   GEOM.circle(segments, radius, yPos, verts);
   tentacleUvs(segments, uvs);
-  this.queueWeights(start, segments, index / total * this.tentacleWeightFactor);
+  this.queueWeights(start, segments, (1.0 - index / total) * this.tentacleWeightFactor);
 
   if (index === 0) {
     this.tentacles.push([]);
