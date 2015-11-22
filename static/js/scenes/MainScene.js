@@ -93,17 +93,21 @@ MainScene.prototype.addPostFx = function () {
 
   var renderPass = new THREE.RenderPass(this.scene, this.camera);
   var bloomPass = new THREE.BloomPass(bloomStrength, bloomKernel, bloomSigma, bloomRes);
-  var copyPass = new THREE.ShaderPass(THREE.CopyShader);
+  var vignettePass = new THREE.ShaderPass(THREE.VignetteShader);
 
   var lensDirtPass = this.lensDirtPass = new App.LensDirtPass({
     quads : 200,
     textureSize : 2048
   });
 
+  vignettePass.material.uniforms.darkness.value = 0.5;
+  vignettePass.material.uniforms.offset.value = 1.25;
+  vignettePass.material.uniforms.color.value = new THREE.Color(0x07070C);
+
   this.addPass(renderPass);
   this.addPass(bloomPass);
   this.addPass(lensDirtPass);
-  this.addPass(copyPass, true);
+  this.addPass(vignettePass, true);
 };
 
 MainScene.prototype.addPass = function (name, pass, renderToScreen) {

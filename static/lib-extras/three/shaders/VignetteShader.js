@@ -12,7 +12,8 @@ THREE.VignetteShader = {
 
 		"tDiffuse": { type: "t", value: null },
 		"offset":   { type: "f", value: 1.0 },
-		"darkness": { type: "f", value: 1.0 }
+		"darkness": { type: "f", value: 1.0 },
+		"color":    { type: "c", value: null }
 
 	},
 
@@ -33,6 +34,7 @@ THREE.VignetteShader = {
 
 		"uniform float offset;",
 		"uniform float darkness;",
+		"uniform vec3 color;",
 
 		"uniform sampler2D tDiffuse;",
 
@@ -44,7 +46,7 @@ THREE.VignetteShader = {
 
 			"vec4 texel = texture2D( tDiffuse, vUv );",
 			"vec2 uv = ( vUv - vec2( 0.5 ) ) * vec2( offset );",
-			"gl_FragColor = vec4( mix( texel.rgb, vec3( 1.0 - darkness ), dot( uv, uv ) ), texel.a );",
+			"gl_FragColor = vec4( mix( texel.rgb, vec3( 1.0 - darkness ) * color, dot( uv, uv ) ), texel.a );",
 
 			/*
 			// alternative version from glfx.js

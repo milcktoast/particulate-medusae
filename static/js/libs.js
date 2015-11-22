@@ -10,6 +10,7 @@ require('lib-extras/three/geometries/SphereBufferGeometry');
 require('lib-extras/three/shaders/BasicShader');
 require('lib-extras/three/shaders/CopyShader');
 require('lib-extras/three/shaders/ConvolutionShader');
+require('lib-extras/three/shaders/VignetteShader');
 
 require('lib-extras/three/postprocessing/EffectComposer');
 require('lib-extras/three/postprocessing/RenderPass');
