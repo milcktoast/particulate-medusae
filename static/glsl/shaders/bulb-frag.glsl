@@ -28,10 +28,10 @@ void main() {
   float rim = 1.0 - max(dot(eye, normal), 0.0);
   float saturation = 0.0;
 
-  saturation += max(-0.25, accumulate(uv, 1.0, 20.0));
-  saturation += max(-0.25, accumulate(vec2(-rim * 0.5), 0.1, 1.0));
-  saturation += max(-0.25, accumulate(vec2(uv.x, rim), 1.25, 20.0));
-  saturation += max(-0.25, accumulate(vec2(rim, uv.y), 1.25, 30.0));
+  saturation += max(-0.5, accumulate(uv, 1.5, 20.0));
+  saturation += max(-0.25, accumulate(vec2(-rim * 0.5), 0.5, 1.0));
+  saturation += max(-0.25, accumulate(vec2(uv.x, rim), 1.5, 2.0));
+  saturation += max(-0.25, accumulate(vec2(rim, uv.y), 1.5, 2.0));
 
   gl_FragColor = vec4(
     mix(diffuseB, diffuse, saturation) * opacity,
