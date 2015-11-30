@@ -122,12 +122,13 @@ Medusae.prototype.createCore = function () {
   var pinTop = this.pinTop = 0;
   var pinMid = this.pinMid = 1;
   var pinBottom = this.pinBottom = 2;
-  /*var pinTail = */this.pinTail = 3;
+  this.pinTail = 3;
+  this.pinTentacle = 4;
 
-  var indexTop = this.indexTop = 4;
-  var indexMid = this.indexMid = 5;
-  var indexBottom = this.indexBottom = 6;
-  var topStart = this.topStart = 7;
+  var indexTop = this.indexTop = 5;
+  var indexMid = this.indexMid = 6;
+  var indexBottom = this.indexBottom = 7;
+  var topStart = this.topStart = 8;
 
   var rangeTop = [0, size * 0.5];
   var rangeMid = [size * 0.5, size * 0.7];
@@ -145,9 +146,10 @@ Medusae.prototype.createCore = function () {
   var posMid = this.posMid = yOffset;
   var posBottom = this.posBottom = yOffset - size;
   var posTail = this.posTail = yOffset - this.tailArmSegments * this.tailArmSegmentLength;
+  var posTentacle = this.posTentacle = yOffset - this.tentacleSegments * this.tentacleSegmentLength;
 
   var offsets = [
-    posTop, posMid, posBottom, posTail, // Pin offsets
+    posTop, posMid, posBottom, posTail, posTentacle, // Pin offsets
     size * 1.5, -size * 0.5, -size // Floating pin offsets
   ];
 
@@ -364,12 +366,15 @@ Medusae.prototype.createTentacleGroup = function (index, total) {
 
   for (var i = 0, il = count; i < il; i ++) {
     this.createTentacleSegment(index, i, count, rib);
+
     if (i > 0) {
       this.linkTentacle(index, i - 1, i);
     } else {
       this.attachTentacles(index, rib);
     }
   }
+
+  this.attachTentaclesSpine(index);
 };
 
 function tentacleUvs(howMany, buffer) {
@@ -411,6 +416,21 @@ Medusae.prototype.attachTentacles = function (groupIndex, rib) {
 
   this.queueConstraints(tentacle);
   this.addLinks(tentacle.indices, this.tentLinks);
+};
+
+Medusae.prototype.attachTentaclesSpine = function (groupIndex) {
+  var group = this.tentacles[groupIndex];
+  var tent = group[group.length - 1];
+  var start = tent.start;
+  var center = this.pinTentacle;
+  var segments = this.totalSegments;
+  var dist = this.tentacleSegments * this.tentacleSegmentLength * 0.5;
+
+  var spine = DistanceConstraint.create([dist * 0.5, dist],
+    LINKS.radial(center, start, segments, []));
+
+  this.queueConstraints(spine);
+  // this.addLinks(spine.indices, this.innerLinks);
 };
 
 Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
@@ -687,6 +707,7 @@ Medusae.prototype.createSystem = function () {
   system.addPinConstraint(PointConstraint.create([0, this.posMid, 0], this.pinMid));
   system.addPinConstraint(PointConstraint.create([0, this.posBottom, 0], this.pinBottom));
   system.addPinConstraint(PointConstraint.create([0, this.posTail, 0], this.pinTail));
+  system.addPinConstraint(PointConstraint.create([0, this.posTentacle, 0], this.pinTentacle));
 };
 
 Medusae.prototype.relax = function (iterations) {
