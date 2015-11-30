@@ -384,6 +384,10 @@ function tentacleUvs(howMany, buffer) {
   return buffer;
 }
 
+function tentacleWeight(t) {
+  return t * t * t;
+}
+
 Medusae.prototype.createTentacleSegment = function (groupIndex, index, total, rib) {
   var segments = this.totalSegments;
   var verts = this.verts;
@@ -392,10 +396,11 @@ Medusae.prototype.createTentacleSegment = function (groupIndex, index, total, ri
   var radius = rib.radius * (0.25 * sin(index * 0.25) + 0.5);
   var yPos = - index * this.tentacleSegmentLength + this.yOffset;
   var start = verts.length / 3;
+  var weight = tentacleWeight(index / total) * this.tentacleWeightFactor;
 
   GEOM.circle(segments, radius, yPos, verts);
   tentacleUvs(segments, uvs);
-  this.queueWeights(start, segments, (1.0 - index / total) * this.tentacleWeightFactor);
+  this.queueWeights(start, segments, weight);
 
   if (index === 0) {
     this.tentacles.push([]);
@@ -445,6 +450,7 @@ Medusae.prototype.linkTentacle = function (groupIndex, i0, i1) {
 
   this.queueConstraints(tentacle);
   this.addLinks(tentacle.indices, this.tentLinks);
+  this.addLinks(tentacle.indices, this.innerLinks);
 };
 
 // ..................................................
@@ -510,7 +516,7 @@ Medusae.prototype.createTailRib = function (index, total) {
       LINKS.radial(spineCenter, start, segments, []));
 
     this.queueConstraints(spine);
-    // this.addLinks(spine.indices);
+    this.addLinks(spine.indices, this.innerLinks);
   }
 
   this.queueConstraints(mainRib, innerRib);
@@ -539,7 +545,7 @@ Medusae.prototype.createTailSkin = function (r0, r1) {
     LINKS.rings(rib0.start, rib1.start, segments, []));
 
   this.queueConstraints(skin);
-  // this.addLinks(skin.indices);
+  this.addLinks(skin.indices, this.innerLinks);
 
   FACES.rings(rib0.start, rib1.start, segments, this.tailFaces);
 };
@@ -656,6 +662,10 @@ Medusae.prototype.createMouthArm = function (vScale, r0, r1, index, total, offse
   this.addLinks(innerIndices);
   this.addLinks(outerIndices);
   this.addLinks(linkIndices);
+
+  this.addLinks(innerIndices, this.innerLinks);
+  this.addLinks(outerIndices, this.innerLinks);
+  this.addLinks(linkIndices, this.innerLinks);
 };
 
 // ..................................................
@@ -798,16 +808,20 @@ Medusae.prototype.createMaterialsDots = function () {
   var geom = new THREE.BufferGeometry();
 
   geom.addAttribute('position', this.position);
+  geom.addAttribute('positionPrev', this.positionPrev);
 
   var dots = this.dots = new THREE.Points(geom,
-    new THREE.PointsMaterial({
-      size : this.pxRatio * 2,
+    new App.LerpPointMaterial({
+      psColor : 0xffffff,
+      size : this.pxRatio * 2000,
       map : this.createTextureDots(),
       transparent : true,
       depthTest : false,
       depthWrite : false
     }));
 
+  this.dotsOpacity = dots.material.uniforms.opacity;
+  this.addTimeAttr(dots);
   this.item.add(dots);
 };
 
@@ -844,9 +858,8 @@ Medusae.prototype.createMaterialsInnerLines = function () {
   geom.setIndex(indices);
 
   var inner = this.linesInner = new THREE.LineSegments(geom,
-    new App.TentacleMaterial({
+    new App.LerpMaterial({
       diffuse : 0xf99ebd,
-      area : 500,
       transparent : true,
       blending : THREE.AdditiveBlending,
       depthTest : false,
@@ -873,11 +886,11 @@ Medusae.prototype.createMaterialsTentacles = function () {
       area : 2000,
       transparent : true,
       blending : THREE.AdditiveBlending,
-      opacity : 0.25,
       depthTest : false,
       depthWrite : false
     }));
 
+  this.tentacleOpacity = tentacle.material.uniforms.opacity;
   this.addTimeAttr(tentacle);
   this.addColor('Tentacles', tentacle.material);
   this.item.add(tentacle);
@@ -919,7 +932,7 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   this.addColor('Hood Primary', bulb.material);
   this.addColor('Hood Secondary', bulb.material, 'diffuseB');
-  this.addColor('Hood Specular', bulbFaint.material);
+  this.addColor('Hood Tertiary', bulbFaint.material);
 
   this.item.add(bulbFaint);
   this.item.add(bulb);
@@ -1002,11 +1015,13 @@ Medusae.prototype.updateTweens = function (delta) {
 
   this.bulbOpacity.value = meshOpacity;
   this.bulbFaintOpacity.value = meshOpacity * 0.25;
+  this.tentacleOpacity.value = meshOpacity * 0.25;
   this.tailOpacity.value = meshOpacity * 0.75;
   this.mouthOpacity.value = meshOpacity * 0.65;
   this.linesForeOpacity.value = meshOpacity * 0.35;
-  this.linesInnerOpacity.value = dotOpacity * 0.5;
-  this.dots.material.opacity = dotOpacity * 0.25;
+
+  this.linesInnerOpacity.value = dotOpacity * 0.15;
+  this.dotsOpacity.value = dotOpacity * 0.25;
 
   this.linesInner.visible = dotsAreVisible;
   this.dots.visible = dotsAreVisible;
