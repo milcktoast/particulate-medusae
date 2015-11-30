@@ -12,7 +12,7 @@ function TailMaterial(parameters) {
 TailMaterial.prototype = Object.create(ShaderMaterial.prototype);
 
 TailMaterial.prototype.shader = {
-  vertexShader : 'lerp-vert',
+  vertexShader : 'normal-vert',
   fragmentShader : 'tail-frag',
 
   uniforms : THREE.UniformsUtils.merge([
