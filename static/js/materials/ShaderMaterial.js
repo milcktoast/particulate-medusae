@@ -25,6 +25,9 @@ function ShaderMaterial(parameters) {
   this.depthTest = parameters.depthTest != null ? parameters.depthTest : true;
   this.depthWrite = parameters.depthWrite != null ? parameters.depthWrite : true;
 
+  this.size = parameters.size || 1;
+  this.sizeAttenuation = parameters.sizeAttenuation;
+
   this.fog = !!parameters.fog;
   this.map = !!parameters.map;
   this.bumpMap = !!parameters.bumpMap;
