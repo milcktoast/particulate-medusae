@@ -57,6 +57,7 @@ MainScene.prototype.initRenderer = function () {
   this.updateClearColor();
   renderer.setPixelRatio(this.pxRatio);
   renderer.autoClear = false;
+  renderer.sortObjects = false;
 };
 
 MainScene.prototype.updateClearColor = function () {

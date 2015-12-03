@@ -43,7 +43,7 @@ function Medusae(opts) {
   this.tentacleGroupCount = 3;
   this.tentacleSegments = 120;
   this.tentacleSegmentLength = 1.5;
-  this.tentacleWeightFactor = 1.25;
+  this.tentacleWeightFactor = 1.5;
 
   this.tailRibsCount = 15;
   this.tailRibRadiusFactor = 20;
@@ -661,11 +661,15 @@ Medusae.prototype.createMouthArm = function (vScale, r0, r1, index, total, offse
 
   this.addLinks(innerIndices);
   this.addLinks(outerIndices);
-  this.addLinks(linkIndices);
+
+  this.addLinks(linkIndices, this.tentLinks);
+  this.addLinks(braceIndices, this.tentLinks);
 
   this.addLinks(innerIndices, this.innerLinks);
   this.addLinks(outerIndices, this.innerLinks);
   this.addLinks(linkIndices, this.innerLinks);
+  this.addLinks(braceIndices, this.innerLinks);
+  this.addLinks(pin.indices, this.innerLinks);
 };
 
 // ..................................................
@@ -756,12 +760,12 @@ Medusae.prototype.createSceneItem = function () {
   this.colors = [];
   this.timeAttrs = [];
   this.createMaterialsDots();
+  this.createMaterialsTentacles();
   this.createMaterialsLines();
-  this.createMaterialsBulb();
+  this.createMaterialsInnerLines();
   this.createMaterialsTail();
   this.createMaterialsMouth();
-  this.createMaterialsTentacles();
-  this.createMaterialsInnerLines();
+  this.createMaterialsBulb();
 
   this.positionAttr = this.linesFore.geometry.attributes.position;
   this.positionPrevAttr = this.linesFore.geometry.attributes.positionPrev;
@@ -885,7 +889,7 @@ Medusae.prototype.createMaterialsTentacles = function () {
       diffuse : 0x997299,
       area : 2000,
       transparent : true,
-      blending : THREE.AdditiveBlending,
+      // blending : THREE.AdditiveBlending,
       depthTest : false,
       depthWrite : false
     }));
@@ -975,8 +979,8 @@ Medusae.prototype.createMaterialsMouth = function () {
   var mouth = this.mouthMesh = new THREE.Mesh(geom,
     new App.TailMaterial({
       diffuse : 0xEFA6F0,
-      diffuseB : 0x463DB5,
-      scale : 5,
+      diffuseB : 0x4A67CE,
+      scale : 3,
       // blending : THREE.AdditiveBlending,
       transparent : true
     }));
@@ -1013,7 +1017,7 @@ Medusae.prototype.updateTweens = function (delta) {
   var dotOpacity = this.tween('dots', this._dotsOpacity || 0);
   var dotsAreVisible = dotOpacity > 0.001;
 
-  this.bulbOpacity.value = meshOpacity;
+  this.bulbOpacity.value = meshOpacity * 0.75;
   this.bulbFaintOpacity.value = meshOpacity * 0.25;
   this.tentacleOpacity.value = meshOpacity * 0.25;
   this.tailOpacity.value = meshOpacity * 0.75;
