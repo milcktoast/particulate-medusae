@@ -35,6 +35,9 @@ AudioController.prototype.createAudioContext = function () {
   return new AudioContext();
 };
 
+AudioController.prototype.canCopyBuffers = window.AudioBuffer &&
+  window.AudioBuffer.prototype.copyFromChannel;
+
 AudioController.prototype.getAudioType = function () {
   if (this._audioType) { return this._audioType; }
 
@@ -125,10 +128,6 @@ AudioController.prototype.sliceBuffer = function (buffer, begin, end) {
   for (channel = 0; channel < channels; channel ++) {
     buffer.copyFromChannel(copyBuffer, channel, startOffset);
     slicedBuffer.copyToChannel(copyBuffer, channel, 0);
-  }
-
-  for (channel = 0; channel < channels; channel ++) {
-    buffer.copyFromChannel(copyBuffer, channel, startOffset);
     copyBuffer.reverse();
     slicedBuffer.copyToChannel(copyBuffer, channel, frameCount);
   }
@@ -212,6 +211,8 @@ AudioController.prototype.updateVolume = function (volume) {
 };
 
 AudioController.prototype.pause = function () {
+  if (!this.canCopyBuffers) { return; }
+
   var sounds = this._activeSounds.slice();
   var soundSlices = sounds.map(
     this.createSoundSlice.bind(this, 0.5));
@@ -226,9 +227,12 @@ AudioController.prototype.pause = function () {
 };
 
 AudioController.prototype.resume = function () {
+  if (!this.canCopyBuffers) { return; }
+
   var prevSounds = this._activeSounds;
   var pausedSounds = this._pausedSounds;
   if (!pausedSounds) { return; }
+
   var activeSounds = [];
 
   pausedSounds.forEach(function (sound) {
