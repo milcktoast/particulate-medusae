@@ -6,6 +6,7 @@ var keysTop = [85, 73, 79, 80];
 
 App.register('index', function index() {
   var scene = App.MainScene.create();
+  var controls = document.getElementById('container-controls');
 
   var dotsToggle = ToggleComponent.create({
     name : 'dots',
@@ -43,6 +44,7 @@ App.register('index', function index() {
 
   setTimeout(function () {
     scene.loop.start();
+    controls.className = 'active';
   }, 0);
 });
 
