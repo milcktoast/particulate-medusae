@@ -273,17 +273,23 @@ MainScene.prototype.toggleAnimate = function (event) {
   var audioIsPlaying = this.audioIsPlaying;
   var shouldAnimate = !this.shouldAnimate;
 
-  if (shouldAnimate) {
-    audio.resume();
-  } else {
-    audio.pause();
-  }
+  if (audio) {
+    if (shouldAnimate) {
+      audio.resume();
+    } else {
+      audio.pause();
+    }
 
-  if (audioIsPlaying) {
-    audio.volume = shouldAnimate ? 1 : 0.7;
+    if (audioIsPlaying) {
+      audio.volume = shouldAnimate ? 1 : 0.7;
+    }
   }
 
   this.shouldAnimate = shouldAnimate;
+};
+
+MainScene.prototype.toggleStats = function () {
+  document.body.classList.toggle('show-info');
 };
 
 // ..................................................
@@ -403,7 +409,7 @@ MainScene.prototype.initAudio = function () {
 };
 
 MainScene.prototype.playSound = function (params) {
-  if (!this.audioIsPlaying) { return; }
+  if (!this.audio || !this.audioIsPlaying) { return; }
   this.audio.playSound(params);
 };
 
@@ -470,6 +476,7 @@ MainScene.prototype.initStats = function () {
 
 MainScene.prototype.update = function (delta) {
   var medusae = this.medusae;
+  var audio = this.audio;
   var nudgeForce = this.nudgeForce;
 
   var distance = this.camera.position.length();
@@ -487,8 +494,10 @@ MainScene.prototype.update = function (delta) {
     this.lensDirtPass.update(delta);
   }
 
-  this.audio.distance = distSound;
-  this.audio.update(delta);
+  if (audio) {
+    audio.distance = distSound;
+    audio.update(delta);
+  }
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
 };
