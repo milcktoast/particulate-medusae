@@ -12,12 +12,6 @@ App.register('index', function index() {
     key : keysTop[0]
   });
 
-  var colorsToggle = ToggleComponent.create({
-    name : 'colors',
-    menu : 'colors',
-    key : keysTop[1]
-  });
-
   var postFxToggle = ToggleComponent.create({
     name : 'postfx',
     key : keysTop[3],
@@ -37,17 +31,6 @@ App.register('index', function index() {
   scene.initItems();
   scene.initForces();
   scene.appendRenderer();
-  scene.loop.start();
-
-  scene.medusae.colors.forEach(function (color) {
-    var controller = ColorComponent.create({
-      label : color.label,
-      color : color.uniform.value
-    });
-
-    controller.addListener('change', scene, 'makeDirty');
-    colorsToggle.menuInner.appendChild(controller.element);
-  });
 
   postFxToggle.addListener('toggle', scene, 'togglePostFx');
   dotsToggle.addListener('toggle', scene, 'toggleDots');
@@ -55,7 +38,12 @@ App.register('index', function index() {
   simToggle.addListener('toggle', scene, 'toggleAnimate');
 
   setupAudio(scene);
+  setupColors(scene);
   setupSystemUI(scene);
+
+  setTimeout(function () {
+    scene.loop.start();
+  }, 0);
 });
 
 function setupAudio(scene) {
@@ -66,19 +54,43 @@ function setupAudio(scene) {
     Features.detectAudioAutoplay()
   ];
 
-  Promise.all(tests).then(function () {
-    var audioToggle = ToggleComponent.create({
-      name : 'audio',
-      key : keysTop[2]
-    });
+  var audioToggle = ToggleComponent.create({
+    name : 'audio',
+    key : keysTop[2]
+  });
 
+  Promise.all(tests).then(function () {
     scene.initAudio();
     scene.addListener('load:audio', function () {
       audioToggle.addListener('toggle', scene, 'toggleAudio');
       audioToggle.toggleState();
     });
   }, function (err) {
+    audioToggle.hide();
     App.log('Audio features not supported');
+  });
+}
+
+function setupColors(scene) {
+  var colorsToggle = ToggleComponent.create({
+    name : 'colors',
+    menu : 'colors',
+    key : keysTop[1]
+  });
+
+  Features.detectInputType('color').then(function () {
+    scene.medusae.colors.forEach(function (color) {
+      var controller = ColorComponent.create({
+        label : color.label,
+        color : color.uniform.value
+      });
+
+      controller.addListener('change', scene, 'makeDirty');
+      colorsToggle.menuInner.appendChild(controller.element);
+    });
+  }, function (err) {
+    colorsToggle.hide();
+    App.log('Color input not supported');
   });
 }
 

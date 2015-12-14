@@ -49,3 +49,16 @@ Features.detectAudioAutoplay = function () {
     audio.play();
   });
 };
+
+Features.detectInputType = function (type) {
+  return new Promise(function (resolve, reject) {
+    var el = document.createElement('input');
+    el.setAttribute('type', type);
+
+    if (el.type === type) {
+      resolve();
+    } else {
+      reject();
+    }
+  });
+};
