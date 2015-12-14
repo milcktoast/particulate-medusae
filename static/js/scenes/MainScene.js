@@ -460,14 +460,8 @@ MainScene.prototype.initStats = function () {
     updateFactor : 0.025
   });
 
-  this.statsPost = App.GraphComponent.create({
-    label : 'Post FX (ms)',
-    updateFactor : 0.025
-  });
-
   this.statsPhysics.appendTo(el);
   this.statsGraphics.appendTo(el);
-  this.statsPost.appendTo(el);
 };
 
 // ..................................................
@@ -508,7 +502,6 @@ MainScene.prototype.preRender = function (delta, stepProgress) {
     this.needsRender = false;
   } else {
     this.statsGraphics.reset();
-    this.statsPost.reset();
   }
 
   if (this._renderStats) {
@@ -519,7 +512,6 @@ MainScene.prototype.preRender = function (delta, stepProgress) {
     }
 
     this.statsGraphics.update();
-    this.statsPost.update();
   }
 };
 
@@ -532,11 +524,8 @@ MainScene.prototype.render = function (delta, stepProgress) {
   }
 
   if (this.usePostFx) {
-    this.statsPost.start();
     this.composer.render(0.01);
-    this.statsPost.end();
   } else {
-    this.statsPost.reset();
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
   }
