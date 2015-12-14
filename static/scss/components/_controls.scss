@@ -65,6 +65,8 @@ $c-active: #E30060;
 
   &:hover:before { border-color: $c-active; }
   &.active:hover:before { border-color: #fff; }
+
+  &.hidden { display: none; }
 }
 
 .controls-menu {
@@ -108,4 +110,6 @@ $c-active: #E30060;
       transition-delay: $delay;
     }
   }
+
+  &.hidden { display: none; }
 }

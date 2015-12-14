@@ -15,9 +15,9 @@ uniform float opacity;
 {{{chunks.logdepthbuf_pars_fragment}}}
 
 void main() {
-  vec3 outgoingLight = vec3( 0.0 );
-  vec4 diffuseColor = vec4( diffuse, opacity );
-  vec3 totalAmbientLight = vec3( 1.0 );
+  vec3 outgoingLight = vec3(0.0);
+  vec4 diffuseColor = vec4(diffuse, opacity);
+  vec3 totalAmbientLight = vec3(1.0);
 
   {{{chunks.logdepthbuf_fragment}}}
   {{{chunks.map_fragment}}}
@@ -34,5 +34,5 @@ void main() {
   {{{chunks.linear_to_gamma_fragment}}}
   {{{chunks.fog_fragment}}}
 
-  gl_FragColor = vec4( outgoingLight, diffuseColor.a );
+  gl_FragColor = vec4(outgoingLight, diffuseColor.a);
 }

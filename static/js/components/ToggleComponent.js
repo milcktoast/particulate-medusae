@@ -64,4 +64,9 @@ ToggleComponent.prototype.updateElHeight = function (element, inner) {
   }
 };
 
+ToggleComponent.prototype.hide = function () {
+  this.toggle.className += ' hidden';
+  this.menu.className += ' hidden';
+};
+
 ToggleComponent.prototype.keyDelegator = App.KeyDelegator.create();

@@ -57,6 +57,7 @@ MainScene.prototype.initRenderer = function () {
   this.updateClearColor();
   renderer.setPixelRatio(this.pxRatio);
   renderer.autoClear = false;
+  renderer.sortObjects = false;
 };
 
 MainScene.prototype.updateClearColor = function () {
@@ -93,17 +94,21 @@ MainScene.prototype.addPostFx = function () {
 
   var renderPass = new THREE.RenderPass(this.scene, this.camera);
   var bloomPass = new THREE.BloomPass(bloomStrength, bloomKernel, bloomSigma, bloomRes);
-  var copyPass = new THREE.ShaderPass(THREE.CopyShader);
+  var vignettePass = new THREE.ShaderPass(THREE.VignetteShader);
 
   var lensDirtPass = this.lensDirtPass = new App.LensDirtPass({
     quads : 200,
     textureSize : 2048
   });
 
+  vignettePass.material.uniforms.darkness.value = 0.5;
+  vignettePass.material.uniforms.offset.value = 1.25;
+  vignettePass.material.uniforms.color.value = new THREE.Color(0x07070C);
+
   this.addPass(renderPass);
   this.addPass(bloomPass);
   this.addPass(lensDirtPass);
-  this.addPass(copyPass, true);
+  this.addPass(vignettePass, true);
 };
 
 MainScene.prototype.addPass = function (name, pass, renderToScreen) {
@@ -264,7 +269,27 @@ MainScene.prototype.onControlsChange = function () {
 };
 
 MainScene.prototype.toggleAnimate = function (event) {
-  this.shouldAnimate = !this.shouldAnimate;
+  var audio = this.audio;
+  var audioIsPlaying = this.audioIsPlaying;
+  var shouldAnimate = !this.shouldAnimate;
+
+  if (audio) {
+    if (shouldAnimate) {
+      audio.resume();
+    } else {
+      audio.pause();
+    }
+
+    if (audioIsPlaying) {
+      audio.volume = shouldAnimate ? 1 : 0.7;
+    }
+  }
+
+  this.shouldAnimate = shouldAnimate;
+};
+
+MainScene.prototype.toggleStats = function () {
+  document.body.classList.toggle('show-info');
 };
 
 // ..................................................
@@ -301,13 +326,13 @@ MainScene.prototype.nudgeMedusae = (function () {
       this.nudgeIndex = 0;
     }
 
-    var bubbles = this.sounds.bubbles;
+    var bubbleSequence = this.bubbleSequence;
     var nudgeIndex = this.nudgeIndex;
-    if (nudgeIndex > bubbles.length - 1) { return; }
+    if (nudgeIndex > bubbleSequence.length - 1) { return; }
 
     var raycaster = this.raycaster;
     var mouse = this.mouse;
-    var sound = bubbles[nudgeIndex];
+    var sound = this.sounds[bubbleSequence[nudgeIndex]];
 
     raycaster.setFromCamera(mouse, this.camera);
 
@@ -316,7 +341,7 @@ MainScene.prototype.nudgeMedusae = (function () {
     var nudge = this.nudgeForce;
     var point = intersects[0].point;
     var spots = nudgeIndex * 5;
-    var intensity = (nudgeIndex + 1) / (bubbles.length) + 0.5;
+    var intensity = (nudgeIndex + 1) / (bubbleSequence.length) + 0.5;
 
     offset.copy(point).normalize().multiplyScalar(15);
     point.add(offset);
@@ -324,7 +349,7 @@ MainScene.prototype.nudgeMedusae = (function () {
     nudge.intensity = intensity;
     nudge.set(point.x, point.y, point.z);
 
-    sound.volume(0.15).play();
+    this.playSound(sound);
     this.lensDirtPass.setGroup(spots, mouse.x, mouse.y, 0.8);
 
     this.lastNudge = Date.now();
@@ -336,92 +361,82 @@ MainScene.prototype.nudgeMedusae = (function () {
 // Audio
 //
 
+MainScene.prototype.sounds = {
+  bg : {
+    path : 'bg-loop',
+    volume : 0.8,
+    loop : true
+  },
+  wave : {
+    path : 'buzz-wave-4',
+    volume : 0.35
+  },
+  bubblesLow : {
+    path : 'bubbles-1',
+    volume : 0.15
+  },
+  bubblesHigh : {
+    path : 'bubbles-2',
+    volume : 0.15
+  }
+};
+
+MainScene.prototype.bubbleSequence = [
+  'bubblesLow',
+  'bubblesLow',
+  'bubblesHigh'
+];
+
 MainScene.prototype.initAudio = function () {
+  var sounds = this.sounds;
   var audio = this.audio = App.AudioController.create({
     baseUrl : App.STATIC_URL + 'audio/'
   });
 
-  this.sounds = {};
-  this.createBackgroundSound();
-  this.createWaveSounds();
-  this.createBubbleSounds();
-
-  this.sounds.bg.on('load', function () {
+  audio.loadBuffer(sounds.bg).then(function () {
+    audio.playSound(sounds.bg);
     audio.addListener('mute', this, 'muteSounds');
     audio.addListener('unmute', this, 'unmuteSounds');
+    setTimeout(this.triggerListeners.bind(this, 'load:audio'), 0);
+  }.bind(this));
+
+  audio.loadBuffer(sounds.wave).then(function () {
     this.medusae.addListener('phase:top', this, 'audioPhaseTop');
-    this.triggerListeners('load:audio');
   }.bind(this));
+
+  audio.loadBuffer(sounds.bubblesLow);
+  audio.loadBuffer(sounds.bubblesHigh);
 };
 
-MainScene.prototype.createBackgroundSound = function () {
-  var bg = this.sounds.bg = this.audio.createSound('bg-loop');
-
-  bg.__pos = 0;
-  bg.__duration = Infinity;
-
-  bg.on('load', function () {
-    bg.__duration = Math.floor(bg._duration) * 1000;
-    bg.play();
-  }.bind(this));
+MainScene.prototype.playSound = function (params) {
+  if (!this.audio || !this.audioIsPlaying) { return; }
+  this.audio.playSound(params);
 };
 
-MainScene.prototype.createWaveSounds = function () {
-  var audio = this.audio;
-  var waves = this.sounds.waves = [];
+// TODO: Stop / restart playback
+MainScene.prototype.muteSounds = function () {};
+MainScene.prototype.unmuteSounds = function () {};
 
-  for (var i = 0; i < 5; i ++) {
-    waves.push(audio.createSound('buzz-wave-2'));
-  }
-};
-
-MainScene.prototype.createBubbleSounds = function () {
-  var audio = this.audio;
-  var bubbles = this.sounds.bubbles = [];
-
-  for (var i = 0; i < 2; i ++) {
-    bubbles.push(audio.createSound('bubbles-2'));
-  }
-
-  bubbles.push(audio.createSound('bubbles-1'));
-};
-
-MainScene.prototype.muteSounds = function () {
-  this.sounds.bg.pause();
-};
-
-MainScene.prototype.unmuteSounds = function () {
-  this.sounds.bg.play();
-};
-
-MainScene.prototype.beginAudio = function () {
-  this.audio.volume = 0.8;
+MainScene.prototype.startAudio = function () {
+  this.audio.volume = 1;
   this.audioIsPlaying = true;
 };
 
-MainScene.prototype.pauseAudio = function () {
+MainScene.prototype.stopAudio = function () {
   this.audio.volume = 0;
   this.audioIsPlaying = false;
 };
 
 MainScene.prototype.toggleAudio = function () {
   if (this.audioIsPlaying) {
-    this.pauseAudio();
+    this.stopAudio();
   } else {
-    this.beginAudio();
+    this.startAudio();
   }
 };
 
 MainScene.prototype.audioPhaseTop = function () {
-  var waves = this.sounds.waves;
-  var index = this.waveIndex;
-
-  if (!index || index > waves.length - 1) {
-    index = this.waveIndex = 0;
-  }
-
-  waves[index].volume(0.08).play();
-  this.waveIndex ++;
+  this.playSound(this.sounds.wave);
 };
 
 // ..................................................
@@ -451,14 +466,8 @@ MainScene.prototype.initStats = function () {
     updateFactor : 0.025
   });
 
-  this.statsPost = App.GraphComponent.create({
-    label : 'Post FX (ms)',
-    updateFactor : 0.025
-  });
-
   this.statsPhysics.appendTo(el);
   this.statsGraphics.appendTo(el);
-  this.statsPost.appendTo(el);
 };
 
 // ..................................................
@@ -467,6 +476,7 @@ MainScene.prototype.initStats = function () {
 
 MainScene.prototype.update = function (delta) {
   var medusae = this.medusae;
+  var audio = this.audio;
   var nudgeForce = this.nudgeForce;
 
   var distance = this.camera.position.length();
@@ -484,26 +494,12 @@ MainScene.prototype.update = function (delta) {
     this.lensDirtPass.update(delta);
   }
 
-  if (!this.audio.isMuted) {
-    this.updateSounds(delta);
+  if (audio) {
+    audio.distance = distSound;
+    audio.update(delta);
   }
-
-  this.audio.distance = distSound;
-  this.audio.update(delta);
 
   if (DEBUG_NUDGE) { this.updateDebugNudge(delta); }
-};
-
-MainScene.prototype.updateSounds = function (delta) {
-  var sounds = this.sounds;
-  var bg = sounds.bg;
-
-  bg.__pos += delta;
-
-  if (bg.__pos > bg.__duration) {
-    bg.pos(0);
-    bg.__pos = 0;
-  }
 };
 
 MainScene.prototype.preRender = function (delta, stepProgress) {
@@ -515,7 +511,6 @@ MainScene.prototype.preRender = function (delta, stepProgress) {
     this.needsRender = false;
   } else {
     this.statsGraphics.reset();
-    this.statsPost.reset();
   }
 
   if (this._renderStats) {
@@ -526,7 +521,6 @@ MainScene.prototype.preRender = function (delta, stepProgress) {
     }
 
     this.statsGraphics.update();
-    this.statsPost.update();
   }
 };
 
@@ -539,11 +533,8 @@ MainScene.prototype.render = function (delta, stepProgress) {
   }
 
   if (this.usePostFx) {
-    this.statsPost.start();
     this.composer.render(0.01);
-    this.statsPost.end();
   } else {
-    this.statsPost.reset();
     this.renderer.clear();
     this.renderer.render(this.scene, this.camera);
   }

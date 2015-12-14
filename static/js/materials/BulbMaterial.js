@@ -12,7 +12,7 @@ function BulbMaterial(parameters) {
 BulbMaterial.prototype = Object.create(ShaderMaterial.prototype);
 
 BulbMaterial.prototype.shader = {
-  vertexShader : 'bulb-vert',
+  vertexShader : 'normal-vert',
   fragmentShader : 'bulb-frag',
 
   uniforms : THREE.UniformsUtils.merge([
