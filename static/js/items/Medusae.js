@@ -43,7 +43,7 @@ function Medusae(opts) {
   this.tentacleGroupCount = 3;
   this.tentacleSegments = 120;
   this.tentacleSegmentLength = 1.5;
-  this.tentacleWeightFactor = 1.5;
+  this.tentacleWeightFactor = 1.25;
 
   this.tailRibsCount = 15;
   this.tailRibRadiusFactor = 20;
@@ -146,7 +146,7 @@ Medusae.prototype.createCore = function () {
   var posMid = this.posMid = yOffset;
   var posBottom = this.posBottom = yOffset - size;
   var posTail = this.posTail = yOffset - this.tailArmSegments * this.tailArmSegmentLength;
-  var posTentacle = this.posTentacle = yOffset - this.tentacleSegments * this.tentacleSegmentLength;
+  var posTentacle = this.posTentacle = yOffset - this.tentacleSegments * this.tentacleSegmentLength * 1.5;
 
   var offsets = [
     posTop, posMid, posBottom, posTail, posTentacle, // Pin offsets
@@ -429,7 +429,7 @@ Medusae.prototype.attachTentaclesSpine = function (groupIndex) {
   var start = tent.start;
   var center = this.pinTentacle;
   var segments = this.totalSegments;
-  var dist = this.tentacleSegments * this.tentacleSegmentLength * 0.5;
+  var dist = this.tentacleSegments * this.tentacleSegmentLength;
 
   var spine = DistanceConstraint.create([dist * 0.5, dist],
     LINKS.radial(center, start, segments, []));
