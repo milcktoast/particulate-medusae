@@ -98,7 +98,6 @@ $c-active: #E30060;
   }
 
   &.active {
-    overflow: visible;
     opacity: 1;
     visibility: visible;
     transition-delay: 0ms;
@@ -109,6 +108,10 @@ $c-active: #E30060;
       transform: translateX(0);
       transition-delay: $delay;
     }
+  }
+
+  &.visible {
+    overflow: visible;
   }
 
   &.hidden { display: none; }
