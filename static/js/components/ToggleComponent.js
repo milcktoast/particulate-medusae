@@ -59,9 +59,15 @@ ToggleComponent.prototype.updateElHeight = function (element, inner) {
   if (!element) { return; }
   if (this.isActive) {
     element.style.height = inner.offsetHeight + 'px';
+    this._willBecomeVisible = setTimeout(
+      this.becomeVisible.bind(null, element), 200);
   } else {
     element.style.height = '';
   }
+};
+
+ToggleComponent.prototype.becomeVisible = function (element) {
+  element.className += ' visible';
 };
 
 ToggleComponent.prototype.hide = function () {
