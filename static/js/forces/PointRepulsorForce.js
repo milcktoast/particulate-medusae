@@ -31,8 +31,8 @@ PointRepulsorForce.prototype.applyForce = function (ix, f0, p0, p1) {
   var diff = PMath.clamp(0.001, 100,
     dist - this._radius2 * this.intensity);
   var diffInv = 1 / diff;
-	var scale = PMath.clamp(0, 10,
-		diffInv * diffInv * diffInv);
+  var scale = PMath.clamp(0, 10,
+    diffInv * diffInv * diffInv);
 
   f0[ix] += dx * scale;
   f0[iy] += dy * scale;
