@@ -29,8 +29,8 @@ function MainScene() {
   this.initStats();
   this.onWindowResize();
 
-  var aspect = this.camera.aspect;
-  camera.position.set(600 / aspect, 300 / aspect, 0);
+  var scale = this.height / 1000;
+  camera.position.set(scale * 400, scale * 300, 0);
   camera.lookAt(scene.position);
 
   this.loop = App.Looper.create(this, 'update', 'preRender', 1 / 30 * 1000);
@@ -172,8 +172,10 @@ MainScene.prototype.onWindowResize = function () {
   var postWidth = width * pxRatio;
   var postHeight = height * pxRatio;
   var aspect = width / height;
-  var minDistance = 300 / aspect;
-  var maxDistance = 1200 / aspect;
+
+  var scale = height / 1000;
+  var minDistance = scale * 300;
+  var maxDistance = scale * 1200;
 
   this.width = width;
   this.height = height;
