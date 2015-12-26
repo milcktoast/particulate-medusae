@@ -174,7 +174,7 @@ MainScene.prototype.onWindowResize = function () {
   var aspect = width / height;
 
   var scale = height / 1000;
-  var minDistance = scale * 300;
+  var minDistance = scale * 200;
   var maxDistance = scale * 1200;
 
   this.width = width;
