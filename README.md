@@ -1,5 +1,7 @@
 # [Medusae][medusae-url]
 
+[![Medusae][medusae-image-url]][medusae-url]
+
 > Soft body jellyfish simulation.
 
 ### Source
@@ -46,8 +48,8 @@ npm install
 grunt server
 ```
 
-
 [medusae-url]: https://jayweeks.com/medusae/
+[medusae-image-url]: https://farm2.staticflickr.com/1628/23884999242_457d932c7a_h.jpg
 
 [medusae-source-url]: https://github.com/jpweeks/particulate-medusae/blob/master/static/js/items/Medusae.js
 [hood-glsl-source-url]: https://github.com/jpweeks/particulate-medusae/blob/master/static/glsl/shaders/bulb-frag.glsl
