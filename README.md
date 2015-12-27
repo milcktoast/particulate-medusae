@@ -2,6 +2,8 @@
 
 > Soft body jellyfish simulation.
 
+[![Medusae][medusae-image-url]][medusae-url]
+
 ### Source
 
 * Jellyfish physics and graphics: [Medusae.js][medusae-source-url]
@@ -48,6 +50,7 @@ grunt server
 
 
 [medusae-url]: https://jayweeks.com/medusae/
+[medusae-image-url]: https://farm2.staticflickr.com/1628/23884999242_88b21d310d_b.jpg
 
 [medusae-source-url]: https://github.com/jpweeks/particulate-medusae/blob/master/static/js/items/Medusae.js
 [hood-glsl-source-url]: https://github.com/jpweeks/particulate-medusae/blob/master/static/glsl/shaders/bulb-frag.glsl
