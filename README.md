@@ -1,8 +1,8 @@
 # [Medusae][medusae-url]
 
-> Soft body jellyfish simulation.
-
 [![Medusae][medusae-image-url]][medusae-url]
+
+> Soft body jellyfish simulation.
 
 ### Source
 
