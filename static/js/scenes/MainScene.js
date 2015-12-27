@@ -174,7 +174,7 @@ MainScene.prototype.onWindowResize = function () {
   var aspect = width / height;
 
   var scale = height / 1000;
-  var minDistance = scale * 300;
+  var minDistance = scale * 200;
   var maxDistance = scale * 1200;
 
   this.width = width;
@@ -366,20 +366,20 @@ MainScene.prototype.nudgeMedusae = (function () {
 MainScene.prototype.sounds = {
   bg : {
     path : 'bg-loop',
-    volume : 0.8,
+    volume : 1,
     loop : true
   },
   wave : {
     path : 'buzz-wave-4',
-    volume : 0.35
+    volume : 0.8
   },
   bubblesLow : {
     path : 'bubbles-1',
-    volume : 0.15
+    volume : 0.6
   },
   bubblesHigh : {
     path : 'bubbles-2',
-    volume : 0.15
+    volume : 0.6
   }
 };
 
