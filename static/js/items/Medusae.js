@@ -772,9 +772,6 @@ Medusae.prototype.createSceneItem = function () {
   this.createMaterialsMouth();
   this.createMaterialsBulb();
 
-  this.positionAttr = this.linesFore.geometry.attributes.position;
-  this.positionPrevAttr = this.linesFore.geometry.attributes.positionPrev;
-
   this.item.position.setY(20);
 };
 
@@ -1074,14 +1071,14 @@ Medusae.prototype.update = function (delta) {
   this.updateRibs(this.tailRibs, phase);
   this.system.tick(delta * 0.001);
 
-  this.positionAttr.needsUpdate = true;
-  this.positionPrevAttr.needsUpdate = true;
+  this.position.needsUpdate = true;
+  this.positionPrev.needsUpdate = true;
 };
 
 Medusae.prototype.updateGraphics = function (delta, stepProgress) {
   var timeAttrs = this.timeAttrs;
   var stepAttrs = this.stepAttrs;
-  var time = this.animTime
+  var time = this.animTime;
   var i;
 
   for (i = 0; i < timeAttrs.length; i++) {
