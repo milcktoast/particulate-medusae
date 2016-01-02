@@ -18,7 +18,7 @@ LerpPointMaterial.prototype.shader = {
   uniforms : THREE.UniformsUtils.merge([
     uniforms.points,
     {
-      time : { type : 'f', value : 0 }
+      stepProgress : { type : 'f', value : 0 }
     }
   ])
 };

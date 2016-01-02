@@ -20,7 +20,7 @@ TailMaterial.prototype.shader = {
     {
       diffuseB : { type : 'c', value : null },
       scale : { type : 'f', value : 1 },
-      time : { type : 'f', value : 0 }
+      stepProgress : { type : 'f', value : 0 }
     }
   ])
 };

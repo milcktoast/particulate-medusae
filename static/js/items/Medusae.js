@@ -751,6 +751,11 @@ Medusae.prototype.addTimeAttr = function (item) {
   this.timeAttrs.push(item.material.uniforms.time);
 };
 
+Medusae.prototype.addStepAttr = function (item) {
+  if (!this.stepAttrs) { this.stepAttrs = []; }
+  this.stepAttrs.push(item.material.uniforms.stepProgress);
+};
+
 Medusae.prototype.createSceneItem = function () {
   this.item = new THREE.Group();
   this.position = new THREE.BufferAttribute(this.system.positions, 3);
@@ -758,7 +763,7 @@ Medusae.prototype.createSceneItem = function () {
   this.uvs = new THREE.BufferAttribute(new Float32Array(this.uvs), 2);
 
   this.colors = [];
-  this.timeAttrs = [];
+  this.stepAttrs = [];
   this.createMaterialsDots();
   this.createMaterialsTentacles();
   this.createMaterialsLines();
@@ -766,9 +771,6 @@ Medusae.prototype.createSceneItem = function () {
   this.createMaterialsTail();
   this.createMaterialsMouth();
   this.createMaterialsBulb();
-
-  this.positionAttr = this.linesFore.geometry.attributes.position;
-  this.positionPrevAttr = this.linesFore.geometry.attributes.positionPrev;
 
   this.item.position.setY(20);
 };
@@ -825,7 +827,7 @@ Medusae.prototype.createMaterialsDots = function () {
     }));
 
   this.dotsOpacity = dots.material.uniforms.opacity;
-  this.addTimeAttr(dots);
+  this.addStepAttr(dots);
   this.item.add(dots);
 };
 
@@ -848,7 +850,7 @@ Medusae.prototype.createMaterialsLines = function () {
     }));
 
   this.linesForeOpacity = fore.material.uniforms.opacity;
-  this.addTimeAttr(fore);
+  this.addStepAttr(fore);
   this.addColor('Hood Contour', fore.material);
   this.item.add(fore);
 };
@@ -871,7 +873,7 @@ Medusae.prototype.createMaterialsInnerLines = function () {
     }));
 
   this.linesInnerOpacity = inner.material.uniforms.opacity;
-  this.addTimeAttr(inner);
+  this.addStepAttr(inner);
   // this.addColor('System Debug', inner.material);
   this.item.add(inner);
 };
@@ -895,7 +897,7 @@ Medusae.prototype.createMaterialsTentacles = function () {
     }));
 
   this.tentacleOpacity = tentacle.material.uniforms.opacity;
-  this.addTimeAttr(tentacle);
+  this.addStepAttr(tentacle);
   this.addColor('Tentacles', tentacle.material);
   this.item.add(tentacle);
 };
@@ -931,7 +933,8 @@ Medusae.prototype.createMaterialsBulb = function () {
   this.bulbFaintOpacity = bulbFaint.material.uniforms.opacity;
   this.bulbOpacity = bulb.material.uniforms.opacity;
 
-  this.addTimeAttr(bulbFaint);
+  this.addStepAttr(bulbFaint);
+  this.addStepAttr(bulb);
   this.addTimeAttr(bulb);
 
   this.addColor('Hood Primary', bulb.material);
@@ -961,7 +964,7 @@ Medusae.prototype.createMaterialsTail = function () {
 
   this.tailMesh.scale.multiplyScalar(0.95);
   this.tailOpacity = tail.material.uniforms.opacity;
-  this.addTimeAttr(tail);
+  this.addStepAttr(tail);
   this.addColor('Belly Primary', tail.material);
   this.addColor('Belly Secondary', tail.material, 'diffuseB');
   this.item.add(tail);
@@ -986,7 +989,7 @@ Medusae.prototype.createMaterialsMouth = function () {
     }));
 
   this.mouthOpacity = mouth.material.uniforms.opacity;
-  this.addTimeAttr(mouth);
+  this.addStepAttr(mouth);
   this.addColor('Mouth Primary', mouth.material);
   this.addColor('Mouth Secondary', mouth.material, 'diffuseB');
   this.item.add(mouth);
@@ -1068,13 +1071,21 @@ Medusae.prototype.update = function (delta) {
   this.updateRibs(this.tailRibs, phase);
   this.system.tick(delta * 0.001);
 
-  this.positionAttr.needsUpdate = true;
-  this.positionPrevAttr.needsUpdate = true;
+  this.position.needsUpdate = true;
+  this.positionPrev.needsUpdate = true;
 };
 
 Medusae.prototype.updateGraphics = function (delta, stepProgress) {
   var timeAttrs = this.timeAttrs;
-  for (var i = 0; i < timeAttrs.length; i++) {
-    timeAttrs[i].value = stepProgress;
+  var stepAttrs = this.stepAttrs;
+  var time = this.animTime;
+  var i;
+
+  for (i = 0; i < timeAttrs.length; i++) {
+    timeAttrs[i].value = time;
+  }
+
+  for (i = 0; i < stepAttrs.length; i++) {
+    stepAttrs[i].value = stepProgress;
   }
 };
