@@ -746,6 +746,11 @@ function pushToBuffer(attr) {
 Medusae.prototype.addLinks = pushToBuffer('links');
 Medusae.prototype.addFaces = pushToBuffer('bulbFaces');
 
+Medusae.prototype.addTimeAttr = function (item) {
+  if (!this.timeAttrs) { this.timeAttrs = []; }
+  this.timeAttrs.push(item.material.uniforms.time);
+};
+
 Medusae.prototype.addStepAttr = function (item) {
   if (!this.stepAttrs) { this.stepAttrs = []; }
   this.stepAttrs.push(item.material.uniforms.stepProgress);
@@ -933,6 +938,7 @@ Medusae.prototype.createMaterialsBulb = function () {
 
   this.addStepAttr(bulbFaint);
   this.addStepAttr(bulb);
+  this.addTimeAttr(bulb);
 
   this.addColor('Hood Primary', bulb.material);
   this.addColor('Hood Secondary', bulb.material, 'diffuseB');
@@ -1073,8 +1079,16 @@ Medusae.prototype.update = function (delta) {
 };
 
 Medusae.prototype.updateGraphics = function (delta, stepProgress) {
+  var timeAttrs = this.timeAttrs;
   var stepAttrs = this.stepAttrs;
-  for (var i = 0; i < stepAttrs.length; i++) {
+  var time = this.animTime
+  var i;
+
+  for (i = 0; i < timeAttrs.length; i++) {
+    timeAttrs[i].value = time;
+  }
+
+  for (i = 0; i < stepAttrs.length; i++) {
     stepAttrs[i].value = stepProgress;
   }
 };

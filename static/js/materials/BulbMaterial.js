@@ -19,7 +19,8 @@ BulbMaterial.prototype.shader = {
     uniforms.common,
     {
       diffuseB : { type : 'c', value : null },
-      stepProgress : { type : 'f', value : 0 }
+      stepProgress : { type : 'f', value : 0 },
+      time : { type : 'f', value : 0 }
     }
   ])
 };
