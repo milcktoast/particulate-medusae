@@ -1,2 +1,2 @@
-uniform float time;
+uniform float stepProgress;
 attribute vec3 positionPrev;
