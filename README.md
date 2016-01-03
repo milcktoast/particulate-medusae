@@ -18,6 +18,7 @@
 ### Process
 
 * Screenshot and video [album][flickr-album-url]
+* Progress release [code and builds][source-releases-url]
 * Procedural GLSL hood texture [sketch][hood-glsl-url]
 * Procedural Canvas2D water drop texture [sketch][water-canvas-url]
 * Canvas graph [sketch][canvas-graph-url]
@@ -63,6 +64,7 @@ grunt server
 [lens-dirt-source-url]: https://github.com/jpweeks/particulate-medusae/blob/master/static/js/post-processing/LensDirtPass.js
 
 [flickr-album-url]: https://www.flickr.com/photos/jpweeks/sets/72157646887502644/
+[source-releases-url]: https://github.com/jpweeks/particulate-medusae/releases
 [hood-glsl-url]: http://glslsandbox.com/e#20575.0
 [water-canvas-url]: https://jsbin.com/guqodi/11/edit?js,output
 [canvas-graph-url]: https://jsbin.com/yoteko/10/edit?js,output
